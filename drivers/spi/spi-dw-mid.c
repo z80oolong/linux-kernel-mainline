@@ -157,6 +157,9 @@ static int mid_spi_dma_transfer(struct dw_spi *dws, int cs_change)
 				1,
 				DMA_MEM_TO_DEV,
 				DMA_PREP_INTERRUPT);
+	if (!txdesc)
+		return NULL;
+
 	txdesc->callback = dw_spi_dma_done;
 	txdesc->callback_param = dws;
 
@@ -180,6 +183,9 @@ static int mid_spi_dma_transfer(struct dw_spi *dws, int cs_change)
 				1,
 				DMA_DEV_TO_MEM,
 				DMA_PREP_INTERRUPT);
+	if (!rxdesc)
+		return NULL;
+
 	rxdesc->callback = dw_spi_dma_done;
 	rxdesc->callback_param = dws;
 
