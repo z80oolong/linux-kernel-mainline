@@ -564,7 +564,15 @@ static void emulate_load_store_insn(struct pt_regs *regs,
 		if (!access_ok(VERIFY_READ, addr, 2))
 			goto sigbus;
 
-		LoadHW(addr, value, res);
+		if (config_enabled(CONFIG_EVA)) {
+			if (segment_eq(get_fs(), get_ds()))
+				LoadHW(addr, value, res);
+			else
+				LoadHWE(addr, value, res);
+		} else {
+			LoadHW(addr, value, res);
+		}
+
 		if (res)
 			goto fault;
 		compute_return_epc(regs);
@@ -575,7 +583,15 @@ static void emulate_load_store_insn(struct pt_regs *regs,
 		if (!access_ok(VERIFY_READ, addr, 4))
 			goto sigbus;
 
-		LoadW(addr, value, res);
+		if (config_enabled(CONFIG_EVA)) {
+			if (segment_eq(get_fs(), get_ds()))
+				LoadW(addr, value, res);
+			else
+				LoadWE(addr, value, res);
+		} else {
+			LoadW(addr, value, res);
+		}
+
 		if (res)
 			goto fault;
 		compute_return_epc(regs);
@@ -586,7 +602,15 @@ static void emulate_load_store_insn(struct pt_regs *regs,
 		if (!access_ok(VERIFY_READ, addr, 2))
 			goto sigbus;
 
-		LoadHWU(addr, value, res);
+		if (config_enabled(CONFIG_EVA)) {
+			if (segment_eq(get_fs(), get_ds()))
+				LoadHWU(addr, value, res);
+			else
+				LoadHWUE(addr, value, res);
+		} else {
+			LoadHWU(addr, value, res);
+		}
+
 		if (res)
 			goto fault;
 		compute_return_epc(regs);
@@ -645,7 +669,16 @@ static void emulate_load_store_insn(struct pt_regs *regs,
 
 		compute_return_epc(regs);
 		value = regs->regs[insn.i_format.rt];
-		StoreHW(addr, value, res);
+
+		if (config_enabled(CONFIG_EVA)) {
+			if (segment_eq(get_fs(), get_ds()))
+				StoreHW(addr, value, res);
+			else
+				StoreHWE(addr, value, res);
+		} else {
+			StoreHW(addr, value, res);
+		}
+
 		if (res)
 			goto fault;
 		break;
@@ -656,7 +689,16 @@ static void emulate_load_store_insn(struct pt_regs *regs,
 
 		compute_return_epc(regs);
 		value = regs->regs[insn.i_format.rt];
-		StoreW(addr, value, res);
+
+		if (config_enabled(CONFIG_EVA)) {
+			if (segment_eq(get_fs(), get_ds()))
+				StoreW(addr, value, res);
+			else
+				StoreWE(addr, value, res);
+		} else {
+			StoreW(addr, value, res);
+		}
+
 		if (res)
 			goto fault;
 		break;
