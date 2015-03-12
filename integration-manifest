@@ -1,0 +1,16 @@
+drm-upstream/drm-fixes cd961bb9eebb630452f49dcbf3e5f0059428614a
+	drm/mst: fix recursive sleep warning on qlock
+origin/drm-intel-fixes 5e4f518959bdf8a4f9c8f80879e4a0f7a95d2cb3
+	drm/i915: Prevent TLB error on first execution on SNB
+drm-upstream/drm-next 03be70050c85768e9ce7c0d0887110d1b629e127
+	Merge tag 'topic/drm-misc-2015-03-10' of git://anongit.freedesktop.org/drm-intel into drm-next
+origin/drm-intel-next-fixes 96abd10ecc2e9ab5c8060697ce721683f387c64e
+	Merge branch 'drm-next-3.20' of git://people.freedesktop.org/~agd5f/linux into drm-next
+origin/drm-intel-next-queued bbe2b865d69927fc41e5ef5b8101b52136aa3d22
+	drm/i915: Remove the preliminary_hw_support shackles from CHV
+origin/topic/atomic-core 9469244d869623e8b54d9f3d4d00737e377af273
+	drm/atomic: Fix potential use of state after free
+sound-upstream/for-next e6826ef14597981f78156a0d5f9553b19f356e3f
+	Merge branch 'for-linus' into for-next
+origin/topic/drm-misc 0e3704c94c5737f42e9ac49a5dcca366674e5229
+	drm/fb: handle tiled connectors better
