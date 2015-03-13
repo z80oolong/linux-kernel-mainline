@@ -1,0 +1,16 @@
+drm-upstream/drm-fixes e2cdcafa8a53228cb996b3c3a0a48efe91c57b8e
+	Merge branch 'drm-fixes-4.0' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+origin/drm-intel-fixes 2dccc9898d45cd552f372c3f0b4a7f42126312f1
+	drm/i915: Ensure plane->state->fb stays in sync with plane->fb
+drm-upstream/drm-next 03be70050c85768e9ce7c0d0887110d1b629e127
+	Merge tag 'topic/drm-misc-2015-03-10' of git://anongit.freedesktop.org/drm-intel into drm-next
+origin/drm-intel-next-fixes 96abd10ecc2e9ab5c8060697ce721683f387c64e
+	Merge branch 'drm-next-3.20' of git://people.freedesktop.org/~agd5f/linux into drm-next
+origin/drm-intel-next-queued e81918499f060fe35ee12298e66fbfc2c6159b19
+	drm/i915: Fix vmap_batch page iterator overrun
+origin/topic/atomic-core 9469244d869623e8b54d9f3d4d00737e377af273
+	drm/atomic: Fix potential use of state after free
+sound-upstream/for-next e79d74ab25339437447478e4dfe2b35c5b560512
+	ALSA: control: Fix breakage of user ctl element addition
+origin/topic/drm-misc 43fc884efe20bcc0fae60d8212c6e66426a3d8b0
+	drm: Silence sparse warnings
