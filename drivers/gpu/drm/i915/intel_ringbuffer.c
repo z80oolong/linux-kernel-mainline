@@ -1060,6 +1060,13 @@ static int skl_init_workarounds(struct intel_engine_cs *ring)
 	return skl_tune_iz_hashing(ring);
 }
 
+static int bxt_init_workarounds(struct intel_engine_cs *ring)
+{
+	gen9_init_workarounds(ring);
+
+	return 0;
+}
+
 int init_workarounds_ring(struct intel_engine_cs *ring)
 {
 	struct drm_device *dev = ring->dev;
@@ -1077,8 +1084,9 @@ int init_workarounds_ring(struct intel_engine_cs *ring)
 
 	if (IS_SKYLAKE(dev))
 		return skl_init_workarounds(ring);
-	else if (IS_GEN9(dev))
-		return gen9_init_workarounds(ring);
+
+	if (IS_BROXTON(dev))
+		return bxt_init_workarounds(ring);
 
 	return 0;
 }
