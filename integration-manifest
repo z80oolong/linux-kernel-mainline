@@ -1,0 +1,16 @@
+origin/drm-intel-fixes 7f0801e566cc78315e5dc383bf3c3b5b5b436048
+	drm/i915: Make sure the primary plane is enabled before reading out the fb state
+drm-upstream/drm-fixes 8265d4486d5c2448a1c645fdc20d4e62873d9c3d
+	Merge tag 'drm-intel-fixes-2015-03-19' of git://anongit.freedesktop.org/drm-intel into drm-fixes
+origin/drm-intel-next-fixes 96abd10ecc2e9ab5c8060697ce721683f387c64e
+	Merge branch 'drm-next-3.20' of git://people.freedesktop.org/~agd5f/linux into drm-next
+origin/drm-intel-next-queued 0b37a9a9ebdf47dc9d5290a1c69bd944dde5cc15
+	drm/i915: Do not leak objects after capturing error state
+drm-upstream/drm-next 6b94aea01d4f96235e947892f6c39f837045e741
+	Merge branch 'drm_next' of https://github.com/markyzq/kernel-drm-rockchip into drm-next
+origin/topic/atomic-core 9469244d869623e8b54d9f3d4d00737e377af273
+	drm/atomic: Fix potential use of state after free
+sound-upstream/for-next fc0daafeb4acf70839db5baf8ec4b861fff3efef
+	Merge branch 'topic/hda-power' into for-next
+origin/topic/drm-misc c60618af77ea89930dffe0a9adb2502a9bef1508
+	drm: atomic: Allow setting CRTC active property
