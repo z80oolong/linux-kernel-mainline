@@ -555,7 +555,14 @@ static void i915_error_state_free(struct kref *error_ref)
 	}
 
 	i915_error_object_free(error->semaphore_obj);
+
+	for (i = 0; i < error->vm_count; i++)
+		kfree(error->active_bo[i]);
+
 	kfree(error->active_bo);
+	kfree(error->active_bo_count);
+	kfree(error->pinned_bo);
+	kfree(error->pinned_bo_count);
 	kfree(error->overlay);
 	kfree(error->display);
 	kfree(error);
@@ -994,12 +1001,11 @@ static void i915_gem_record_rings(struct drm_device *dev,
 					i915_error_ggtt_object_create(dev_priv,
 							     ring->scratch.obj);
 
-			if (request->file_priv) {
+			if (request->pid) {
 				struct task_struct *task;
 
 				rcu_read_lock();
-				task = pid_task(request->file_priv->file->pid,
-						PIDTYPE_PID);
+				task = pid_task(request->pid, PIDTYPE_PID);
 				if (task) {
 					strcpy(error->ring[i].comm, task->comm);
 					error->ring[i].pid = task->pid;
