@@ -1,0 +1,16 @@
+origin/drm-intel-fixes bc465aa9d045feb0e13b4a8f32cc33c1943f62d6
+	Linux 4.0-rc5
+drm-upstream/drm-fixes 8218c3f4df3bb1c637c17552405039a6dd3c1ee1
+	drm: Fixup racy refcounting in plane_force_disable
+origin/drm-intel-next-fixes 96abd10ecc2e9ab5c8060697ce721683f387c64e
+	Merge branch 'drm-next-3.20' of git://people.freedesktop.org/~agd5f/linux into drm-next
+origin/drm-intel-next-queued 096fad9ebfadb4922332f98895ea948e8d7fe6a7
+	drm/i915: move clearing of RPS interrupt bits from disable to reset time
+drm-upstream/drm-next ae10c2248593fb84c6951d67c98c9c934997e56a
+	Merge branch 'drm/next/rcar-du' of git://linuxtv.org/pinchartl/fbdev into drm-next
+origin/topic/atomic-core 9469244d869623e8b54d9f3d4d00737e377af273
+	drm/atomic: Fix potential use of state after free
+sound-upstream/for-next 77008b70fe0a9ffe354580d9dfda329cdde7f20b
+	ALSA: echoaudio: read past end of array
+origin/topic/drm-misc 27798365a60eaa61d8d9010466ffd57368b98ba9
+	drm: atomic: Allow setting CRTC active property
