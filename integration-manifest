@@ -1,0 +1,18 @@
+origin/drm-intel-fixes 7712467cedbf2212bd1bdda3015926e68b4595d3
+	drm/i915: Keep ring->active_list and ring->requests_list consistent
+drm-upstream/drm-fixes 59a58cb34d3fe73e6c899cc5d9a87428ca662925
+	drm/i915: Don't try to reference the fb in get_initial_plane_config()
+origin/drm-intel-next-fixes 96abd10ecc2e9ab5c8060697ce721683f387c64e
+	Merge branch 'drm-next-3.20' of git://people.freedesktop.org/~agd5f/linux into drm-next
+origin/drm-intel-next-queued 73527c7251e7df82542e72ed4891892b0870a509
+	drm/i915: kill i915.powersave
+drm-upstream/drm-next ae10c2248593fb84c6951d67c98c9c934997e56a
+	Merge branch 'drm/next/rcar-du' of git://linuxtv.org/pinchartl/fbdev into drm-next
+origin/topic/atomic-core 9469244d869623e8b54d9f3d4d00737e377af273
+	drm/atomic: Fix potential use of state after free
+sound-upstream/for-next 4738465c37298cd9228750f7e16aad88af8495c5
+	ALSA: hda/via - Add beep controls to VIA codecs
+origin/topic/drm-misc 27798365a60eaa61d8d9010466ffd57368b98ba9
+	drm: atomic: Allow setting CRTC active property
+origin/topic/drm-fixes 4d6cb99c04142d286d0be2dedbe05a5bcf8fa148
+	drm/i915: make unsupported fb modifier message DRM_DEBUG
