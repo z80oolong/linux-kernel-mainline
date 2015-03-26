@@ -1388,6 +1388,8 @@ intel_dp_compute_config(struct intel_encoder *encoder,
 		 */
 		min_lane_count = max_lane_count;
 		min_clock = max_clock;
+
+		pipe_config->psr_ready = intel_psr_ready(intel_dp);
 	}
 
 	for (; bpp >= 6*3; bpp -= 2*3) {

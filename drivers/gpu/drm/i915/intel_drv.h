@@ -385,6 +385,7 @@ struct intel_crtc_state {
 	int fdi_lanes;
 	struct intel_link_m_n fdi_m_n;
 
+	bool psr_ready;
 	bool ips_enabled;
 
 	bool double_wide;
@@ -1209,6 +1210,7 @@ void intel_backlight_unregister(struct drm_device *dev);
 
 
 /* intel_psr.c */
+bool intel_psr_ready(struct intel_dp *intel_dp);
 void intel_psr_enable(struct intel_dp *intel_dp);
 void intel_psr_disable(struct intel_dp *intel_dp);
 void intel_psr_invalidate(struct drm_device *dev,

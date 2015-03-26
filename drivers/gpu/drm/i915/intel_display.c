@@ -10510,6 +10510,7 @@ static void intel_dump_pipe_config(struct intel_crtc *crtc,
 		      pipe_config->pch_pfit.pos,
 		      pipe_config->pch_pfit.size,
 		      pipe_config->pch_pfit.enabled ? "enabled" : "disabled");
+	DRM_DEBUG_KMS("psr ready: %i\n", pipe_config->psr_ready);
 	DRM_DEBUG_KMS("ips: %i\n", pipe_config->ips_enabled);
 	DRM_DEBUG_KMS("double wide: %i\n", pipe_config->double_wide);
 }
