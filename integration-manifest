@@ -1,0 +1,18 @@
+origin/drm-intel-fixes ee73c61c0af590ff2c03fb83e68a5664bd8b38d0
+	drm/i915: Skip allocating shadow batch for 0-length batches
+drm-upstream/drm-fixes 9822393d23ba9129396ab9308dbb8ce10ae74751
+	Merge tag 'drm-intel-fixes-2015-03-26' of git://anongit.freedesktop.org/drm-intel into drm-fixes
+origin/drm-intel-next-fixes 1ff27a3443addb19af609245b218fa510c7d37dd
+	drm/i915: Update DRIVER_DATE to 20150327
+origin/drm-intel-next-queued 22d2d046b3814ea54c27a559e9d13c2378f347e1
+	drm/i915: Only enabled DRRS if PRS won't be enabled on this pipe.
+drm-upstream/drm-next ae10c2248593fb84c6951d67c98c9c934997e56a
+	Merge branch 'drm/next/rcar-du' of git://linuxtv.org/pinchartl/fbdev into drm-next
+origin/topic/atomic-core 9469244d869623e8b54d9f3d4d00737e377af273
+	drm/atomic: Fix potential use of state after free
+sound-upstream/for-next 4738465c37298cd9228750f7e16aad88af8495c5
+	ALSA: hda/via - Add beep controls to VIA codecs
+origin/topic/drm-misc a0211bb482c346820506c546a6a58b8357999a99
+	drm/atomic: Don't try to free a NULL state
+origin/topic/drm-fixes ad692b46dbf122ef90aadce3b389ef64c90e861d
+	drm/edid: set ELD for firmware and debugfs override EDIDs
