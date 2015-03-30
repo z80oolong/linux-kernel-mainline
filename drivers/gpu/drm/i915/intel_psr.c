@@ -56,11 +56,6 @@
 #include "intel_drv.h"
 #include "i915_drv.h"
 
-static bool is_edp_psr(struct intel_dp *intel_dp)
-{
-	return intel_dp->psr_dpcd[0] & DP_PSR_IS_SUPPORTED;
-}
-
 static bool vlv_is_psr_active_on_pipe(struct drm_device *dev, int pipe)
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
@@ -133,7 +128,7 @@ static void hsw_psr_setup_vsc(struct intel_dp *intel_dp)
 static void vlv_psr_enable_sink(struct intel_dp *intel_dp)
 {
 	drm_dp_dpcd_writeb(&intel_dp->aux, DP_PSR_EN_CFG,
-			   DP_PSR_ENABLE);
+			   DP_PSR_ENABLE | DP_PSR_MAIN_LINK_ACTIVE);
 }
 
 static void hsw_psr_enable_sink(struct intel_dp *intel_dp)
@@ -257,7 +252,19 @@ static void hsw_psr_enable_source(struct intel_dp *intel_dp)
 		   EDP_PSR_ENABLE);
 }
 
-static bool intel_psr_match_conditions(struct intel_dp *intel_dp)
+/**
+ * intel_psr_ready - PSR ready
+ * @intel_dp: Intel DP
+ *
+ * This function Checks if PSR is supported by Hardware/Source and
+ * Panel/Sink and if all conditions to be enabled are fulfilled.
+ *
+ * It is used to know beforehand if PSR is going to be enabled.
+ *
+ * Returns:
+ * True when PSR is ready to be enabled, false otherwise.
+ */
+bool intel_psr_ready(struct intel_dp *intel_dp)
 {
 	struct intel_digital_port *dig_port = dp_to_dig_port(intel_dp);
 	struct drm_device *dev = dig_port->base.base.dev;
@@ -265,11 +272,13 @@ static bool intel_psr_match_conditions(struct intel_dp *intel_dp)
 	struct drm_crtc *crtc = dig_port->base.base.crtc;
 	struct intel_crtc *intel_crtc = to_intel_crtc(crtc);
 
-	lockdep_assert_held(&dev_priv->psr.lock);
+	if (!HAS_PSR(dev)) {
+		DRM_DEBUG_KMS("PSR not supported on this platform\n");
+		return false;
+	}
+
 	WARN_ON(!drm_modeset_is_locked(&dev->mode_config.connection_mutex));
 	WARN_ON(!drm_modeset_is_locked(&crtc->mutex));
-
-	dev_priv->psr.source_ok = false;
 
 	if (IS_HASWELL(dev) && dig_port->port != PORT_A) {
 		DRM_DEBUG_KMS("HSW ties PSR to DDI A (eDP)\n");
@@ -294,9 +303,18 @@ static bool intel_psr_match_conditions(struct intel_dp *intel_dp)
 		return false;
 	}
 
+	/* At this point we can tell HW/Source supports PSR */
 	dev_priv->psr.source_ok = true;
+
+	/* Now check if Panel/Sink supports it */
+	if (!dev_priv->psr.sink_support) {
+		DRM_DEBUG_KMS("PSR not supported by this panel\n");
+		return false;
+	}
+
 	return true;
 }
+
 
 static void intel_psr_activate(struct intel_dp *intel_dp)
 {
@@ -332,25 +350,17 @@ void intel_psr_enable(struct intel_dp *intel_dp)
 	struct intel_digital_port *intel_dig_port = dp_to_dig_port(intel_dp);
 	struct drm_device *dev = intel_dig_port->base.base.dev;
 	struct drm_i915_private *dev_priv = dev->dev_private;
+	struct intel_crtc *intel_crtc =
+		to_intel_crtc(intel_dig_port->base.base.crtc);
 
-	if (!HAS_PSR(dev)) {
-		DRM_DEBUG_KMS("PSR not supported on this platform\n");
+	if (!intel_crtc->config->psr_ready)
 		return;
-	}
-
-	if (!is_edp_psr(intel_dp)) {
-		DRM_DEBUG_KMS("PSR not supported by this panel\n");
-		return;
-	}
 
 	mutex_lock(&dev_priv->psr.lock);
 	if (dev_priv->psr.enabled) {
 		DRM_DEBUG_KMS("PSR already in use\n");
 		goto unlock;
 	}
-
-	if (!intel_psr_match_conditions(intel_dp))
-		goto unlock;
 
 	/* First we check VBT, but we must respect sink and source
 	 * known restrictions */

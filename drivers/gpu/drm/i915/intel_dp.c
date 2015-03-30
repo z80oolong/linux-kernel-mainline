@@ -1388,6 +1388,8 @@ intel_dp_compute_config(struct intel_encoder *encoder,
 		 */
 		min_lane_count = max_lane_count;
 		min_clock = max_clock;
+
+		pipe_config->psr_ready = intel_psr_ready(intel_dp);
 	}
 
 	for (; bpp >= 6*3; bpp -= 2*3) {
@@ -4993,11 +4995,6 @@ static void intel_dp_set_drrs_state(struct drm_device *dev, int refresh_rate)
 		return;
 	}
 
-	/*
-	 * FIXME: This needs proper synchronization with psr state for some
-	 * platforms that cannot have PSR and DRRS enabled at the same time.
-	 */
-
 	dig_port = dp_to_dig_port(intel_dp);
 	encoder = &dig_port->base;
 	intel_crtc = to_intel_crtc(encoder->base.crtc);
@@ -5080,6 +5077,11 @@ void intel_edp_drrs_enable(struct intel_dp *intel_dp)
 
 	if (!intel_crtc->config->has_drrs) {
 		DRM_DEBUG_KMS("Panel doesn't support DRRS\n");
+		return;
+	}
+
+	if (intel_crtc->config->psr_ready) {
+		DRM_DEBUG_KMS("DRRS: PSR will be enabled on this crtc\n");
 		return;
 	}
 
