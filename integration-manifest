@@ -1,0 +1,20 @@
+origin/drm-intel-fixes ee73c61c0af590ff2c03fb83e68a5664bd8b38d0
+	drm/i915: Skip allocating shadow batch for 0-length batches
+drm-upstream/drm-fixes 91fd89660ba2e8ee59a587294fa9b17761691b05
+	Merge branch 'drm-fixes-4.0' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+origin/drm-intel-next-fixes fcec46ecd5f638b08ac8f24fdc8d71bae06b84d1
+	drm/i915: Set best_encoder field of connector_state also when disabling
+origin/drm-intel-next-queued 1652d19e66c2dd118bd263ccba2a951b7946a2bb
+	drm/i915: Convert the ddi cdclk code to get_display_clock_speed
+drm-upstream/drm-next d7de390bff7ad0f551fc0e409543e98db86a65df
+	Merge branch 'drm-atmel-hlcdc-4.1-fixes' of git://github.com/bbrezillon/linux-at91 into drm-next
+origin/topic/atomic-core 9469244d869623e8b54d9f3d4d00737e377af273
+	drm/atomic: Fix potential use of state after free
+sound-upstream/for-next 4738465c37298cd9228750f7e16aad88af8495c5
+	ALSA: hda/via - Add beep controls to VIA codecs
+origin/topic/drm-misc 066626d5d5548d7ff63772a840b8d40a0d278825
+	drm: line wrap DRM_IOCTL_DEF* macros
+origin/topic/drm-fixes ad692b46dbf122ef90aadce3b389ef64c90e861d
+	drm/edid: set ELD for firmware and debugfs override EDIDs
+origin/topic/bxt-stage1 43eec5d385fe90ca7283b5f8a0a536f64fcbae5f
+	drm/i915/bxt: Add Broxton steppings
