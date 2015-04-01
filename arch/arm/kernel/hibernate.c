@@ -21,6 +21,7 @@
 #include <asm/idmap.h>
 #include <asm/suspend.h>
 #include <asm/memory.h>
+#include "reboot.h"
 
 extern const void __nosave_begin, __nosave_end;
 
@@ -62,7 +63,7 @@ static int notrace arch_save_image(unsigned long unused)
 
 	ret = swsusp_save();
 	if (ret == 0)
-		soft_restart(virt_to_phys(cpu_resume));
+		_soft_restart(virt_to_phys(cpu_resume), false);
 	return ret;
 }
 
@@ -87,7 +88,7 @@ static void notrace arch_restore_image(void *unused)
 	for (pbe = restore_pblist; pbe; pbe = pbe->next)
 		copy_page(pbe->orig_address, pbe->address);
 
-	soft_restart(virt_to_phys(cpu_resume));
+	_soft_restart(virt_to_phys(cpu_resume), false);
 }
 
 static u64 resume_stack[PAGE_SIZE/2/sizeof(u64)] __nosavedata;
