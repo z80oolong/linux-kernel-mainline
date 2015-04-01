@@ -2518,6 +2518,43 @@ void i915_gem_request_free(struct kref *req_ref)
 	kfree(req);
 }
 
+int i915_gem_request_alloc(struct intel_engine_cs *ring,
+			   struct intel_context *ctx)
+{
+	int ret;
+	struct drm_i915_gem_request *request;
+	struct drm_i915_private *dev_private = ring->dev->dev_private;
+
+	if (ring->outstanding_lazy_request)
+		return 0;
+
+	request = kzalloc(sizeof(*request), GFP_KERNEL);
+	if (request == NULL)
+		return -ENOMEM;
+
+	ret = i915_gem_get_seqno(ring->dev, &request->seqno);
+	if (ret) {
+		kfree(request);
+		return ret;
+	}
+
+	kref_init(&request->ref);
+	request->ring = ring;
+	request->uniq = dev_private->request_uniq++;
+
+	if (i915.enable_execlists)
+		ret = intel_logical_ring_alloc_request_extras(request, ctx);
+	else
+		ret = intel_ring_alloc_request_extras(request);
+	if (ret) {
+		kfree(request);
+		return ret;
+	}
+
+	ring->outstanding_lazy_request = request;
+	return 0;
+}
+
 struct drm_i915_gem_request *
 i915_gem_find_active_request(struct intel_engine_cs *ring)
 {
@@ -2866,9 +2903,7 @@ i915_gem_wait_ioctl(struct drm_device *dev, void *data, struct drm_file *file)
 	ret = __i915_wait_request(req, reset_counter, true,
 				  args->timeout_ns > 0 ? &args->timeout_ns : NULL,
 				  file->driver_priv);
-	mutex_lock(&dev->struct_mutex);
-	i915_gem_request_unreference(req);
-	mutex_unlock(&dev->struct_mutex);
+	i915_gem_request_unreference__unlocked(req);
 	return ret;
 
 out:
@@ -4071,9 +4106,7 @@ i915_gem_ring_throttle(struct drm_device *dev, struct drm_file *file)
 	if (ret == 0)
 		queue_delayed_work(dev_priv->wq, &dev_priv->mm.retire_work, 0);
 
-	mutex_lock(&dev->struct_mutex);
-	i915_gem_request_unreference(target);
-	mutex_unlock(&dev->struct_mutex);
+	i915_gem_request_unreference__unlocked(target);
 
 	return ret;
 }
@@ -4863,12 +4896,12 @@ int i915_gem_init(struct drm_device *dev)
 	}
 
 	if (!i915.enable_execlists) {
-		dev_priv->gt.do_execbuf = i915_gem_ringbuffer_submission;
+		dev_priv->gt.execbuf_submit = i915_gem_ringbuffer_submission;
 		dev_priv->gt.init_rings = i915_gem_init_rings;
 		dev_priv->gt.cleanup_ring = intel_cleanup_ring_buffer;
 		dev_priv->gt.stop_ring = intel_stop_ring_buffer;
 	} else {
-		dev_priv->gt.do_execbuf = intel_execlists_submission;
+		dev_priv->gt.execbuf_submit = intel_execlists_submission;
 		dev_priv->gt.init_rings = intel_logical_rings_init;
 		dev_priv->gt.cleanup_ring = intel_logical_ring_cleanup;
 		dev_priv->gt.stop_ring = intel_logical_ring_stop;

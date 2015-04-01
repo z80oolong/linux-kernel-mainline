@@ -1574,8 +1574,7 @@ struct drm_i915_private {
 
 	struct i915_virtual_gpu vgpu;
 
-	struct intel_gmbus gmbus[GMBUS_NUM_PORTS];
-
+	struct intel_gmbus gmbus[GMBUS_NUM_PINS];
 
 	/** gmbus_mutex protects against concurrent usage of the single hw gmbus
 	 * controller on different i2c buses. */
@@ -1814,13 +1813,13 @@ struct drm_i915_private {
 
 	/* Abstract the submission mechanism (legacy ringbuffer or execlists) away */
 	struct {
-		int (*do_execbuf)(struct drm_device *dev, struct drm_file *file,
-				  struct intel_engine_cs *ring,
-				  struct intel_context *ctx,
-				  struct drm_i915_gem_execbuffer2 *args,
-				  struct list_head *vmas,
-				  struct drm_i915_gem_object *batch_obj,
-				  u64 exec_start, u32 flags);
+		int (*execbuf_submit)(struct drm_device *dev, struct drm_file *file,
+				      struct intel_engine_cs *ring,
+				      struct intel_context *ctx,
+				      struct drm_i915_gem_execbuffer2 *args,
+				      struct list_head *vmas,
+				      struct drm_i915_gem_object *batch_obj,
+				      u64 exec_start, u32 flags);
 		int (*init_rings)(struct drm_device *dev);
 		void (*cleanup_ring)(struct intel_engine_cs *ring);
 		void (*stop_ring)(struct intel_engine_cs *ring);
@@ -2115,6 +2114,8 @@ struct drm_i915_gem_request {
 
 };
 
+int i915_gem_request_alloc(struct intel_engine_cs *ring,
+			   struct intel_context *ctx);
 void i915_gem_request_free(struct kref *req_ref);
 
 static inline uint32_t
@@ -2140,6 +2141,19 @@ i915_gem_request_unreference(struct drm_i915_gem_request *req)
 {
 	WARN_ON(!mutex_is_locked(&req->ring->dev->struct_mutex));
 	kref_put(&req->ref, i915_gem_request_free);
+}
+
+static inline void
+i915_gem_request_unreference__unlocked(struct drm_i915_gem_request *req)
+{
+	if (req && !atomic_add_unless(&req->ref.refcount, -1, 1)) {
+		struct drm_device *dev = req->ring->dev;
+
+		mutex_lock(&dev->struct_mutex);
+		if (likely(atomic_dec_and_test(&req->ref.refcount)))
+			i915_gem_request_free(&req->ref);
+		mutex_unlock(&dev->struct_mutex);
+	}
 }
 
 static inline void i915_gem_request_assign(struct drm_i915_gem_request **pdst,
@@ -3050,13 +3064,11 @@ void i915_teardown_sysfs(struct drm_device *dev_priv);
 /* intel_i2c.c */
 extern int intel_setup_gmbus(struct drm_device *dev);
 extern void intel_teardown_gmbus(struct drm_device *dev);
-static inline bool intel_gmbus_is_port_valid(unsigned port)
-{
-	return (port >= GMBUS_PORT_SSC && port <= GMBUS_PORT_DPD);
-}
+extern bool intel_gmbus_is_valid_pin(struct drm_i915_private *dev_priv,
+				     unsigned int pin);
 
-extern struct i2c_adapter *intel_gmbus_get_adapter(
-		struct drm_i915_private *dev_priv, unsigned port);
+extern struct i2c_adapter *
+intel_gmbus_get_adapter(struct drm_i915_private *dev_priv, unsigned int pin);
 extern void intel_gmbus_set_speed(struct i2c_adapter *adapter, int speed);
 extern void intel_gmbus_force_bit(struct i2c_adapter *adapter, bool force_bit);
 static inline bool intel_gmbus_is_forced_bit(struct i2c_adapter *adapter)
