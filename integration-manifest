@@ -1,0 +1,20 @@
+origin/drm-intel-fixes 840a1cf0cd533f30da792527ca5ff6a023d4a727
+	drm/i915: Reject the colorkey ioctls for primary and cursor planes
+drm-upstream/drm-fixes 91fd89660ba2e8ee59a587294fa9b17761691b05
+	Merge branch 'drm-fixes-4.0' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+origin/drm-intel-next-fixes 6e0aa8018f9c676b115b7ca6c20a056fc57c68a9
+	Merge tag 'v4.0-rc6' into drm-intel-next
+origin/drm-intel-next-queued 2d1070b21e004609a5bebafdb4303bb021f5477c
+	drm/i915: Make debugfs/i915_gem_request more friendly
+drm-upstream/drm-next 502e95c6678505474f1056480310cd9382bacbac
+	drm/vgem: implement virtual GEM
+origin/topic/atomic-core 9469244d869623e8b54d9f3d4d00737e377af273
+	drm/atomic: Fix potential use of state after free
+sound-upstream/for-next 4738465c37298cd9228750f7e16aad88af8495c5
+	ALSA: hda/via - Add beep controls to VIA codecs
+origin/topic/drm-misc 066626d5d5548d7ff63772a840b8d40a0d278825
+	drm: line wrap DRM_IOCTL_DEF* macros
+origin/topic/drm-fixes ad692b46dbf122ef90aadce3b389ef64c90e861d
+	drm/edid: set ELD for firmware and debugfs override EDIDs
+origin/topic/bxt-stage1 43eec5d385fe90ca7283b5f8a0a536f64fcbae5f
+	drm/i915/bxt: Add Broxton steppings
