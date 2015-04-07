@@ -1792,7 +1792,7 @@ hsw_compute_linetime_wm(struct drm_device *dev, struct drm_crtc *crtc)
 	linetime = DIV_ROUND_CLOSEST(mode->crtc_htotal * 1000 * 8,
 				     mode->crtc_clock);
 	ips_linetime = DIV_ROUND_CLOSEST(mode->crtc_htotal * 1000 * 8,
-					 intel_ddi_get_cdclk_freq(dev_priv));
+					 dev_priv->display.get_display_clock_speed(dev_priv->dev));
 
 	return PIPE_WM_LINETIME_IPS_LINETIME(ips_linetime) |
 	       PIPE_WM_LINETIME_TIME(linetime);
@@ -3178,7 +3178,7 @@ static void skl_flush_wm_values(struct drm_i915_private *dev_priv,
 {
 	struct drm_device *dev = dev_priv->dev;
 	struct skl_ddb_allocation *cur_ddb, *new_ddb;
-	bool reallocated[I915_MAX_PIPES] = {false, false, false};
+	bool reallocated[I915_MAX_PIPES] = {};
 	struct intel_crtc *crtc;
 	enum pipe pipe;
 

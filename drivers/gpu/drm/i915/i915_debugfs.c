@@ -643,31 +643,44 @@ static int i915_gem_request_info(struct seq_file *m, void *data)
 	struct drm_device *dev = node->minor->dev;
 	struct drm_i915_private *dev_priv = dev->dev_private;
 	struct intel_engine_cs *ring;
-	struct drm_i915_gem_request *gem_request;
-	int ret, count, i;
+	struct drm_i915_gem_request *rq;
+	int ret, any, i;
 
 	ret = mutex_lock_interruptible(&dev->struct_mutex);
 	if (ret)
 		return ret;
 
-	count = 0;
+	any = 0;
 	for_each_ring(ring, dev_priv, i) {
-		if (list_empty(&ring->request_list))
+		int count;
+
+		count = 0;
+		list_for_each_entry(rq, &ring->request_list, list)
+			count++;
+		if (count == 0)
 			continue;
 
-		seq_printf(m, "%s requests:\n", ring->name);
-		list_for_each_entry(gem_request,
-				    &ring->request_list,
-				    list) {
-			seq_printf(m, "    %x @ %d\n",
-				   gem_request->seqno,
-				   (int) (jiffies - gem_request->emitted_jiffies));
+		seq_printf(m, "%s requests: %d\n", ring->name, count);
+		list_for_each_entry(rq, &ring->request_list, list) {
+			struct task_struct *task;
+
+			rcu_read_lock();
+			task = NULL;
+			if (rq->pid)
+				task = pid_task(rq->pid, PIDTYPE_PID);
+			seq_printf(m, "    %x @ %d: %s [%d]\n",
+				   rq->seqno,
+				   (int) (jiffies - rq->emitted_jiffies),
+				   task ? task->comm : "<unknown>",
+				   task ? task->pid : -1);
+			rcu_read_unlock();
 		}
-		count++;
+
+		any++;
 	}
 	mutex_unlock(&dev->struct_mutex);
 
-	if (count == 0)
+	if (any == 0)
 		seq_puts(m, "No requests\n");
 
 	return 0;
@@ -4779,4 +4792,100 @@ void i915_debugfs_cleanup(struct drm_minor *minor)
 
 		drm_debugfs_remove_files(info_list, 1, minor);
 	}
+}
+
+struct dpcd_block {
+	/* DPCD dump start address. */
+	unsigned int offset;
+	/* DPCD dump end address, inclusive. If unset, .size will be used. */
+	unsigned int end;
+	/* DPCD dump size. Used if .end is unset. If unset, defaults to 1. */
+	size_t size;
+	/* Only valid for eDP. */
+	bool edp;
+};
+
+static const struct dpcd_block i915_dpcd_debug[] = {
+	{ .offset = DP_DPCD_REV, .size = DP_RECEIVER_CAP_SIZE },
+	{ .offset = DP_PSR_SUPPORT, .end = DP_PSR_CAPS },
+	{ .offset = DP_DOWNSTREAM_PORT_0, .size = 16 },
+	{ .offset = DP_LINK_BW_SET, .end = DP_EDP_CONFIGURATION_SET },
+	{ .offset = DP_SINK_COUNT, .end = DP_ADJUST_REQUEST_LANE2_3 },
+	{ .offset = DP_SET_POWER },
+	{ .offset = DP_EDP_DPCD_REV },
+	{ .offset = DP_EDP_GENERAL_CAP_1, .end = DP_EDP_GENERAL_CAP_3 },
+	{ .offset = DP_EDP_DISPLAY_CONTROL_REGISTER, .end = DP_EDP_BACKLIGHT_FREQ_CAP_MAX_LSB },
+	{ .offset = DP_EDP_DBC_MINIMUM_BRIGHTNESS_SET, .end = DP_EDP_DBC_MAXIMUM_BRIGHTNESS_SET },
+};
+
+static int i915_dpcd_show(struct seq_file *m, void *data)
+{
+	struct drm_connector *connector = m->private;
+	struct intel_dp *intel_dp =
+		enc_to_intel_dp(&intel_attached_encoder(connector)->base);
+	uint8_t buf[16];
+	ssize_t err;
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE(i915_dpcd_debug); i++) {
+		const struct dpcd_block *b = &i915_dpcd_debug[i];
+		size_t size = b->end ? b->end - b->offset + 1 : (b->size ?: 1);
+
+		if (b->edp &&
+		    connector->connector_type != DRM_MODE_CONNECTOR_eDP)
+			continue;
+
+		/* low tech for now */
+		if (WARN_ON(size > sizeof(buf)))
+			continue;
+
+		err = drm_dp_dpcd_read(&intel_dp->aux, b->offset, buf, size);
+		if (err <= 0) {
+			DRM_ERROR("dpcd read (%zu bytes at %u) failed (%zd)\n",
+				  size, b->offset, err);
+			continue;
+		}
+
+		seq_printf(m, "%04x: %*ph\n", b->offset, (int) size, buf);
+	};
+
+	return 0;
+}
+
+static int i915_dpcd_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, i915_dpcd_show, inode->i_private);
+}
+
+static const struct file_operations i915_dpcd_fops = {
+	.owner = THIS_MODULE,
+	.open = i915_dpcd_open,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = single_release,
+};
+
+/**
+ * i915_debugfs_connector_add - add i915 specific connector debugfs files
+ * @connector: pointer to a registered drm_connector
+ *
+ * Cleanup will be done by drm_connector_unregister() through a call to
+ * drm_debugfs_connector_remove().
+ *
+ * Returns 0 on success, negative error codes on error.
+ */
+int i915_debugfs_connector_add(struct drm_connector *connector)
+{
+	struct dentry *root = connector->debugfs_entry;
+
+	/* The connector must have been registered beforehands. */
+	if (!root)
+		return -ENODEV;
+
+	if (connector->connector_type == DRM_MODE_CONNECTOR_DisplayPort ||
+	    connector->connector_type == DRM_MODE_CONNECTOR_eDP)
+		debugfs_create_file("i915_dpcd", S_IRUGO, root, connector,
+				    &i915_dpcd_fops);
+
+	return 0;
 }
