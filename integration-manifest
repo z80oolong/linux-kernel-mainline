@@ -1,0 +1,20 @@
+origin/drm-intel-fixes 5df0582bf036bb5f9a8ad8db5884fe13a55347d1
+	drm/i915/vlv: remove wait for previous GFX clk disable request
+drm-upstream/drm-fixes 04bdf441787a385487fb7b08d9a3f35a1271b474
+	drm: fix drm_mode_getconnector() locking imbalance regression
+origin/drm-intel-next-fixes 6e0aa8018f9c676b115b7ca6c20a056fc57c68a9
+	Merge tag 'v4.0-rc6' into drm-intel-next
+origin/drm-intel-next-queued 674db11ccbc130338e5780000b1826353920f86f
+	drm/i915: Record ring->start address in error state
+drm-upstream/drm-next 5c7f0c27956a9884e29dbe5f83e56609fa00290f
+	Merge tag 'imx-drm-fixes-2015-03-31' of git://git.pengutronix.de/git/pza/linux into drm-next
+origin/topic/atomic-core 9469244d869623e8b54d9f3d4d00737e377af273
+	drm/atomic: Fix potential use of state after free
+sound-upstream/for-next e1e62b98ebddc3234f3259019d3236f66fc667f8
+	ALSA: hda/realtek - Support Dell headset mode for ALC288
+origin/topic/drm-misc 0578be680c6623ad6515b60a0b41ec70ebc1f204
+	drm: Use kref_put_mutex in drm_gem_object_unreference_unlocked
+origin/topic/drm-fixes 6f67f0f928e25aca99796974834f60ffc309c5fd
+	drm: fix drm_mode_getconnector() locking imbalance regression
+origin/topic/bxt-stage1 4dba72cfdc03ae71934284ec5ae014590f353147
+	drm/i915/bxt: Increase DDI buf idle timeout
