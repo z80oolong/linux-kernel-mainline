@@ -853,6 +853,9 @@ static int bdw_init_workarounds(struct intel_engine_cs *ring)
 			    GEN6_WIZ_HASHING_MASK,
 			    GEN6_WIZ_HASHING_16x4);
 
+	/* WaProgramL3SqcReg1Default:bdw */
+	WA_WRITE(GEN8_L3SQCREG1, BDW_WA_L3SQCREG1_DEFAULT);
+
 	return 0;
 }
 
@@ -1972,6 +1975,7 @@ static int intel_init_ring_buffer(struct drm_device *dev,
 	INIT_LIST_HEAD(&ring->active_list);
 	INIT_LIST_HEAD(&ring->request_list);
 	INIT_LIST_HEAD(&ring->execlist_queue);
+	i915_gem_batch_pool_init(dev, &ring->batch_pool);
 	ringbuf->size = 32 * PAGE_SIZE;
 	ringbuf->ring = ring;
 	memset(ring->semaphore.sync_seqno, 0, sizeof(ring->semaphore.sync_seqno));
@@ -2050,6 +2054,7 @@ void intel_cleanup_ring_buffer(struct intel_engine_cs *ring)
 	cleanup_status_page(ring);
 
 	i915_cmd_parser_fini_ring(ring);
+	i915_gem_batch_pool_fini(&ring->batch_pool);
 
 	kfree(ringbuf);
 	ring->buffer = NULL;
@@ -2059,16 +2064,16 @@ static int intel_ring_wait_request(struct intel_engine_cs *ring, int n)
 {
 	struct intel_ringbuffer *ringbuf = ring->buffer;
 	struct drm_i915_gem_request *request;
-	int ret;
+	int ret, new_space;
 
 	if (intel_ring_space(ringbuf) >= n)
 		return 0;
 
 	list_for_each_entry(request, &ring->request_list, list) {
-		if (__intel_ring_space(request->postfix, ringbuf->tail,
-				       ringbuf->size) >= n) {
+		new_space = __intel_ring_space(request->postfix, ringbuf->tail,
+				       ringbuf->size);
+		if (new_space >= n)
 			break;
-		}
 	}
 
 	if (&request->list == &ring->request_list)
@@ -2079,6 +2084,8 @@ static int intel_ring_wait_request(struct intel_engine_cs *ring, int n)
 		return ret;
 
 	i915_gem_retire_requests_ring(ring);
+
+	WARN_ON(intel_ring_space(ringbuf) < new_space);
 
 	return 0;
 }
@@ -2181,32 +2188,10 @@ int intel_ring_idle(struct intel_engine_cs *ring)
 	return i915_wait_request(req);
 }
 
-static int
-intel_ring_alloc_request(struct intel_engine_cs *ring)
+int intel_ring_alloc_request_extras(struct drm_i915_gem_request *request)
 {
-	int ret;
-	struct drm_i915_gem_request *request;
-	struct drm_i915_private *dev_private = ring->dev->dev_private;
+	request->ringbuf = request->ring->buffer;
 
-	if (ring->outstanding_lazy_request)
-		return 0;
-
-	request = kzalloc(sizeof(*request), GFP_KERNEL);
-	if (request == NULL)
-		return -ENOMEM;
-
-	kref_init(&request->ref);
-	request->ring = ring;
-	request->ringbuf = ring->buffer;
-	request->uniq = dev_private->request_uniq++;
-
-	ret = i915_gem_get_seqno(ring->dev, &request->seqno);
-	if (ret) {
-		kfree(request);
-		return ret;
-	}
-
-	ring->outstanding_lazy_request = request;
 	return 0;
 }
 
@@ -2247,7 +2232,7 @@ int intel_ring_begin(struct intel_engine_cs *ring,
 		return ret;
 
 	/* Preallocate the olr before touching the ring */
-	ret = intel_ring_alloc_request(ring);
+	ret = i915_gem_request_alloc(ring, ring->default_context);
 	if (ret)
 		return ret;
 
