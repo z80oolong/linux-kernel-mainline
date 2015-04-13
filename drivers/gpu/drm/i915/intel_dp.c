@@ -696,15 +696,13 @@ static uint32_t ilk_get_aux_clock_divider(struct intel_dp *intel_dp, int index)
 {
 	struct intel_digital_port *intel_dig_port = dp_to_dig_port(intel_dp);
 	struct drm_device *dev = intel_dig_port->base.base.dev;
+	struct drm_i915_private *dev_priv = dev->dev_private;
 
 	if (index)
 		return 0;
 
 	if (intel_dig_port->port == PORT_A) {
-		if (IS_GEN6(dev) || IS_GEN7(dev))
-			return 200; /* SNB & IVB eDP input clock at 400Mhz */
-		else
-			return 225; /* eDP input clock at 450Mhz */
+		return DIV_ROUND_UP(dev_priv->display.get_display_clock_speed(dev), 2000);
 	} else {
 		return DIV_ROUND_UP(intel_pch_rawclk(dev), 2);
 	}
@@ -719,7 +717,7 @@ static uint32_t hsw_get_aux_clock_divider(struct intel_dp *intel_dp, int index)
 	if (intel_dig_port->port == PORT_A) {
 		if (index)
 			return 0;
-		return DIV_ROUND_CLOSEST(intel_ddi_get_cdclk_freq(dev_priv), 2000);
+		return DIV_ROUND_CLOSEST(dev_priv->display.get_display_clock_speed(dev), 2000);
 	} else if (dev_priv->pch_id == INTEL_PCH_LPT_DEVICE_ID_TYPE) {
 		/* Workaround for non-ULT HSW */
 		switch (index) {
@@ -1353,6 +1351,14 @@ intel_dp_compute_config(struct intel_encoder *encoder,
 	if (is_edp(intel_dp) && intel_connector->panel.fixed_mode) {
 		intel_fixed_panel_mode(intel_connector->panel.fixed_mode,
 				       adjusted_mode);
+
+		if (INTEL_INFO(dev)->gen >= 9) {
+			int ret;
+			ret = skl_update_scaler_users(intel_crtc, pipe_config, NULL, NULL, 0);
+			if (ret)
+				return ret;
+		}
+
 		if (!HAS_PCH_SPLIT(dev))
 			intel_gmch_panel_fitting(intel_crtc, pipe_config,
 						 intel_connector->panel.fitting_mode);
@@ -3782,6 +3788,21 @@ intel_dp_get_dpcd(struct intel_dp *intel_dp)
 			dev_priv->psr.sink_support = true;
 			DRM_DEBUG_KMS("Detected EDP PSR Panel.\n");
 		}
+
+		if (INTEL_INFO(dev)->gen >= 9 &&
+			(intel_dp->psr_dpcd[0] & DP_PSR2_IS_SUPPORTED)) {
+			uint8_t frame_sync_cap;
+
+			dev_priv->psr.sink_support = true;
+			intel_dp_dpcd_read_wake(&intel_dp->aux,
+					DP_SINK_DEVICE_AUX_FRAME_SYNC_CAP,
+					&frame_sync_cap, 1);
+			dev_priv->psr.aux_frame_sync = frame_sync_cap ? true : false;
+			/* PSR2 needs frame sync as well */
+			dev_priv->psr.psr2_support = dev_priv->psr.aux_frame_sync;
+			DRM_DEBUG_KMS("PSR2 %s on sink",
+				dev_priv->psr.psr2_support ? "supported" : "not supported");
+		}
 	}
 
 	/* Training Pattern 3 support, both source and sink */
@@ -5573,6 +5594,8 @@ intel_dp_init_connector(struct intel_digital_port *intel_dig_port,
 		u32 temp = I915_READ(PEG_BAND_GAP_DATA);
 		I915_WRITE(PEG_BAND_GAP_DATA, (temp & ~0xf) | 0xd);
 	}
+
+	i915_debugfs_connector_add(connector);
 
 	return true;
 }
