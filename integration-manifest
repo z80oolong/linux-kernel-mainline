@@ -1,0 +1,20 @@
+origin/drm-intel-fixes 39a8804455fb23f09157341d3ba7db6d7ae6ee76
+	Linux 4.0
+drm-upstream/drm-fixes f4274e23fb16721449d973ed607505f5dbdcd2df
+	Merge tag 'drm-intel-fixes-2015-04-08' of git://anongit.freedesktop.org/drm-intel into drm-fixes
+origin/drm-intel-next-fixes 08d9bc920d465bbbbd762cac9383249c19bf69a2
+	drm/i915: Allocate connector state together with the connectors
+origin/drm-intel-next-queued 30154650b8b58cd2633475d5a730b44baa140d98
+	drm/i915: Remove obj->pin_mappable
+drm-upstream/drm-next 1d8ac08d498d579aae36221a80b4b724b2f52f39
+	Merge tag 'v4.0-rc7' into drm-next
+origin/topic/atomic-core 9469244d869623e8b54d9f3d4d00737e377af273
+	drm/atomic: Fix potential use of state after free
+sound-upstream/for-next f2aa111041ce36b94e651d882458dea502e76721
+	ALSA: hda/realtek - Enable the ALC292 dock fixup on the Thinkpad T450
+origin/topic/drm-misc 9a436ee6c3f311f2ae604d775d7de06a49f8c9a0
+	drm: make crtc/encoder/connector/plane helper_private a const pointer
+origin/topic/drm-fixes 39a8804455fb23f09157341d3ba7db6d7ae6ee76
+	Linux 4.0
+origin/topic/bxt-stage1 1c046bc1db49e5a42e5c4167ac42cee4c1725a37
+	drm/i915/bxt: Support BXT in SSEU device status dump
