@@ -1,0 +1,20 @@
+origin/drm-intel-fixes 39a8804455fb23f09157341d3ba7db6d7ae6ee76
+	Linux 4.0
+drm-upstream/drm-fixes f4274e23fb16721449d973ed607505f5dbdcd2df
+	Merge tag 'drm-intel-fixes-2015-04-08' of git://anongit.freedesktop.org/drm-intel into drm-fixes
+origin/drm-intel-next-fixes 37ef01ab5d24d1d520dc79f6a98099d451c2a901
+	drm/i915: Dont enable CS_PARSER_ERROR interrupts at all
+origin/drm-intel-next-queued c7240c3bc5d6610b42dbb10fda71bbbf1dad5515
+	drm/i915: PSR VLV: Add single frame update.
+drm-upstream/drm-next 1d2add28edd268a8290801ccf46b37f6d5239cdb
+	Merge tag 'imx-drm-next-2015-03-31' of git://git.pengutronix.de/git/pza/linux into drm-next
+origin/topic/atomic-core 9469244d869623e8b54d9f3d4d00737e377af273
+	drm/atomic: Fix potential use of state after free
+sound-upstream/for-next d6eb9e3ec78c98324097bab8eea266c3bb0d0ac7
+	ALSA: hda - set GET bit when adding a vendor verb to the codec regmap
+origin/topic/drm-misc 2b1193d5287004edfbf89407149a3159656f47f1
+	drm: fix trivial typo mistake
+origin/topic/drm-fixes 39a8804455fb23f09157341d3ba7db6d7ae6ee76
+	Linux 4.0
+origin/topic/bxt-stage1 1c046bc1db49e5a42e5c4167ac42cee4c1725a37
+	drm/i915/bxt: Support BXT in SSEU device status dump
