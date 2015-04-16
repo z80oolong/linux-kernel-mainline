@@ -1,0 +1,20 @@
+origin/drm-intel-fixes 39a8804455fb23f09157341d3ba7db6d7ae6ee76
+	Linux 4.0
+drm-upstream/drm-fixes f4274e23fb16721449d973ed607505f5dbdcd2df
+	Merge tag 'drm-intel-fixes-2015-04-08' of git://anongit.freedesktop.org/drm-intel into drm-fixes
+origin/drm-intel-next-fixes 37ef01ab5d24d1d520dc79f6a98099d451c2a901
+	drm/i915: Dont enable CS_PARSER_ERROR interrupts at all
+origin/drm-intel-next-queued 097f8261ddda4b1896dd335dec95dedeecfeaa1b
+	drm/i915/audio: remove duplicated include from intel_audio.c
+drm-upstream/drm-next aa219a0dd7774e2454a5687e7d38e947a131cdee
+	Merge tag 'drm-intel-next-fixes-2015-04-15' of git://anongit.freedesktop.org/drm-intel into drm-next
+origin/topic/atomic-core 9469244d869623e8b54d9f3d4d00737e377af273
+	drm/atomic: Fix potential use of state after free
+sound-upstream/for-next d6eb9e3ec78c98324097bab8eea266c3bb0d0ac7
+	ALSA: hda - set GET bit when adding a vendor verb to the codec regmap
+origin/topic/drm-misc 747552b947e1013276851b6a19a9867a94ff1c4f
+	drm: Fix the 'native defer' message in drm_dp_i2c_do_msg()
+origin/topic/drm-fixes 39a8804455fb23f09157341d3ba7db6d7ae6ee76
+	Linux 4.0
+origin/topic/bxt-stage1 1c046bc1db49e5a42e5c4167ac42cee4c1725a37
+	drm/i915/bxt: Support BXT in SSEU device status dump
