@@ -660,6 +660,9 @@ int drm_crtc_init_with_planes(struct drm_device *dev, struct drm_crtc *crtc,
 	struct drm_mode_config *config = &dev->mode_config;
 	int ret;
 
+	WARN_ON(primary && primary->type != DRM_PLANE_TYPE_PRIMARY);
+	WARN_ON(cursor && cursor->type != DRM_PLANE_TYPE_CURSOR);
+
 	crtc->dev = dev;
 	crtc->funcs = funcs;
 	crtc->invert_dimensions = false;
@@ -1284,6 +1287,29 @@ unsigned int drm_plane_index(struct drm_plane *plane)
 	BUG();
 }
 EXPORT_SYMBOL(drm_plane_index);
+
+/**
+ * drm_plane_from_index - find the registered plane at an index
+ * @dev: DRM device
+ * @idx: index of registered plane to find for
+ *
+ * Given a plane index, return the registered plane from DRM device's
+ * list of planes with matching index.
+ */
+struct drm_plane *
+drm_plane_from_index(struct drm_device *dev, int idx)
+{
+	struct drm_plane *plane;
+	unsigned int i = 0;
+
+	list_for_each_entry(plane, &dev->mode_config.plane_list, head) {
+		if (i == idx)
+			return plane;
+		i++;
+	}
+	return NULL;
+}
+EXPORT_SYMBOL(drm_plane_from_index);
 
 /**
  * drm_plane_force_disable - Forcibly disable a plane
@@ -5598,6 +5624,7 @@ struct drm_tile_group *drm_mode_get_tile_group(struct drm_device *dev,
 	mutex_unlock(&dev->mode_config.idr_mutex);
 	return NULL;
 }
+EXPORT_SYMBOL(drm_mode_get_tile_group);
 
 /**
  * drm_mode_create_tile_group - create a tile group from a displayid description
@@ -5636,3 +5663,4 @@ struct drm_tile_group *drm_mode_create_tile_group(struct drm_device *dev,
 	mutex_unlock(&dev->mode_config.idr_mutex);
 	return tg;
 }
+EXPORT_SYMBOL(drm_mode_create_tile_group);

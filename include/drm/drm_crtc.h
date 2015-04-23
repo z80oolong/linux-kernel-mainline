@@ -53,7 +53,6 @@ struct fence;
 #define DRM_MODE_OBJECT_FB 0xfbfbfbfb
 #define DRM_MODE_OBJECT_BLOB 0xbbbbbbbb
 #define DRM_MODE_OBJECT_PLANE 0xeeeeeeee
-#define DRM_MODE_OBJECT_BRIDGE 0xbdbdbdbd
 #define DRM_MODE_OBJECT_ANY 0
 
 struct drm_mode_object {
@@ -915,7 +914,7 @@ struct drm_bridge {
 };
 
 /**
- * struct struct drm_atomic_state - the global state object for atomic updates
+ * struct drm_atomic_state - the global state object for atomic updates
  * @dev: parent DRM device
  * @allow_modeset: allow full modeset
  * @legacy_cursor_update: hint to enforce legacy cursor ioctl semantics
@@ -1264,6 +1263,7 @@ extern int drm_plane_init(struct drm_device *dev,
 			  bool is_primary);
 extern void drm_plane_cleanup(struct drm_plane *plane);
 extern unsigned int drm_plane_index(struct drm_plane *plane);
+extern struct drm_plane * drm_plane_from_index(struct drm_device *dev, int idx);
 extern void drm_plane_force_disable(struct drm_plane *plane);
 extern int drm_plane_check_pixel_format(const struct drm_plane *plane,
 					u32 format);
