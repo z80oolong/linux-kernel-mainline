@@ -1,0 +1,20 @@
+origin/drm-intel-fixes a04f90a33fab74789b91fc9739999012f11022d1
+	drm/i915/chv: Implement WaDisableShadowRegForCpd
+drm-upstream/drm-fixes 59fd7e4b0b0769638b5162e56c28bbb027a118d3
+	Merge tag 'drm-intel-next-fixes-2015-04-25' of git://anongit.freedesktop.org/drm-intel into drm-fixes
+origin/drm-intel-next-fixes b5f1c97f944482e98e6e39208af356630389d1ea
+	drm/i915: vlv: fix save/restore of GFX_MAX_REQ_COUNT reg
+origin/drm-intel-next-queued 699ab787155d6760b396bfd66c403a6b6a3dfdc0
+	drm/i915: Silence compiler warning in dvo
+drm-upstream/drm-next cec32a47010647e8b0603726ebb75b990a4057a4
+	media-bus: Fixup RGB444_1X12, RGB565_1X16, and YUV8_1X24 media bus format
+origin/topic/atomic-core 9469244d869623e8b54d9f3d4d00737e377af273
+	drm/atomic: Fix potential use of state after free
+sound-upstream/for-next 49c4a4c5244d2c1a25ec1e01dbb4fba3813d237d
+	Merge branch 'for-linus' into for-next
+origin/topic/drm-misc a3c6d686443e912e33cebdf9cd80f94df3ded7b0
+	DRM: Don't re-poll connector for disconnect
+origin/topic/drm-fixes 39a8804455fb23f09157341d3ba7db6d7ae6ee76
+	Linux 4.0
+origin/topic/bxt-stage1 1c046bc1db49e5a42e5c4167ac42cee4c1725a37
+	drm/i915/bxt: Support BXT in SSEU device status dump
