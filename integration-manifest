@@ -1,0 +1,20 @@
+origin/drm-intel-fixes 736a69ca8c99a595a523d2fece66491b89168da6
+	drm/i915: Drop PIPE-A quirk for 945GSE HP Mini
+drm-upstream/drm-fixes 3790e395b8f4b66fe4e53629f304505c110a2be7
+	drm/tegra: Don't use vblank_disable_immediate on incapable driver.
+origin/drm-intel-next-fixes b5f1c97f944482e98e6e39208af356630389d1ea
+	drm/i915: vlv: fix save/restore of GFX_MAX_REQ_COUNT reg
+origin/drm-intel-next-queued c457879f0d8f664050e46092afde46fec58c9e67
+	drm/i915: Remove unused variable from i915_gem_mmap_gtt
+drm-upstream/drm-next e1dee1973c74a0408b108d88c57a15be8a2d6d84
+	Merge tag 'drm-intel-next-2015-04-23-fixed' of git://anongit.freedesktop.org/drm-intel into drm-next
+origin/topic/atomic-core 9469244d869623e8b54d9f3d4d00737e377af273
+	drm/atomic: Fix potential use of state after free
+sound-upstream/for-next 3b90f4072730c619809a0cbf597bf1b3bf76a2ec
+	ALSA: hda/tegra - Fix oops
+origin/topic/drm-misc 9a6e1b1181b419ce3f6e9fd4606d3dce5b595120
+	drm/prime: Allow internal imports without import_sg_table
+origin/topic/drm-fixes 39a8804455fb23f09157341d3ba7db6d7ae6ee76
+	Linux 4.0
+origin/topic/bxt-stage1 1c046bc1db49e5a42e5c4167ac42cee4c1725a37
+	drm/i915/bxt: Support BXT in SSEU device status dump
