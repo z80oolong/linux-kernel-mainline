@@ -1,0 +1,20 @@
+origin/drm-intel-fixes 364aece01a2dd748fc36a1e8bf52ef639b0857bd
+	drm/i915: Avoid GPU hang when coming out of s3 or s4
+drm-upstream/drm-fixes 332545b3016cbff066c17037d32ec8aae8e4cfb5
+	Merge tag 'drm-intel-fixes-2015-05-08' of git://anongit.freedesktop.org/drm-intel into drm-fixes
+origin/drm-intel-next-fixes b5f1c97f944482e98e6e39208af356630389d1ea
+	drm/i915: vlv: fix save/restore of GFX_MAX_REQ_COUNT reg
+origin/drm-intel-next-queued 65de797816eadb227c45b0127d7ff92410fa3814
+	drm/edid: fix a debug message
+drm-upstream/drm-next e1dee1973c74a0408b108d88c57a15be8a2d6d84
+	Merge tag 'drm-intel-next-2015-04-23-fixed' of git://anongit.freedesktop.org/drm-intel into drm-next
+origin/topic/atomic-core 9469244d869623e8b54d9f3d4d00737e377af273
+	drm/atomic: Fix potential use of state after free
+sound-upstream/for-next 1a5bc8d95020c5a81264146c94102baec6ab0861
+	ALSA: hda/realtek - Support headset mode for ALC298
+origin/topic/drm-misc 1b26a5e1932beb34c4213934d8faf02217fc40e4
+	drm/atomic: add drm_atomic_get_existing_*_state helpers
+origin/topic/drm-fixes 39a8804455fb23f09157341d3ba7db6d7ae6ee76
+	Linux 4.0
+origin/topic/bxt-stage1 1c046bc1db49e5a42e5c4167ac42cee4c1725a37
+	drm/i915/bxt: Support BXT in SSEU device status dump
