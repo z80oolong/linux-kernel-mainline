@@ -1,0 +1,20 @@
+origin/drm-intel-fixes 364aece01a2dd748fc36a1e8bf52ef639b0857bd
+	drm/i915: Avoid GPU hang when coming out of s3 or s4
+drm-upstream/drm-fixes 472313245645661c3bc710f874e660c493d313e1
+	Merge tag 'drm-intel-fixes-2015-05-13' of git://anongit.freedesktop.org/drm-intel into drm-fixes
+origin/drm-intel-next-fixes b5f1c97f944482e98e6e39208af356630389d1ea
+	drm/i915: vlv: fix save/restore of GFX_MAX_REQ_COUNT reg
+origin/drm-intel-next-queued e8f12dd0270fd6f4a9cf6396c0c8287fe3d6b302
+	drm/i915: add HAS_DP_MST feature test macro
+drm-upstream/drm-next dde10068e1a4798fa44e68a5d08b5dfe3602cbba
+	Merge branch 'drm-armada-devel' of git://ftp.arm.linux.org.uk/~rmk/linux-arm into drm-next
+origin/topic/atomic-core 9469244d869623e8b54d9f3d4d00737e377af273
+	drm/atomic: Fix potential use of state after free
+sound-upstream/for-next ac397c80de895094cbb72264c279fade45447cbf
+	ALSA: ppc: keywest: drop using attach adapter
+origin/topic/drm-misc 036ef5733ba433760a3512bb5f7a155946e2df05
+	drm/atomic: Allow drivers to subclass drm_atomic_state, v3
+origin/topic/drm-fixes 39a8804455fb23f09157341d3ba7db6d7ae6ee76
+	Linux 4.0
+origin/topic/bxt-stage1 1c046bc1db49e5a42e5c4167ac42cee4c1725a37
+	drm/i915/bxt: Support BXT in SSEU device status dump
