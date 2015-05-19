@@ -1,0 +1,20 @@
+origin/drm-intel-fixes 54da691deb123c045259ebf4f5c67381244f58f1
+	drm/i915: fix screen flickering
+drm-upstream/drm-fixes 64d237e66d562348f04a9c04a45455c1f3201ced
+	Merge branch 'msm-fixes-4.1' of git://people.freedesktop.org/~robclark/linux into drm-fixes
+origin/drm-intel-next-fixes b5f1c97f944482e98e6e39208af356630389d1ea
+	drm/i915: vlv: fix save/restore of GFX_MAX_REQ_COUNT reg
+origin/drm-intel-next-queued 75a27165ed8c7f92defdb8830635f266342aedce
+	drm/i915: Tighten the exposure ARGB/ABGR 8888 formats
+drm-upstream/drm-next d0093404f808e23a480dbb4e05c083f1cfeddfd9
+	Merge tag 'drm-intel-next-2015-05-08' of git://anongit.freedesktop.org/drm-intel into drm-next
+origin/topic/atomic-core 9469244d869623e8b54d9f3d4d00737e377af273
+	drm/atomic: Fix potential use of state after free
+sound-upstream/for-next 4214c5349c20005b7a83916801394eb7270896b2
+	ALSA: hda - Fix NULL dereference from CA0132 DSP loader
+origin/topic/drm-misc 12008083be6d19c384d1d5f702bcd5889df917a3
+	drm/atomic: add all affected planes in drm_atomic_helper_check_modeset
+origin/topic/drm-fixes 39a8804455fb23f09157341d3ba7db6d7ae6ee76
+	Linux 4.0
+origin/topic/bxt-stage1 1c046bc1db49e5a42e5c4167ac42cee4c1725a37
+	drm/i915/bxt: Support BXT in SSEU device status dump
