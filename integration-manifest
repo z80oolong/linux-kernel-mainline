@@ -1,0 +1,20 @@
+origin/drm-intel-fixes 54da691deb123c045259ebf4f5c67381244f58f1
+	drm/i915: fix screen flickering
+drm-upstream/drm-fixes f7c125a198325b0b7ec6ba1ce53713765dc9d240
+	Merge branch 'exynos-drm-fixes' of git://git.kernel.org/pub/scm/linux/kernel/git/daeinki/drm-exynos into drm-fixes
+origin/drm-intel-next-fixes b5f1c97f944482e98e6e39208af356630389d1ea
+	drm/i915: vlv: fix save/restore of GFX_MAX_REQ_COUNT reg
+origin/drm-intel-next-queued 16e44e3e93c429b44a1441049ce89208fd3e0d28
+	drm/i915: Kill the dev variable in intel_suspend_complete()
+drm-upstream/drm-next bdcddf95e82b1c4e370fc1196b1f4f50f775dab4
+	Backmerge v4.1-rc4 into into drm-next
+origin/topic/atomic-core 9469244d869623e8b54d9f3d4d00737e377af273
+	drm/atomic: Fix potential use of state after free
+sound-upstream/for-next 98d8fc6c5d3652e91c61d78941e0fa6f94771d67
+	ALSA: hda - Move hda_i915.c from sound/pci/hda to sound/hda
+origin/topic/drm-misc 12008083be6d19c384d1d5f702bcd5889df917a3
+	drm/atomic: add all affected planes in drm_atomic_helper_check_modeset
+origin/topic/drm-fixes 39a8804455fb23f09157341d3ba7db6d7ae6ee76
+	Linux 4.0
+origin/topic/bxt-stage1 1c046bc1db49e5a42e5c4167ac42cee4c1725a37
+	drm/i915/bxt: Support BXT in SSEU device status dump
