@@ -1,0 +1,20 @@
+origin/drm-intel-fixes 54da691deb123c045259ebf4f5c67381244f58f1
+	drm/i915: fix screen flickering
+drm-upstream/drm-fixes a8106b147f9b90ff84c458ec1f6d3b3a9d27a5f1
+	Merge branch 'drm-fixes-4.1' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+origin/drm-intel-next-fixes b5f1c97f944482e98e6e39208af356630389d1ea
+	drm/i915: vlv: fix save/restore of GFX_MAX_REQ_COUNT reg
+origin/drm-intel-next-queued d0bc54f2f012d8c8c3b4315f51f408ff3d938031
+	drm/i915: Introduce DRM_I915_THROTTLE_JIFFIES
+drm-upstream/drm-next bdcddf95e82b1c4e370fc1196b1f4f50f775dab4
+	Backmerge v4.1-rc4 into into drm-next
+origin/topic/atomic-core 9469244d869623e8b54d9f3d4d00737e377af273
+	drm/atomic: Fix potential use of state after free
+sound-upstream/for-next 6ab97f25ad1c3883f0dc20d2d5b7dae30acade74
+	ALSA: jack: Remove MODULE_*() macros
+origin/topic/drm-misc e2f5d2ea479b9b2619965d43db70939589afe43a
+	drm/mode: Add user blob-creation ioctl
+origin/topic/drm-fixes 2e7f43c41c042d6fed4d67aceeaae32d8f102e98
+	drm/plane-helper: Adapt cursor hack to transitional helpers
+origin/topic/bxt-stage1 1c046bc1db49e5a42e5c4167ac42cee4c1725a37
+	drm/i915/bxt: Support BXT in SSEU device status dump
