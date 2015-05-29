@@ -1,0 +1,20 @@
+origin/drm-intel-fixes b45aa85338865bf479cda4586989fef28d580051
+	drm/i915: Don't skip request retirement if the active list is empty
+drm-upstream/drm-fixes 1fe7142063517dfb17bfd3ada394e1dd7ee44ba7
+	Merge branch 'linux-4.1' of git://anongit.freedesktop.org/git/nouveau/linux-2.6 into drm-fixes
+origin/drm-intel-next-fixes 501fd70fcaebc911b6b96a7b331e6960e5af67e7
+	drm/i915: limit PPGTT size to 2GB in 32-bit platforms
+origin/drm-intel-next-queued a2ee48d60eed9cfb6447a4233370aee4ea88108b
+	drm/i915: abstract hpd irq storm detection
+drm-upstream/drm-next 95872b49ce14169a1ce0dfaac62e284cbdc6eea8
+	Merge branch 'drm-tda998x-devel' of git://ftp.arm.linux.org.uk/~rmk/linux-arm into drm-next
+origin/topic/atomic-core 9469244d869623e8b54d9f3d4d00737e377af273
+	drm/atomic: Fix potential use of state after free
+sound-upstream/for-next 0cbf324e90ef0d03b79eade46123479849f6b02b
+	sound/oss: use schedule_timeout_interruptible()
+origin/topic/drm-misc 0f5c41dbe96a7e9b233bec8a69e6125b122c440e
+	Documentation/drm: Update rotation property
+origin/topic/drm-fixes 2e7f43c41c042d6fed4d67aceeaae32d8f102e98
+	drm/plane-helper: Adapt cursor hack to transitional helpers
+origin/topic/bxt-stage1 1c046bc1db49e5a42e5c4167ac42cee4c1725a37
+	drm/i915/bxt: Support BXT in SSEU device status dump
