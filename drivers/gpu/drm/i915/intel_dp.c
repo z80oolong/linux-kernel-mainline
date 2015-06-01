@@ -4919,12 +4919,6 @@ static const struct drm_encoder_funcs intel_dp_enc_funcs = {
 	.destroy = intel_dp_encoder_destroy,
 };
 
-void
-intel_dp_hot_plug(struct intel_encoder *intel_encoder)
-{
-	return;
-}
-
 enum irqreturn
 intel_dp_hpd_pulse(struct intel_digital_port *intel_dig_port, bool long_hpd)
 {
@@ -5936,10 +5930,9 @@ intel_dp_init(struct drm_device *dev, int output_reg, enum port port)
 		intel_encoder->crtc_mask = (1 << 0) | (1 << 1) | (1 << 2);
 	}
 	intel_encoder->cloneable = 0;
-	intel_encoder->hot_plug = intel_dp_hot_plug;
 
 	intel_dig_port->hpd_pulse = intel_dp_hpd_pulse;
-	dev_priv->hpd_irq_port[port] = intel_dig_port;
+	dev_priv->hotplug.irq_port[port] = intel_dig_port;
 
 	if (!intel_dp_init_connector(intel_dig_port, intel_connector)) {
 		drm_encoder_cleanup(encoder);
@@ -5955,7 +5948,7 @@ void intel_dp_mst_suspend(struct drm_device *dev)
 
 	/* disable MST */
 	for (i = 0; i < I915_MAX_PORTS; i++) {
-		struct intel_digital_port *intel_dig_port = dev_priv->hpd_irq_port[i];
+		struct intel_digital_port *intel_dig_port = dev_priv->hotplug.irq_port[i];
 		if (!intel_dig_port)
 			continue;
 
@@ -5974,7 +5967,7 @@ void intel_dp_mst_resume(struct drm_device *dev)
 	int i;
 
 	for (i = 0; i < I915_MAX_PORTS; i++) {
-		struct intel_digital_port *intel_dig_port = dev_priv->hpd_irq_port[i];
+		struct intel_digital_port *intel_dig_port = dev_priv->hotplug.irq_port[i];
 		if (!intel_dig_port)
 			continue;
 		if (intel_dig_port->base.type == INTEL_OUTPUT_DISPLAYPORT) {
