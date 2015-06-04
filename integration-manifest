@@ -1,0 +1,20 @@
+origin/drm-intel-fixes 4f47c99a9be7e9b90a7f3c2c4599ea6b7c2ec49d
+	drm/i915: Move WaBarrierPerformanceFixDisable:skl to skl code from chv code
+drm-upstream/drm-fixes 1fe7142063517dfb17bfd3ada394e1dd7ee44ba7
+	Merge branch 'linux-4.1' of git://anongit.freedesktop.org/git/nouveau/linux-2.6 into drm-fixes
+origin/drm-intel-next-fixes 501fd70fcaebc911b6b96a7b331e6960e5af67e7
+	drm/i915: limit PPGTT size to 2GB in 32-bit platforms
+origin/drm-intel-next-queued 2da44aae8144b8380f4e45688e570d4c7a4ef2c4
+	drm/i915: BDW clock change support
+drm-upstream/drm-next 63e1456122761745082d325329ccce749a426059
+	Merge branch 'virtio-gpu-drm-next' of git://git.kraxel.org/linux into drm-next
+origin/topic/atomic-core 9469244d869623e8b54d9f3d4d00737e377af273
+	drm/atomic: Fix potential use of state after free
+sound-upstream/for-next 83b0b677f90a2056a53f1930881bbee2741b048f
+	ALSA: hda - add new HDA registers
+origin/topic/drm-misc 0f5c41dbe96a7e9b233bec8a69e6125b122c440e
+	Documentation/drm: Update rotation property
+origin/topic/drm-fixes 2e7f43c41c042d6fed4d67aceeaae32d8f102e98
+	drm/plane-helper: Adapt cursor hack to transitional helpers
+origin/topic/bxt-stage1 1c046bc1db49e5a42e5c4167ac42cee4c1725a37
+	drm/i915/bxt: Support BXT in SSEU device status dump
