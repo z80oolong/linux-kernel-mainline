@@ -5409,7 +5409,7 @@ static void broxton_set_cdclk(struct drm_device *dev, int frequency)
 		return;
 	}
 
-	dev_priv->cdclk_freq = frequency;
+	intel_update_cdclk(dev);
 }
 
 void broxton_init_cdclk(struct drm_device *dev)
