@@ -545,15 +545,15 @@ void intel_hpd_cancel_work(struct drm_i915_private *dev_priv)
 {
 	spin_lock_irq(&dev_priv->irq_lock);
 
-	dev_priv->long_hpd_port_mask = 0;
-	dev_priv->short_hpd_port_mask = 0;
-	dev_priv->hpd_event_bits = 0;
+	dev_priv->hotplug.long_port_mask = 0;
+	dev_priv->hotplug.short_port_mask = 0;
+	dev_priv->hotplug.event_bits = 0;
 
 	spin_unlock_irq(&dev_priv->irq_lock);
 
-	cancel_work_sync(&dev_priv->dig_port_work);
-	cancel_work_sync(&dev_priv->hotplug_work);
-	cancel_delayed_work_sync(&dev_priv->hotplug_reenable_work);
+	cancel_work_sync(&dev_priv->hotplug.dig_port_work);
+	cancel_work_sync(&dev_priv->hotplug.hotplug_work);
+	cancel_delayed_work_sync(&dev_priv->hotplug.reenable_work);
 }
 
 void i915_firmware_load_error_print(const char *fw_path, int err)
@@ -601,7 +601,6 @@ static int bxt_resume_prepare(struct drm_i915_private *dev_priv);
 static int i915_drm_suspend(struct drm_device *dev)
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
-	struct drm_crtc *crtc;
 	pci_power_t opregion_target_state;
 	int error;
 
@@ -632,9 +631,11 @@ static int i915_drm_suspend(struct drm_device *dev)
 	 * for _thaw. Also, power gate the CRTC power wells.
 	 */
 	drm_modeset_lock_all(dev);
-	for_each_crtc(dev, crtc)
-		intel_crtc_control(crtc, false);
+	intel_display_suspend(dev);
 	drm_modeset_unlock_all(dev);
+
+	/* suspending displays will unsets init power */
+	intel_display_set_init_power(dev_priv, true);
 
 	intel_dp_mst_suspend(dev);
 
