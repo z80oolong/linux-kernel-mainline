@@ -130,11 +130,6 @@ struct intel_fbdev {
 
 struct intel_encoder {
 	struct drm_encoder base;
-	/*
-	 * The new crtc this encoder will be driven from. Only differs from
-	 * base->crtc while a modeset is in progress.
-	 */
-	struct intel_crtc *new_crtc;
 
 	enum intel_output_type type;
 	unsigned int cloneable;
@@ -195,12 +190,6 @@ struct intel_connector {
 	 */
 	struct intel_encoder *encoder;
 
-	/*
-	 * The new encoder this connector will be driven. Only differs from
-	 * encoder while a modeset is in progress.
-	 */
-	struct intel_encoder *new_encoder;
-
 	/* Reads out the current hw, returning true if the connector is enabled
 	 * and active (i.e. dpms ON state). */
 	bool (*get_hw_state)(struct intel_connector *);
@@ -240,6 +229,13 @@ typedef struct dpll {
 	int	m;
 	int	p;
 } intel_clock_t;
+
+struct intel_atomic_state {
+	struct drm_atomic_state base;
+
+	bool dpll_set;
+	struct intel_shared_dpll_config shared_dpll[I915_NUM_PLLS];
+};
 
 struct intel_plane_state {
 	struct drm_plane_state base;
@@ -447,6 +443,9 @@ struct intel_crtc_state {
 	int pbn;
 
 	struct intel_crtc_scaler_state scaler_state;
+
+	/* w/a for waiting 2 vblanks during crtc enable */
+	enum pipe hsw_workaround_pipe;
 };
 
 struct intel_pipe_wm {
@@ -528,7 +527,6 @@ struct intel_crtc {
 
 	struct intel_initial_plane_config plane_config;
 	struct intel_crtc_state *config;
-	bool new_enabled;
 
 	/* reset counter value when the last flip was submitted */
 	unsigned int reset_counter;
@@ -628,6 +626,7 @@ struct cxsr_latency {
 	unsigned long cursor_hpll_disable;
 };
 
+#define to_intel_atomic_state(x) container_of(x, struct intel_atomic_state, base)
 #define to_intel_crtc(x) container_of(x, struct intel_crtc, base)
 #define to_intel_crtc_state(x) container_of(x, struct intel_crtc_state, base)
 #define to_intel_connector(x) container_of(x, struct intel_connector, base)
@@ -993,8 +992,8 @@ int intel_pch_rawclk(struct drm_device *dev);
 void intel_mark_busy(struct drm_device *dev);
 void intel_mark_idle(struct drm_device *dev);
 void intel_crtc_restore_mode(struct drm_crtc *crtc);
-void intel_crtc_control(struct drm_crtc *crtc, bool enable);
-void intel_crtc_reset(struct intel_crtc *crtc);
+int intel_display_suspend(struct drm_device *dev);
+int intel_crtc_control(struct drm_crtc *crtc, bool enable);
 void intel_crtc_update_dpms(struct drm_crtc *crtc);
 void intel_encoder_destroy(struct drm_encoder *encoder);
 int intel_connector_init(struct intel_connector *);
@@ -1083,7 +1082,6 @@ void assert_shared_dpll(struct drm_i915_private *dev_priv,
 #define assert_shared_dpll_disabled(d, p) assert_shared_dpll(d, p, false)
 struct intel_shared_dpll *intel_get_shared_dpll(struct intel_crtc *crtc,
 						struct intel_crtc_state *state);
-void intel_put_shared_dpll(struct intel_crtc *crtc);
 
 void vlv_force_pll_on(struct drm_device *dev, enum pipe pipe,
 		      const struct dpll *dpll);
@@ -1375,7 +1373,7 @@ void ilk_wm_get_hw_state(struct drm_device *dev);
 void skl_wm_get_hw_state(struct drm_device *dev);
 void skl_ddb_get_hw_state(struct drm_i915_private *dev_priv,
 			  struct skl_ddb_allocation *ddb /* out */);
-
+uint32_t ilk_pipe_pixel_rate(const struct intel_crtc_state *pipe_config);
 
 /* intel_sdvo.c */
 bool intel_sdvo_init(struct drm_device *dev, uint32_t sdvo_reg, bool is_sdvob);
@@ -1406,6 +1404,13 @@ int intel_connector_atomic_get_property(struct drm_connector *connector,
 struct drm_crtc_state *intel_crtc_duplicate_state(struct drm_crtc *crtc);
 void intel_crtc_destroy_state(struct drm_crtc *crtc,
 			       struct drm_crtc_state *state);
+struct drm_atomic_state *intel_atomic_state_alloc(struct drm_device *dev);
+void intel_atomic_state_clear(struct drm_atomic_state *);
+struct intel_shared_dpll_config *
+intel_atomic_get_shared_dpll_state(struct drm_atomic_state *s);
+void intel_atomic_duplicate_dpll_state(struct drm_i915_private *,
+				       struct intel_shared_dpll_config *);
+
 static inline struct intel_crtc_state *
 intel_atomic_get_crtc_state(struct drm_atomic_state *state,
 			    struct intel_crtc *crtc)
