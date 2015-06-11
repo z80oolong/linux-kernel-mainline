@@ -217,6 +217,39 @@ enum hpd_pin {
 	HPD_NUM_PINS
 };
 
+#define for_each_hpd_pin(__pin) \
+	for ((__pin) = (HPD_NONE + 1); (__pin) < HPD_NUM_PINS; (__pin)++)
+
+struct i915_hotplug {
+	struct work_struct hotplug_work;
+
+	struct {
+		unsigned long last_jiffies;
+		int count;
+		enum {
+			HPD_ENABLED = 0,
+			HPD_DISABLED = 1,
+			HPD_MARK_DISABLED = 2
+		} state;
+	} stats[HPD_NUM_PINS];
+	u32 event_bits;
+	struct delayed_work reenable_work;
+
+	struct intel_digital_port *irq_port[I915_MAX_PORTS];
+	u32 long_port_mask;
+	u32 short_port_mask;
+	struct work_struct dig_port_work;
+
+	/*
+	 * if we get a HPD irq from DP and a HPD irq from non-DP
+	 * the non-DP HPD could block the workqueue on a mode config
+	 * mutex getting, that userspace may have taken. However
+	 * userspace is waiting on the DP workqueue to run which is
+	 * blocked behind the non-DP one.
+	 */
+	struct workqueue_struct *dp_wq;
+};
+
 #define I915_GEM_GPU_DOMAINS \
 	(I915_GEM_DOMAIN_RENDER | \
 	 I915_GEM_DOMAIN_SAMPLER | \
@@ -343,7 +376,6 @@ struct intel_shared_dpll_config {
 
 struct intel_shared_dpll {
 	struct intel_shared_dpll_config config;
-	struct intel_shared_dpll_config *new_config;
 
 	int active; /* count of number of active CRTCs (i.e. DPMS on) */
 	bool on; /* is the PLL actually active? Disabled during modeset */
@@ -598,7 +630,6 @@ struct drm_i915_display_funcs {
 				  struct intel_crtc_state *crtc_state);
 	void (*crtc_enable)(struct drm_crtc *crtc);
 	void (*crtc_disable)(struct drm_crtc *crtc);
-	void (*off)(struct drm_crtc *crtc);
 	void (*audio_codec_enable)(struct drm_connector *connector,
 				   struct intel_encoder *encoder,
 				   struct drm_display_mode *mode);
@@ -805,11 +836,15 @@ struct i915_ctx_hang_stats {
 
 /* This must match up with the value previously used for execbuf2.rsvd1. */
 #define DEFAULT_CONTEXT_HANDLE 0
+
+#define CONTEXT_NO_ZEROMAP (1<<0)
 /**
  * struct intel_context - as the name implies, represents a context.
  * @ref: reference count.
  * @user_handle: userspace tracking identity for this context.
  * @remap_slice: l3 row remapping information.
+ * @flags: context specific flags:
+ *         CONTEXT_NO_ZEROMAP: do not allow mapping things to page 0.
  * @file_priv: filp associated with this context (NULL for global default
  *	       context).
  * @hang_stats: information about the role of this context in possible GPU
@@ -826,6 +861,7 @@ struct intel_context {
 	struct kref ref;
 	int user_handle;
 	uint8_t remap_slice;
+	int flags;
 	struct drm_i915_file_private *file_priv;
 	struct i915_ctx_hang_stats hang_stats;
 	struct i915_hw_ppgtt *ppgtt;
@@ -1679,19 +1715,7 @@ struct drm_i915_private {
 	u32 pm_rps_events;
 	u32 pipestat_irq_mask[I915_MAX_PIPES];
 
-	struct work_struct hotplug_work;
-	struct {
-		unsigned long hpd_last_jiffies;
-		int hpd_cnt;
-		enum {
-			HPD_ENABLED = 0,
-			HPD_DISABLED = 1,
-			HPD_MARK_DISABLED = 2
-		} hpd_mark;
-	} hpd_stats[HPD_NUM_PINS];
-	u32 hpd_event_bits;
-	struct delayed_work hotplug_reenable_work;
-
+	struct i915_hotplug hotplug;
 	struct i915_fbc fbc;
 	struct i915_drrs drrs;
 	struct intel_opregion opregion;
@@ -1717,7 +1741,7 @@ struct drm_i915_private {
 
 	unsigned int fsb_freq, mem_freq, is_ddr3;
 	unsigned int skl_boot_cdclk;
-	unsigned int cdclk_freq;
+	unsigned int cdclk_freq, max_cdclk_freq;
 	unsigned int hpll_freq;
 
 	/**
@@ -1856,20 +1880,6 @@ struct drm_i915_private {
 	} wm;
 
 	struct i915_runtime_pm pm;
-
-	struct intel_digital_port *hpd_irq_port[I915_MAX_PORTS];
-	u32 long_hpd_port_mask;
-	u32 short_hpd_port_mask;
-	struct work_struct dig_port_work;
-
-	/*
-	 * if we get a HPD irq from DP and a HPD irq from non-DP
-	 * the non-DP HPD could block the workqueue on a mode config
-	 * mutex getting, that userspace may have taken. However
-	 * userspace is waiting on the DP workqueue to run which is
-	 * blocked behind the non-DP one.
-	 */
-	struct workqueue_struct *dp_wq;
 
 	/* Abstract the submission mechanism (legacy ringbuffer or execlists) away */
 	struct {
@@ -2387,6 +2397,9 @@ struct drm_i915_cmd_table {
 				 ((INTEL_DEVID(dev) & 0xf) == 0x6 ||	\
 				 (INTEL_DEVID(dev) & 0xf) == 0xb ||	\
 				 (INTEL_DEVID(dev) & 0xf) == 0xe))
+/* ULX machines are also considered ULT. */
+#define IS_BDW_ULX(dev)		(IS_BROADWELL(dev) && \
+				 (INTEL_DEVID(dev) & 0xf) == 0xe)
 #define IS_BDW_GT3(dev)		(IS_BROADWELL(dev) && \
 				 (INTEL_DEVID(dev) & 0x00F0) == 0x0020)
 #define IS_HSW_ULT(dev)		(IS_HASWELL(dev) && \
