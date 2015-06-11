@@ -1,0 +1,20 @@
+origin/drm-intel-fixes 2a8b35837c51d9ddb862ce22ad5bfd6898e250e5
+	drm/i915: Always reset vma->ggtt_view.pages cache on unbinding
+drm-upstream/drm-fixes 38d8571dad8a759bdc051dbff747b189c90658cf
+	drm: fix writing to /sys/class/drm/*/status
+origin/drm-intel-next-fixes bf546f8158e2df2656494a475e6235634121c87c
+	drm/i915/skl: Fix DMC API version in firmware file name
+origin/drm-intel-next-queued 04475e27f9d2afbc40c17284f928982857d38419
+	drm/i915: Add runtime PM's usage_count in i915_runtime_pm_status
+drm-upstream/drm-next 3f05eb4e3fc56df678f83925ced78bc97166b052
+	drm/virtio: remove some dead code
+origin/topic/atomic-core 9469244d869623e8b54d9f3d4d00737e377af273
+	drm/atomic: Fix potential use of state after free
+sound-upstream/for-next 8721fa692bc218df3f0ad30740baedf176a41f56
+	Doc: sound:oss: Fix typo in sound/oss
+origin/topic/drm-misc 0f5c41dbe96a7e9b233bec8a69e6125b122c440e
+	Documentation/drm: Update rotation property
+origin/topic/drm-fixes 2e7f43c41c042d6fed4d67aceeaae32d8f102e98
+	drm/plane-helper: Adapt cursor hack to transitional helpers
+origin/topic/bxt-stage1 1c046bc1db49e5a42e5c4167ac42cee4c1725a37
+	drm/i915/bxt: Support BXT in SSEU device status dump
