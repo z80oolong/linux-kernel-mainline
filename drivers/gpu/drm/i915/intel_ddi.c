@@ -181,15 +181,15 @@ struct bxt_ddi_buf_trans {
  */
 static const struct bxt_ddi_buf_trans bxt_ddi_translations_dp[] = {
 					/* Idx	NT mV diff	db  */
-	{ 52,  0,    0, 128, true  },	/* 0:	400		0   */
-	{ 78,  0,    0, 85,  false },	/* 1:	400		3.5 */
-	{ 104, 0,    0, 64,  false },	/* 2:	400		6   */
-	{ 154, 0,    0, 43,  false },	/* 3:	400		9.5 */
-	{ 77,  0,    0, 128, false },	/* 4:	600		0   */
-	{ 116, 0,    0, 85,  false },	/* 5:	600		3.5 */
-	{ 154, 0,    0, 64,  false },	/* 6:	600		6   */
-	{ 102, 0,    0, 128, false },	/* 7:	800		0   */
-	{ 154, 0,    0, 85,  false },	/* 8:	800		3.5 */
+	{ 52,  0x9A, 0, 128, true  },	/* 0:	400		0   */
+	{ 78,  0x9A, 0, 85,  false },	/* 1:	400		3.5 */
+	{ 104, 0x9A, 0, 64,  false },	/* 2:	400		6   */
+	{ 154, 0x9A, 0, 43,  false },	/* 3:	400		9.5 */
+	{ 77,  0x9A, 0, 128, false },	/* 4:	600		0   */
+	{ 116, 0x9A, 0, 85,  false },	/* 5:	600		3.5 */
+	{ 154, 0x9A, 0, 64,  false },	/* 6:	600		6   */
+	{ 102, 0x9A, 0, 128, false },	/* 7:	800		0   */
+	{ 154, 0x9A, 0, 85,  false },	/* 8:	800		3.5 */
 	{ 154, 0x9A, 1, 128, false },  /* 9:	1200		0   */
 };
 
@@ -198,15 +198,15 @@ static const struct bxt_ddi_buf_trans bxt_ddi_translations_dp[] = {
  */
 static const struct bxt_ddi_buf_trans bxt_ddi_translations_hdmi[] = {
 					/* Idx	NT mV diff	db  */
-	{ 52,  0,    0, 128, false },	/* 0:	400		0   */
-	{ 52,  0,    0, 85,  false },	/* 1:	400		3.5 */
-	{ 52,  0,    0, 64,  false },	/* 2:	400		6   */
-	{ 42,  0,    0, 43,  false },	/* 3:	400		9.5 */
-	{ 77,  0,    0, 128, false },	/* 4:	600		0   */
-	{ 77,  0,    0, 85,  false },	/* 5:	600		3.5 */
-	{ 77,  0,    0, 64,  false },	/* 6:	600		6   */
-	{ 102, 0,    0, 128, false },	/* 7:	800		0   */
-	{ 102, 0,    0, 85,  false },	/* 8:	800		3.5 */
+	{ 52,  0x9A, 0, 128, false },	/* 0:	400		0   */
+	{ 52,  0x9A, 0, 85,  false },	/* 1:	400		3.5 */
+	{ 52,  0x9A, 0, 64,  false },	/* 2:	400		6   */
+	{ 42,  0x9A, 0, 43,  false },	/* 3:	400		9.5 */
+	{ 77,  0x9A, 0, 128, false },	/* 4:	600		0   */
+	{ 77,  0x9A, 0, 85,  false },	/* 5:	600		3.5 */
+	{ 77,  0x9A, 0, 64,  false },	/* 6:	600		6   */
+	{ 102, 0x9A, 0, 128, false },	/* 7:	800		0   */
+	{ 102, 0x9A, 0, 85,  false },	/* 8:	800		3.5 */
 	{ 154, 0x9A, 1, 128, true },	/* 9:	1200		0   */
 };
 
@@ -625,11 +625,11 @@ intel_ddi_get_crtc_new_encoder(struct intel_crtc_state *crtc_state)
 	(void) (&__a == &__b);			\
 	__a > __b ? (__a - __b) : (__b - __a); })
 
-struct wrpll_rnp {
+struct hsw_wrpll_rnp {
 	unsigned p, n2, r2;
 };
 
-static unsigned wrpll_get_budget_for_freq(int clock)
+static unsigned hsw_wrpll_get_budget_for_freq(int clock)
 {
 	unsigned budget;
 
@@ -703,9 +703,9 @@ static unsigned wrpll_get_budget_for_freq(int clock)
 	return budget;
 }
 
-static void wrpll_update_rnp(uint64_t freq2k, unsigned budget,
-			     unsigned r2, unsigned n2, unsigned p,
-			     struct wrpll_rnp *best)
+static void hsw_wrpll_update_rnp(uint64_t freq2k, unsigned budget,
+				 unsigned r2, unsigned n2, unsigned p,
+				 struct hsw_wrpll_rnp *best)
 {
 	uint64_t a, b, c, d, diff, diff_best;
 
@@ -762,8 +762,7 @@ static void wrpll_update_rnp(uint64_t freq2k, unsigned budget,
 	/* Otherwise a < c && b >= d, do nothing */
 }
 
-static int intel_ddi_calc_wrpll_link(struct drm_i915_private *dev_priv,
-				     int reg)
+static int hsw_ddi_calc_wrpll_link(struct drm_i915_private *dev_priv, int reg)
 {
 	int refclk = LC_FREQ;
 	int n, p, r;
@@ -929,10 +928,10 @@ static void hsw_ddi_clock_get(struct intel_encoder *encoder,
 		link_clock = 270000;
 		break;
 	case PORT_CLK_SEL_WRPLL1:
-		link_clock = intel_ddi_calc_wrpll_link(dev_priv, WRPLL_CTL1);
+		link_clock = hsw_ddi_calc_wrpll_link(dev_priv, WRPLL_CTL1);
 		break;
 	case PORT_CLK_SEL_WRPLL2:
-		link_clock = intel_ddi_calc_wrpll_link(dev_priv, WRPLL_CTL2);
+		link_clock = hsw_ddi_calc_wrpll_link(dev_priv, WRPLL_CTL2);
 		break;
 	case PORT_CLK_SEL_SPLL:
 		pll = I915_READ(SPLL_CTL) & SPLL_PLL_FREQ_MASK;
@@ -1011,12 +1010,12 @@ hsw_ddi_calculate_wrpll(int clock /* in Hz */,
 {
 	uint64_t freq2k;
 	unsigned p, n2, r2;
-	struct wrpll_rnp best = { 0, 0, 0 };
+	struct hsw_wrpll_rnp best = { 0, 0, 0 };
 	unsigned budget;
 
 	freq2k = clock / 100;
 
-	budget = wrpll_get_budget_for_freq(clock);
+	budget = hsw_wrpll_get_budget_for_freq(clock);
 
 	/* Special case handling for 540 pixel clock: bypass WR PLL entirely
 	 * and directly pass the LC PLL to it. */
@@ -1060,8 +1059,8 @@ hsw_ddi_calculate_wrpll(int clock /* in Hz */,
 		     n2++) {
 
 			for (p = P_MIN; p <= P_MAX; p += P_INC)
-				wrpll_update_rnp(freq2k, budget,
-						 r2, n2, p, &best);
+				hsw_wrpll_update_rnp(freq2k, budget,
+						     r2, n2, p, &best);
 		}
 	}
 
@@ -1115,7 +1114,74 @@ struct skl_wrpll_params {
 	uint32_t        central_freq;
 };
 
-static void
+static void skl_wrpll_params_populate(struct skl_wrpll_params *params,
+				      uint64_t afe_clock,
+				      uint64_t central_freq,
+				      uint32_t p0, uint32_t p1, uint32_t p2)
+{
+	uint64_t dco_freq;
+
+	switch (central_freq) {
+	case 9600000000ULL:
+		params->central_freq = 0;
+		break;
+	case 9000000000ULL:
+		params->central_freq = 1;
+		break;
+	case 8400000000ULL:
+		params->central_freq = 3;
+	}
+
+	switch (p0) {
+	case 1:
+		params->pdiv = 0;
+		break;
+	case 2:
+		params->pdiv = 1;
+		break;
+	case 3:
+		params->pdiv = 2;
+		break;
+	case 7:
+		params->pdiv = 4;
+		break;
+	default:
+		WARN(1, "Incorrect PDiv\n");
+	}
+
+	switch (p2) {
+	case 5:
+		params->kdiv = 0;
+		break;
+	case 2:
+		params->kdiv = 1;
+		break;
+	case 3:
+		params->kdiv = 2;
+		break;
+	case 1:
+		params->kdiv = 3;
+		break;
+	default:
+		WARN(1, "Incorrect KDiv\n");
+	}
+
+	params->qdiv_ratio = p1;
+	params->qdiv_mode = (params->qdiv_ratio == 1) ? 0 : 1;
+
+	dco_freq = p0 * p1 * p2 * afe_clock;
+
+	/*
+	 * Intermediate values are in Hz.
+	 * Divide by MHz to match bsepc
+	 */
+	params->dco_integer = div_u64(dco_freq, 24 * MHz(1));
+	params->dco_fraction =
+		div_u64((div_u64(dco_freq, 24) -
+			 params->dco_integer * MHz(1)) * 0x8000, MHz(1));
+}
+
+static bool
 skl_ddi_calculate_wrpll(int clock /* in Hz */,
 			struct skl_wrpll_params *wrpll_params)
 {
@@ -1134,7 +1200,6 @@ skl_ddi_calculate_wrpll(int clock /* in Hz */,
 	uint32_t dco_central_freq_deviation[3];
 	uint32_t i, P1, k, dco_count;
 	bool retry_with_odd = false;
-	uint64_t dco_freq;
 
 	/* Determine P0, P1 or P2 */
 	for (dco_count = 0; dco_count < 3; dco_count++) {
@@ -1171,7 +1236,7 @@ found:
 		if (found) {
 			dco_central_freq_deviation[dco_count] =
 				div64_u64(10000 *
-					  abs_diff((candidate_p * afe_clock),
+					  abs_diff(candidate_p * afe_clock,
 						   dco_central_freq[dco_count]),
 					  dco_central_freq[dco_count]);
 
@@ -1184,79 +1249,27 @@ found:
 		}
 
 		if (min_dco_index > 2 && dco_count == 2) {
+                        /* oh well, we tried... */
+                        if (retry_with_odd)
+                                break;
+
 			retry_with_odd = true;
 			dco_count = 0;
 		}
 	}
 
-	if (min_dco_index > 2) {
-		WARN(1, "No valid values found for the given pixel clock\n");
-	} else {
-		wrpll_params->central_freq = dco_central_freq[min_dco_index];
+	if (WARN(min_dco_index > 2,
+		 "No valid parameters found for pixel clock: %dHz\n", clock))
+		return false;
 
-		switch (dco_central_freq[min_dco_index]) {
-		case 9600000000ULL:
-			wrpll_params->central_freq = 0;
-			break;
-		case 9000000000ULL:
-			wrpll_params->central_freq = 1;
-			break;
-		case 8400000000ULL:
-			wrpll_params->central_freq = 3;
-		}
+	skl_wrpll_params_populate(wrpll_params,
+				  afe_clock,
+				  dco_central_freq[min_dco_index],
+				  candidate_p0[min_dco_index],
+				  candidate_p1[min_dco_index],
+				  candidate_p2[min_dco_index]);
 
-		switch (candidate_p0[min_dco_index]) {
-		case 1:
-			wrpll_params->pdiv = 0;
-			break;
-		case 2:
-			wrpll_params->pdiv = 1;
-			break;
-		case 3:
-			wrpll_params->pdiv = 2;
-			break;
-		case 7:
-			wrpll_params->pdiv = 4;
-			break;
-		default:
-			WARN(1, "Incorrect PDiv\n");
-		}
-
-		switch (candidate_p2[min_dco_index]) {
-		case 5:
-			wrpll_params->kdiv = 0;
-			break;
-		case 2:
-			wrpll_params->kdiv = 1;
-			break;
-		case 3:
-			wrpll_params->kdiv = 2;
-			break;
-		case 1:
-			wrpll_params->kdiv = 3;
-			break;
-		default:
-			WARN(1, "Incorrect KDiv\n");
-		}
-
-		wrpll_params->qdiv_ratio = candidate_p1[min_dco_index];
-		wrpll_params->qdiv_mode =
-			(wrpll_params->qdiv_ratio == 1) ? 0 : 1;
-
-		dco_freq = candidate_p0[min_dco_index] *
-			candidate_p1[min_dco_index] *
-			candidate_p2[min_dco_index] * afe_clock;
-
-		/*
-		 * Intermediate values are in Hz.
-		 * Divide by MHz to match bsepc
-		 */
-		wrpll_params->dco_integer = div_u64(dco_freq, (24 * MHz(1)));
-		wrpll_params->dco_fraction =
-			div_u64(((div_u64(dco_freq, 24) -
-				  wrpll_params->dco_integer * MHz(1)) * 0x8000), MHz(1));
-
-	}
+	return true;
 }
 
 
@@ -1281,7 +1294,8 @@ skl_ddi_pll_select(struct intel_crtc *intel_crtc,
 
 		ctrl1 |= DPLL_CTRL1_HDMI_MODE(0);
 
-		skl_ddi_calculate_wrpll(clock * 1000, &wrpll_params);
+		if (!skl_ddi_calculate_wrpll(clock * 1000, &wrpll_params))
+			return false;
 
 		cfgcr1 = DPLL_CFGCR1_FREQ_ENABLE |
 			 DPLL_CFGCR1_DCO_FRACTION(wrpll_params.dco_fraction) |
@@ -1334,6 +1348,7 @@ skl_ddi_pll_select(struct intel_crtc *intel_crtc,
 
 /* bxt clock parameters */
 struct bxt_clk_div {
+	int clock;
 	uint32_t p1;
 	uint32_t p2;
 	uint32_t m2_int;
@@ -1343,14 +1358,14 @@ struct bxt_clk_div {
 };
 
 /* pre-calculated values for DP linkrates */
-static struct bxt_clk_div bxt_dp_clk_val[7] = {
-	/* 162 */ {4, 2, 32, 1677722, 1, 1},
-	/* 270 */ {4, 1, 27,       0, 0, 1},
-	/* 540 */ {2, 1, 27,       0, 0, 1},
-	/* 216 */ {3, 2, 32, 1677722, 1, 1},
-	/* 243 */ {4, 1, 24, 1258291, 1, 1},
-	/* 324 */ {4, 1, 32, 1677722, 1, 1},
-	/* 432 */ {3, 1, 32, 1677722, 1, 1}
+static const struct bxt_clk_div bxt_dp_clk_val[] = {
+	{162000, 4, 2, 32, 1677722, 1, 1},
+	{270000, 4, 1, 27,       0, 0, 1},
+	{540000, 2, 1, 27,       0, 0, 1},
+	{216000, 3, 2, 32, 1677722, 1, 1},
+	{243000, 4, 1, 24, 1258291, 1, 1},
+	{324000, 4, 1, 32, 1677722, 1, 1},
+	{432000, 3, 1, 32, 1677722, 1, 1}
 };
 
 static bool
@@ -1390,22 +1405,14 @@ bxt_ddi_pll_select(struct intel_crtc *intel_crtc,
 		vco = best_clock.vco;
 	} else if (intel_encoder->type == INTEL_OUTPUT_DISPLAYPORT ||
 			intel_encoder->type == INTEL_OUTPUT_EDP) {
-		struct drm_encoder *encoder = &intel_encoder->base;
-		struct intel_dp *intel_dp = enc_to_intel_dp(encoder);
+		int i;
 
-		switch (intel_dp->link_bw) {
-		case DP_LINK_BW_1_62:
-			clk_div = bxt_dp_clk_val[0];
-			break;
-		case DP_LINK_BW_2_7:
-			clk_div = bxt_dp_clk_val[1];
-			break;
-		case DP_LINK_BW_5_4:
-			clk_div = bxt_dp_clk_val[2];
-			break;
-		default:
-			clk_div = bxt_dp_clk_val[0];
-			DRM_ERROR("Unknown link rate\n");
+		clk_div = bxt_dp_clk_val[0];
+		for (i = 0; i < ARRAY_SIZE(bxt_dp_clk_val); ++i) {
+			if (bxt_dp_clk_val[i].clock == clock) {
+				clk_div = bxt_dp_clk_val[i];
+				break;
+			}
 		}
 		vco = clock * 10 / 2 * clk_div.p1 * clk_div.p2;
 	}
@@ -2510,7 +2517,6 @@ void intel_ddi_pll_init(struct drm_device *dev)
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
 	uint32_t val = I915_READ(LCPLL_CTL);
-	int cdclk_freq;
 
 	if (IS_SKYLAKE(dev))
 		skl_shared_dplls_init(dev_priv);
@@ -2519,10 +2525,10 @@ void intel_ddi_pll_init(struct drm_device *dev)
 	else
 		hsw_shared_dplls_init(dev_priv);
 
-	cdclk_freq = dev_priv->display.get_display_clock_speed(dev);
-	DRM_DEBUG_KMS("CDCLK running at %dKHz\n", cdclk_freq);
-
 	if (IS_SKYLAKE(dev)) {
+		int cdclk_freq;
+
+		cdclk_freq = dev_priv->display.get_display_clock_speed(dev);
 		dev_priv->skl_boot_cdclk = cdclk_freq;
 		if (!(I915_READ(LCPLL1_CTL) & LCPLL_PLL_ENABLE))
 			DRM_ERROR("LCPLL1 is disabled\n");
@@ -2616,20 +2622,6 @@ void intel_ddi_fdi_disable(struct drm_crtc *crtc)
 	val = I915_READ(_FDI_RXA_CTL);
 	val &= ~FDI_RX_PLL_ENABLE;
 	I915_WRITE(_FDI_RXA_CTL, val);
-}
-
-static void intel_ddi_hot_plug(struct intel_encoder *intel_encoder)
-{
-	struct intel_digital_port *intel_dig_port = enc_to_dig_port(&intel_encoder->base);
-	int type = intel_dig_port->base.type;
-
-	if (type != INTEL_OUTPUT_DISPLAYPORT &&
-	    type != INTEL_OUTPUT_EDP &&
-	    type != INTEL_OUTPUT_UNKNOWN) {
-		return;
-	}
-
-	intel_dp_hot_plug(intel_encoder);
 }
 
 void intel_ddi_get_config(struct intel_encoder *encoder,
@@ -2825,14 +2817,13 @@ void intel_ddi_init(struct drm_device *dev, enum port port)
 	intel_encoder->type = INTEL_OUTPUT_UNKNOWN;
 	intel_encoder->crtc_mask = (1 << 0) | (1 << 1) | (1 << 2);
 	intel_encoder->cloneable = 0;
-	intel_encoder->hot_plug = intel_ddi_hot_plug;
 
 	if (init_dp) {
 		if (!intel_ddi_init_dp_connector(intel_dig_port))
 			goto err;
 
 		intel_dig_port->hpd_pulse = intel_dp_hpd_pulse;
-		dev_priv->hpd_irq_port[port] = intel_dig_port;
+		dev_priv->hotplug.irq_port[port] = intel_dig_port;
 	}
 
 	/* In theory we don't need the encoder->type check, but leave it just in
