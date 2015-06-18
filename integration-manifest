@@ -1,0 +1,18 @@
+origin/drm-intel-fixes 245ec9d85696c3e539b23e210f248698b478379c
+	Revert "drm/i915: Don't skip request retirement if the active list is empty"
+drm-upstream/drm-fixes 25161084b1c1b0c29948f6f77266a35f302196b7
+	drm/mgag200: Reject non-character-cell-aligned mode widths
+origin/drm-intel-next-fixes 4ed9fb371ccdfe465bd3bbb69e4cad5243e6c4e2
+	drm/i915: Don't set enabled value of all CRTCs when restoring the mode
+origin/drm-intel-next-queued 7fd2d26921d1dd70732d8765d714ec3a023a3ca9
+	drm/i915: Reset request handling for gen8+
+drm-upstream/drm-next 0dc499aff57f5e787214d5085dd1c391e0f93710
+	Merge branch 'virtio-gpu-drm-next' of git://git.kraxel.org/linux into drm-next
+sound-upstream/for-next d39513f85163e202a44283856286fabb6902f2e0
+	ALSA: HDAC: move SND_HDA_PREALLOC_SIZE to core
+origin/topic/drm-misc 30616e4fe017634400009b8bcf57504e28d4cc68
+	drm: Avoid the double clflush on the last cache line in drm_clflush_virt_range()
+origin/topic/drm-fixes 2e7f43c41c042d6fed4d67aceeaae32d8f102e98
+	drm/plane-helper: Adapt cursor hack to transitional helpers
+origin/topic/atomic-conversion c0165304e10f317672e20f2b40770d74c51e287f
+	drm/i915: Only enable cursor if it can be enabled.
