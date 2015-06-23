@@ -58,7 +58,7 @@ struct i915_params i915 __read_mostly = {
 
 module_param_named(modeset, i915.modeset, int, 0400);
 MODULE_PARM_DESC(modeset,
-	"Use kernel modesetting [KMS] (0=DRM_I915_KMS from .config, "
+	"Use kernel modesetting [KMS] (0=disable, "
 	"1=on, -1=force vga console preference [default])");
 
 module_param_named(panel_ignore_lid, i915.panel_ignore_lid, int, 0600);
@@ -104,7 +104,7 @@ MODULE_PARM_DESC(vbt_sdvo_panel_type,
 	"Override/Ignore selection of SDVO panel mode in the VBT "
 	"(-2=ignore, -1=auto [default], index in VBT BIOS table)");
 
-module_param_named(reset, i915.reset, bool, 0600);
+module_param_named_unsafe(reset, i915.reset, bool, 0600);
 MODULE_PARM_DESC(reset, "Attempt GPU resets (default: true)");
 
 module_param_named(enable_hangcheck, i915.enable_hangcheck, bool, 0644);
