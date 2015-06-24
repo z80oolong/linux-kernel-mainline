@@ -369,7 +369,7 @@ static void gen8_initialize_pt(struct i915_address_space *vm,
 	kunmap_atomic(pt_vaddr);
 }
 
-static struct i915_page_table *alloc_pt_single(struct drm_device *dev)
+static struct i915_page_table *alloc_pt(struct drm_device *dev)
 {
 	struct i915_page_table *pt;
 	const size_t count = INTEL_INFO(dev)->gen >= 8 ?
@@ -417,7 +417,7 @@ static void unmap_and_free_pd(struct i915_page_directory *pd,
 	}
 }
 
-static struct i915_page_directory *alloc_pd_single(struct drm_device *dev)
+static struct i915_page_directory *alloc_pd(struct drm_device *dev)
 {
 	struct i915_page_directory *pd;
 	int ret = -ENOMEM;
@@ -452,15 +452,16 @@ free_pd:
 }
 
 /* Broadwell Page Directory Pointer Descriptors */
-static int gen8_write_pdp(struct intel_engine_cs *ring,
+static int gen8_write_pdp(struct drm_i915_gem_request *req,
 			  unsigned entry,
 			  dma_addr_t addr)
 {
+	struct intel_engine_cs *ring = req->ring;
 	int ret;
 
 	BUG_ON(entry >= 4);
 
-	ret = intel_ring_begin(ring, 6);
+	ret = intel_ring_begin(req, 6);
 	if (ret)
 		return ret;
 
@@ -476,7 +477,7 @@ static int gen8_write_pdp(struct intel_engine_cs *ring,
 }
 
 static int gen8_mm_switch(struct i915_hw_ppgtt *ppgtt,
-			  struct intel_engine_cs *ring)
+			  struct drm_i915_gem_request *req)
 {
 	int i, ret;
 
@@ -485,7 +486,7 @@ static int gen8_mm_switch(struct i915_hw_ppgtt *ppgtt,
 		dma_addr_t pd_daddr = pd ? pd->daddr : ppgtt->scratch_pd->daddr;
 		/* The page directory might be NULL, but we need to clear out
 		 * whatever the previous context might have used. */
-		ret = gen8_write_pdp(ring, i, pd_daddr);
+		ret = gen8_write_pdp(req, i, pd_daddr);
 		if (ret)
 			return ret;
 	}
@@ -702,7 +703,7 @@ static int gen8_ppgtt_alloc_pagetabs(struct i915_hw_ppgtt *ppgtt,
 			continue;
 		}
 
-		pt = alloc_pt_single(dev);
+		pt = alloc_pt(dev);
 		if (IS_ERR(pt))
 			goto unwind_out;
 
@@ -763,7 +764,7 @@ static int gen8_ppgtt_alloc_page_directories(struct i915_hw_ppgtt *ppgtt,
 		if (pd)
 			continue;
 
-		pd = alloc_pd_single(dev);
+		pd = alloc_pd(dev);
 		if (IS_ERR(pd))
 			goto unwind_out;
 
@@ -939,11 +940,11 @@ err_out:
  */
 static int gen8_ppgtt_init(struct i915_hw_ppgtt *ppgtt)
 {
-	ppgtt->scratch_pt = alloc_pt_single(ppgtt->base.dev);
+	ppgtt->scratch_pt = alloc_pt(ppgtt->base.dev);
 	if (IS_ERR(ppgtt->scratch_pt))
 		return PTR_ERR(ppgtt->scratch_pt);
 
-	ppgtt->scratch_pd = alloc_pd_single(ppgtt->base.dev);
+	ppgtt->scratch_pd = alloc_pd(ppgtt->base.dev);
 	if (IS_ERR(ppgtt->scratch_pd))
 		return PTR_ERR(ppgtt->scratch_pd);
 
@@ -1062,16 +1063,17 @@ static uint32_t get_pd_offset(struct i915_hw_ppgtt *ppgtt)
 }
 
 static int hsw_mm_switch(struct i915_hw_ppgtt *ppgtt,
-			 struct intel_engine_cs *ring)
+			 struct drm_i915_gem_request *req)
 {
+	struct intel_engine_cs *ring = req->ring;
 	int ret;
 
 	/* NB: TLBs must be flushed and invalidated before a switch */
-	ret = ring->flush(ring, I915_GEM_GPU_DOMAINS, I915_GEM_GPU_DOMAINS);
+	ret = ring->flush(req, I915_GEM_GPU_DOMAINS, I915_GEM_GPU_DOMAINS);
 	if (ret)
 		return ret;
 
-	ret = intel_ring_begin(ring, 6);
+	ret = intel_ring_begin(req, 6);
 	if (ret)
 		return ret;
 
@@ -1087,8 +1089,9 @@ static int hsw_mm_switch(struct i915_hw_ppgtt *ppgtt,
 }
 
 static int vgpu_mm_switch(struct i915_hw_ppgtt *ppgtt,
-			  struct intel_engine_cs *ring)
+			  struct drm_i915_gem_request *req)
 {
+	struct intel_engine_cs *ring = req->ring;
 	struct drm_i915_private *dev_priv = to_i915(ppgtt->base.dev);
 
 	I915_WRITE(RING_PP_DIR_DCLV(ring), PP_DIR_DCLV_2G);
@@ -1097,16 +1100,17 @@ static int vgpu_mm_switch(struct i915_hw_ppgtt *ppgtt,
 }
 
 static int gen7_mm_switch(struct i915_hw_ppgtt *ppgtt,
-			  struct intel_engine_cs *ring)
+			  struct drm_i915_gem_request *req)
 {
+	struct intel_engine_cs *ring = req->ring;
 	int ret;
 
 	/* NB: TLBs must be flushed and invalidated before a switch */
-	ret = ring->flush(ring, I915_GEM_GPU_DOMAINS, I915_GEM_GPU_DOMAINS);
+	ret = ring->flush(req, I915_GEM_GPU_DOMAINS, I915_GEM_GPU_DOMAINS);
 	if (ret)
 		return ret;
 
-	ret = intel_ring_begin(ring, 6);
+	ret = intel_ring_begin(req, 6);
 	if (ret)
 		return ret;
 
@@ -1120,7 +1124,7 @@ static int gen7_mm_switch(struct i915_hw_ppgtt *ppgtt,
 
 	/* XXX: RCS is the only one to auto invalidate the TLBs? */
 	if (ring->id != RCS) {
-		ret = ring->flush(ring, I915_GEM_GPU_DOMAINS, I915_GEM_GPU_DOMAINS);
+		ret = ring->flush(req, I915_GEM_GPU_DOMAINS, I915_GEM_GPU_DOMAINS);
 		if (ret)
 			return ret;
 	}
@@ -1129,8 +1133,9 @@ static int gen7_mm_switch(struct i915_hw_ppgtt *ppgtt,
 }
 
 static int gen6_mm_switch(struct i915_hw_ppgtt *ppgtt,
-			  struct intel_engine_cs *ring)
+			  struct drm_i915_gem_request *req)
 {
+	struct intel_engine_cs *ring = req->ring;
 	struct drm_device *dev = ppgtt->base.dev;
 	struct drm_i915_private *dev_priv = dev->dev_private;
 
@@ -1327,7 +1332,7 @@ static int gen6_alloc_va_range(struct i915_address_space *vm,
 		/* We've already allocated a page table */
 		WARN_ON(!bitmap_empty(pt->used_ptes, GEN6_PTES));
 
-		pt = alloc_pt_single(dev);
+		pt = alloc_pt(dev);
 		if (IS_ERR(pt)) {
 			ret = PTR_ERR(pt);
 			goto unwind_out;
@@ -1413,7 +1418,7 @@ static int gen6_ppgtt_allocate_page_directories(struct i915_hw_ppgtt *ppgtt)
 	 * size. We allocate at the top of the GTT to avoid fragmentation.
 	 */
 	BUG_ON(!drm_mm_initialized(&dev_priv->gtt.base.mm));
-	ppgtt->scratch_pt = alloc_pt_single(ppgtt->base.dev);
+	ppgtt->scratch_pt = alloc_pt(ppgtt->base.dev);
 	if (IS_ERR(ppgtt->scratch_pt))
 		return PTR_ERR(ppgtt->scratch_pt);
 
@@ -1550,11 +1555,6 @@ int i915_ppgtt_init(struct drm_device *dev, struct i915_hw_ppgtt *ppgtt)
 
 int i915_ppgtt_init_hw(struct drm_device *dev)
 {
-	struct drm_i915_private *dev_priv = dev->dev_private;
-	struct intel_engine_cs *ring;
-	struct i915_hw_ppgtt *ppgtt = dev_priv->mm.aliasing_ppgtt;
-	int i, ret = 0;
-
 	/* In the case of execlists, PPGTT is enabled by the context descriptor
 	 * and the PDPs are contained within the context itself.  We don't
 	 * need to do anything here. */
@@ -1573,16 +1573,23 @@ int i915_ppgtt_init_hw(struct drm_device *dev)
 	else
 		MISSING_CASE(INTEL_INFO(dev)->gen);
 
-	if (ppgtt) {
-		for_each_ring(ring, dev_priv, i) {
-			ret = ppgtt->switch_mm(ppgtt, ring);
-			if (ret != 0)
-				return ret;
-		}
-	}
-
-	return ret;
+	return 0;
 }
+
+int i915_ppgtt_init_ring(struct drm_i915_gem_request *req)
+{
+	struct drm_i915_private *dev_priv = req->ring->dev->dev_private;
+	struct i915_hw_ppgtt *ppgtt = dev_priv->mm.aliasing_ppgtt;
+
+	if (i915.enable_execlists)
+		return 0;
+
+	if (!ppgtt)
+		return 0;
+
+	return ppgtt->switch_mm(ppgtt, req);
+}
+
 struct i915_hw_ppgtt *
 i915_ppgtt_create(struct drm_device *dev, struct drm_i915_file_private *fpriv)
 {
@@ -2143,8 +2150,10 @@ static int setup_scratch_page(struct drm_device *dev)
 #ifdef CONFIG_INTEL_IOMMU
 	dma_addr = pci_map_page(dev->pdev, page, 0, PAGE_SIZE,
 				PCI_DMA_BIDIRECTIONAL);
-	if (pci_dma_mapping_error(dev->pdev, dma_addr))
+	if (pci_dma_mapping_error(dev->pdev, dma_addr)) {
+		__free_page(page);
 		return -EINVAL;
+	}
 #else
 	dma_addr = page_to_phys(page);
 #endif
@@ -2691,30 +2700,17 @@ static struct sg_table *
 intel_rotate_fb_obj_pages(struct i915_ggtt_view *ggtt_view,
 			  struct drm_i915_gem_object *obj)
 {
-	struct drm_device *dev = obj->base.dev;
 	struct intel_rotation_info *rot_info = &ggtt_view->rotation_info;
-	unsigned long size, pages, rot_pages;
+	unsigned int size_pages = rot_info->size >> PAGE_SHIFT;
 	struct sg_page_iter sg_iter;
 	unsigned long i;
 	dma_addr_t *page_addr_list;
 	struct sg_table *st;
-	unsigned int tile_pitch, tile_height;
-	unsigned int width_pages, height_pages;
 	int ret = -ENOMEM;
 
-	pages = obj->base.size / PAGE_SIZE;
-
-	/* Calculate tiling geometry. */
-	tile_height = intel_tile_height(dev, rot_info->pixel_format,
-					rot_info->fb_modifier);
-	tile_pitch = PAGE_SIZE / tile_height;
-	width_pages = DIV_ROUND_UP(rot_info->pitch, tile_pitch);
-	height_pages = DIV_ROUND_UP(rot_info->height, tile_height);
-	rot_pages = width_pages * height_pages;
-	size = rot_pages * PAGE_SIZE;
-
 	/* Allocate a temporary list of source pages for random access. */
-	page_addr_list = drm_malloc_ab(pages, sizeof(dma_addr_t));
+	page_addr_list = drm_malloc_ab(obj->base.size / PAGE_SIZE,
+				       sizeof(dma_addr_t));
 	if (!page_addr_list)
 		return ERR_PTR(ret);
 
@@ -2723,7 +2719,7 @@ intel_rotate_fb_obj_pages(struct i915_ggtt_view *ggtt_view,
 	if (!st)
 		goto err_st_alloc;
 
-	ret = sg_alloc_table(st, rot_pages, GFP_KERNEL);
+	ret = sg_alloc_table(st, size_pages, GFP_KERNEL);
 	if (ret)
 		goto err_sg_alloc;
 
@@ -2735,13 +2731,15 @@ intel_rotate_fb_obj_pages(struct i915_ggtt_view *ggtt_view,
 	}
 
 	/* Rotate the pages. */
-	rotate_pages(page_addr_list, width_pages, height_pages, st);
+	rotate_pages(page_addr_list,
+		     rot_info->width_pages, rot_info->height_pages,
+		     st);
 
 	DRM_DEBUG_KMS(
-		      "Created rotated page mapping for object size %lu (pitch=%u, height=%u, pixel_format=0x%x, %ux%u tiles, %lu pages).\n",
-		      size, rot_info->pitch, rot_info->height,
-		      rot_info->pixel_format, width_pages, height_pages,
-		      rot_pages);
+		      "Created rotated page mapping for object size %zu (pitch=%u, height=%u, pixel_format=0x%x, %ux%u tiles, %u pages).\n",
+		      obj->base.size, rot_info->pitch, rot_info->height,
+		      rot_info->pixel_format, rot_info->width_pages,
+		      rot_info->height_pages, size_pages);
 
 	drm_free_large(page_addr_list);
 
@@ -2753,10 +2751,10 @@ err_st_alloc:
 	drm_free_large(page_addr_list);
 
 	DRM_DEBUG_KMS(
-		      "Failed to create rotated mapping for object size %lu! (%d) (pitch=%u, height=%u, pixel_format=0x%x, %ux%u tiles, %lu pages)\n",
-		      size, ret, rot_info->pitch, rot_info->height,
-		      rot_info->pixel_format, width_pages, height_pages,
-		      rot_pages);
+		      "Failed to create rotated mapping for object size %zu! (%d) (pitch=%u, height=%u, pixel_format=0x%x, %ux%u tiles, %u pages)\n",
+		      obj->base.size, ret, rot_info->pitch, rot_info->height,
+		      rot_info->pixel_format, rot_info->width_pages,
+		      rot_info->height_pages, size_pages);
 	return ERR_PTR(ret);
 }
 
@@ -2901,9 +2899,10 @@ size_t
 i915_ggtt_view_size(struct drm_i915_gem_object *obj,
 		    const struct i915_ggtt_view *view)
 {
-	if (view->type == I915_GGTT_VIEW_NORMAL ||
-	    view->type == I915_GGTT_VIEW_ROTATED) {
+	if (view->type == I915_GGTT_VIEW_NORMAL) {
 		return obj->base.size;
+	} else if (view->type == I915_GGTT_VIEW_ROTATED) {
+		return view->rotation_info.size;
 	} else if (view->type == I915_GGTT_VIEW_PARTIAL) {
 		return view->params.partial.size << PAGE_SHIFT;
 	} else {

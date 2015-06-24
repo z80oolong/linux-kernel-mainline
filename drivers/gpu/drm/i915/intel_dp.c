@@ -91,6 +91,8 @@ static const struct dp_link_dpll chv_dpll[] = {
 		{ .p1 = 2, .p2 = 1, .n = 1, .m1 = 2, .m2 = 0x6c00000 } }
 };
 
+static const int bxt_rates[] = { 162000, 216000, 243000, 270000,
+				  324000, 432000, 540000 };
 static const int skl_rates[] = { 162000, 216000, 270000,
 				  324000, 432000, 540000 };
 static const int chv_rates[] = { 162000, 202500, 210000, 216000,
@@ -565,7 +567,9 @@ static u32 _pp_ctrl_reg(struct intel_dp *intel_dp)
 {
 	struct drm_device *dev = intel_dp_to_dev(intel_dp);
 
-	if (HAS_PCH_SPLIT(dev))
+	if (IS_BROXTON(dev))
+		return BXT_PP_CONTROL(0);
+	else if (HAS_PCH_SPLIT(dev))
 		return PCH_PP_CONTROL;
 	else
 		return VLV_PIPE_PP_CONTROL(vlv_power_sequencer_pipe(intel_dp));
@@ -575,7 +579,9 @@ static u32 _pp_stat_reg(struct intel_dp *intel_dp)
 {
 	struct drm_device *dev = intel_dp_to_dev(intel_dp);
 
-	if (HAS_PCH_SPLIT(dev))
+	if (IS_BROXTON(dev))
+		return BXT_PP_STATUS(0);
+	else if (HAS_PCH_SPLIT(dev))
 		return PCH_PP_STATUS;
 	else
 		return VLV_PIPE_PP_STATUS(vlv_power_sequencer_pipe(intel_dp));
@@ -708,7 +714,8 @@ static uint32_t ilk_get_aux_clock_divider(struct intel_dp *intel_dp, int index)
 		return 0;
 
 	if (intel_dig_port->port == PORT_A) {
-		return DIV_ROUND_UP(dev_priv->display.get_display_clock_speed(dev), 2000);
+		return DIV_ROUND_UP(dev_priv->cdclk_freq, 2000);
+
 	} else {
 		return DIV_ROUND_UP(intel_pch_rawclk(dev), 2);
 	}
@@ -723,7 +730,7 @@ static uint32_t hsw_get_aux_clock_divider(struct intel_dp *intel_dp, int index)
 	if (intel_dig_port->port == PORT_A) {
 		if (index)
 			return 0;
-		return DIV_ROUND_CLOSEST(dev_priv->display.get_display_clock_speed(dev), 2000);
+		return DIV_ROUND_CLOSEST(dev_priv->cdclk_freq, 2000);
 	} else if (dev_priv->pch_id == INTEL_PCH_LPT_DEVICE_ID_TYPE) {
 		/* Workaround for non-ULT HSW */
 		switch (index) {
@@ -1169,7 +1176,10 @@ intel_dp_sink_rates(struct intel_dp *intel_dp, const int **sink_rates)
 static int
 intel_dp_source_rates(struct drm_device *dev, const int **source_rates)
 {
-	if (IS_SKYLAKE(dev)) {
+	if (IS_BROXTON(dev)) {
+		*source_rates = bxt_rates;
+		return ARRAY_SIZE(bxt_rates);
+	} else if (IS_SKYLAKE(dev)) {
 		*source_rates = skl_rates;
 		return ARRAY_SIZE(skl_rates);
 	} else if (IS_CHERRYVIEW(dev)) {
@@ -1371,7 +1381,7 @@ intel_dp_compute_config(struct intel_encoder *encoder,
 
 		if (INTEL_INFO(dev)->gen >= 9) {
 			int ret;
-			ret = skl_update_scaler_users(intel_crtc, pipe_config, NULL, NULL, 0);
+			ret = skl_update_scaler_crtc(pipe_config, 0);
 			if (ret)
 				return ret;
 		}
@@ -1696,8 +1706,10 @@ static  u32 ironlake_get_pp_control(struct intel_dp *intel_dp)
 	lockdep_assert_held(&dev_priv->pps_mutex);
 
 	control = I915_READ(_pp_ctrl_reg(intel_dp));
-	control &= ~PANEL_UNLOCK_MASK;
-	control |= PANEL_UNLOCK_REGS;
+	if (!IS_BROXTON(dev)) {
+		control &= ~PANEL_UNLOCK_MASK;
+		control |= PANEL_UNLOCK_REGS;
+	}
 	return control;
 }
 
@@ -4919,12 +4931,6 @@ static const struct drm_encoder_funcs intel_dp_enc_funcs = {
 	.destroy = intel_dp_encoder_destroy,
 };
 
-void
-intel_dp_hot_plug(struct intel_encoder *intel_encoder)
-{
-	return;
-}
-
 enum irqreturn
 intel_dp_hpd_pulse(struct intel_digital_port *intel_dig_port, bool long_hpd)
 {
@@ -5092,8 +5098,8 @@ intel_dp_init_panel_power_sequencer(struct drm_device *dev,
 	struct drm_i915_private *dev_priv = dev->dev_private;
 	struct edp_power_seq cur, vbt, spec,
 		*final = &intel_dp->pps_delays;
-	u32 pp_on, pp_off, pp_div, pp;
-	int pp_ctrl_reg, pp_on_reg, pp_off_reg, pp_div_reg;
+	u32 pp_on, pp_off, pp_div = 0, pp_ctl = 0;
+	int pp_ctrl_reg, pp_on_reg, pp_off_reg, pp_div_reg = 0;
 
 	lockdep_assert_held(&dev_priv->pps_mutex);
 
@@ -5101,7 +5107,16 @@ intel_dp_init_panel_power_sequencer(struct drm_device *dev,
 	if (final->t11_t12 != 0)
 		return;
 
-	if (HAS_PCH_SPLIT(dev)) {
+	if (IS_BROXTON(dev)) {
+		/*
+		 * TODO: BXT has 2 sets of PPS registers.
+		 * Correct Register for Broxton need to be identified
+		 * using VBT. hardcoding for now
+		 */
+		pp_ctrl_reg = BXT_PP_CONTROL(0);
+		pp_on_reg = BXT_PP_ON_DELAYS(0);
+		pp_off_reg = BXT_PP_OFF_DELAYS(0);
+	} else if (HAS_PCH_SPLIT(dev)) {
 		pp_ctrl_reg = PCH_PP_CONTROL;
 		pp_on_reg = PCH_PP_ON_DELAYS;
 		pp_off_reg = PCH_PP_OFF_DELAYS;
@@ -5117,12 +5132,14 @@ intel_dp_init_panel_power_sequencer(struct drm_device *dev,
 
 	/* Workaround: Need to write PP_CONTROL with the unlock key as
 	 * the very first thing. */
-	pp = ironlake_get_pp_control(intel_dp);
-	I915_WRITE(pp_ctrl_reg, pp);
+	pp_ctl = ironlake_get_pp_control(intel_dp);
 
 	pp_on = I915_READ(pp_on_reg);
 	pp_off = I915_READ(pp_off_reg);
-	pp_div = I915_READ(pp_div_reg);
+	if (!IS_BROXTON(dev)) {
+		I915_WRITE(pp_ctrl_reg, pp_ctl);
+		pp_div = I915_READ(pp_div_reg);
+	}
 
 	/* Pull timing values out of registers */
 	cur.t1_t3 = (pp_on & PANEL_POWER_UP_DELAY_MASK) >>
@@ -5137,8 +5154,17 @@ intel_dp_init_panel_power_sequencer(struct drm_device *dev,
 	cur.t10 = (pp_off & PANEL_POWER_DOWN_DELAY_MASK) >>
 		PANEL_POWER_DOWN_DELAY_SHIFT;
 
-	cur.t11_t12 = ((pp_div & PANEL_POWER_CYCLE_DELAY_MASK) >>
+	if (IS_BROXTON(dev)) {
+		u16 tmp = (pp_ctl & BXT_POWER_CYCLE_DELAY_MASK) >>
+			BXT_POWER_CYCLE_DELAY_SHIFT;
+		if (tmp > 0)
+			cur.t11_t12 = (tmp - 1) * 1000;
+		else
+			cur.t11_t12 = 0;
+	} else {
+		cur.t11_t12 = ((pp_div & PANEL_POWER_CYCLE_DELAY_MASK) >>
 		       PANEL_POWER_CYCLE_DELAY_SHIFT) * 1000;
+	}
 
 	DRM_DEBUG_KMS("cur t1_t3 %d t8 %d t9 %d t10 %d t11_t12 %d\n",
 		      cur.t1_t3, cur.t8, cur.t9, cur.t10, cur.t11_t12);
@@ -5195,13 +5221,23 @@ intel_dp_init_panel_power_sequencer_registers(struct drm_device *dev,
 	struct drm_i915_private *dev_priv = dev->dev_private;
 	u32 pp_on, pp_off, pp_div, port_sel = 0;
 	int div = HAS_PCH_SPLIT(dev) ? intel_pch_rawclk(dev) : intel_hrawclk(dev);
-	int pp_on_reg, pp_off_reg, pp_div_reg;
+	int pp_on_reg, pp_off_reg, pp_div_reg = 0, pp_ctrl_reg;
 	enum port port = dp_to_dig_port(intel_dp)->port;
 	const struct edp_power_seq *seq = &intel_dp->pps_delays;
 
 	lockdep_assert_held(&dev_priv->pps_mutex);
 
-	if (HAS_PCH_SPLIT(dev)) {
+	if (IS_BROXTON(dev)) {
+		/*
+		 * TODO: BXT has 2 sets of PPS registers.
+		 * Correct Register for Broxton need to be identified
+		 * using VBT. hardcoding for now
+		 */
+		pp_ctrl_reg = BXT_PP_CONTROL(0);
+		pp_on_reg = BXT_PP_ON_DELAYS(0);
+		pp_off_reg = BXT_PP_OFF_DELAYS(0);
+
+	} else if (HAS_PCH_SPLIT(dev)) {
 		pp_on_reg = PCH_PP_ON_DELAYS;
 		pp_off_reg = PCH_PP_OFF_DELAYS;
 		pp_div_reg = PCH_PP_DIVISOR;
@@ -5227,9 +5263,16 @@ intel_dp_init_panel_power_sequencer_registers(struct drm_device *dev,
 		 (seq->t10 << PANEL_POWER_DOWN_DELAY_SHIFT);
 	/* Compute the divisor for the pp clock, simply match the Bspec
 	 * formula. */
-	pp_div = ((100 * div)/2 - 1) << PP_REFERENCE_DIVIDER_SHIFT;
-	pp_div |= (DIV_ROUND_UP(seq->t11_t12, 1000)
-			<< PANEL_POWER_CYCLE_DELAY_SHIFT);
+	if (IS_BROXTON(dev)) {
+		pp_div = I915_READ(pp_ctrl_reg);
+		pp_div &= ~BXT_POWER_CYCLE_DELAY_MASK;
+		pp_div |= (DIV_ROUND_UP((seq->t11_t12 + 1), 1000)
+				<< BXT_POWER_CYCLE_DELAY_SHIFT);
+	} else {
+		pp_div = ((100 * div)/2 - 1) << PP_REFERENCE_DIVIDER_SHIFT;
+		pp_div |= (DIV_ROUND_UP(seq->t11_t12, 1000)
+				<< PANEL_POWER_CYCLE_DELAY_SHIFT);
+	}
 
 	/* Haswell doesn't have any port selection bits for the panel
 	 * power sequencer any more. */
@@ -5246,11 +5289,16 @@ intel_dp_init_panel_power_sequencer_registers(struct drm_device *dev,
 
 	I915_WRITE(pp_on_reg, pp_on);
 	I915_WRITE(pp_off_reg, pp_off);
-	I915_WRITE(pp_div_reg, pp_div);
+	if (IS_BROXTON(dev))
+		I915_WRITE(pp_ctrl_reg, pp_div);
+	else
+		I915_WRITE(pp_div_reg, pp_div);
 
 	DRM_DEBUG_KMS("panel power sequencer register settings: PP_ON %#x, PP_OFF %#x, PP_DIV %#x\n",
 		      I915_READ(pp_on_reg),
 		      I915_READ(pp_off_reg),
+		      IS_BROXTON(dev) ?
+		      (I915_READ(pp_ctrl_reg) & BXT_POWER_CYCLE_DELAY_MASK) :
 		      I915_READ(pp_div_reg));
 }
 
@@ -5455,13 +5503,12 @@ unlock:
 }
 
 /**
- * intel_edp_drrs_invalidate - Invalidate DRRS
+ * intel_edp_drrs_invalidate - Disable Idleness DRRS
  * @dev: DRM device
  * @frontbuffer_bits: frontbuffer plane tracking bits
  *
- * When there is a disturbance on screen (due to cursor movement/time
- * update etc), DRRS needs to be invalidated, i.e. need to switch to
- * high RR.
+ * This function gets called everytime rendering on the given planes start.
+ * Hence DRRS needs to be Upclocked, i.e. (LOW_RR -> HIGH_RR).
  *
  * Dirty frontbuffers relevant to DRRS are tracked in busy_frontbuffer_bits.
  */
@@ -5486,26 +5533,27 @@ void intel_edp_drrs_invalidate(struct drm_device *dev,
 	crtc = dp_to_dig_port(dev_priv->drrs.dp)->base.base.crtc;
 	pipe = to_intel_crtc(crtc)->pipe;
 
-	if (dev_priv->drrs.refresh_rate_type == DRRS_LOW_RR) {
+	frontbuffer_bits &= INTEL_FRONTBUFFER_ALL_MASK(pipe);
+	dev_priv->drrs.busy_frontbuffer_bits |= frontbuffer_bits;
+
+	/* invalidate means busy screen hence upclock */
+	if (frontbuffer_bits && dev_priv->drrs.refresh_rate_type == DRRS_LOW_RR)
 		intel_dp_set_drrs_state(dev_priv->dev,
 				dev_priv->drrs.dp->attached_connector->panel.
 				fixed_mode->vrefresh);
-	}
 
-	frontbuffer_bits &= INTEL_FRONTBUFFER_ALL_MASK(pipe);
-
-	dev_priv->drrs.busy_frontbuffer_bits |= frontbuffer_bits;
 	mutex_unlock(&dev_priv->drrs.mutex);
 }
 
 /**
- * intel_edp_drrs_flush - Flush DRRS
+ * intel_edp_drrs_flush - Restart Idleness DRRS
  * @dev: DRM device
  * @frontbuffer_bits: frontbuffer plane tracking bits
  *
- * When there is no movement on screen, DRRS work can be scheduled.
- * This DRRS work is responsible for setting relevant registers after a
- * timeout of 1 second.
+ * This function gets called every time rendering on the given planes has
+ * completed or flip on a crtc is completed. So DRRS should be upclocked
+ * (LOW_RR -> HIGH_RR). And also Idleness detection should be started again,
+ * if no other planes are dirty.
  *
  * Dirty frontbuffers relevant to DRRS are tracked in busy_frontbuffer_bits.
  */
@@ -5529,10 +5577,21 @@ void intel_edp_drrs_flush(struct drm_device *dev,
 
 	crtc = dp_to_dig_port(dev_priv->drrs.dp)->base.base.crtc;
 	pipe = to_intel_crtc(crtc)->pipe;
+
+	frontbuffer_bits &= INTEL_FRONTBUFFER_ALL_MASK(pipe);
 	dev_priv->drrs.busy_frontbuffer_bits &= ~frontbuffer_bits;
 
-	if (dev_priv->drrs.refresh_rate_type != DRRS_LOW_RR &&
-			!dev_priv->drrs.busy_frontbuffer_bits)
+	/* flush means busy screen hence upclock */
+	if (frontbuffer_bits && dev_priv->drrs.refresh_rate_type == DRRS_LOW_RR)
+		intel_dp_set_drrs_state(dev_priv->dev,
+				dev_priv->drrs.dp->attached_connector->panel.
+				fixed_mode->vrefresh);
+
+	/*
+	 * flush also means no more activity hence schedule downclock, if all
+	 * other fbs are quiescent too
+	 */
+	if (!dev_priv->drrs.busy_frontbuffer_bits)
 		schedule_delayed_work(&dev_priv->drrs.work,
 				msecs_to_jiffies(1000));
 	mutex_unlock(&dev_priv->drrs.mutex);
@@ -5936,10 +5995,9 @@ intel_dp_init(struct drm_device *dev, int output_reg, enum port port)
 		intel_encoder->crtc_mask = (1 << 0) | (1 << 1) | (1 << 2);
 	}
 	intel_encoder->cloneable = 0;
-	intel_encoder->hot_plug = intel_dp_hot_plug;
 
 	intel_dig_port->hpd_pulse = intel_dp_hpd_pulse;
-	dev_priv->hpd_irq_port[port] = intel_dig_port;
+	dev_priv->hotplug.irq_port[port] = intel_dig_port;
 
 	if (!intel_dp_init_connector(intel_dig_port, intel_connector)) {
 		drm_encoder_cleanup(encoder);
@@ -5955,7 +6013,7 @@ void intel_dp_mst_suspend(struct drm_device *dev)
 
 	/* disable MST */
 	for (i = 0; i < I915_MAX_PORTS; i++) {
-		struct intel_digital_port *intel_dig_port = dev_priv->hpd_irq_port[i];
+		struct intel_digital_port *intel_dig_port = dev_priv->hotplug.irq_port[i];
 		if (!intel_dig_port)
 			continue;
 
@@ -5974,7 +6032,7 @@ void intel_dp_mst_resume(struct drm_device *dev)
 	int i;
 
 	for (i = 0; i < I915_MAX_PORTS; i++) {
-		struct intel_digital_port *intel_dig_port = dev_priv->hpd_irq_port[i];
+		struct intel_digital_port *intel_dig_port = dev_priv->hotplug.irq_port[i];
 		if (!intel_dig_port)
 			continue;
 		if (intel_dig_port->base.type == INTEL_OUTPUT_DISPLAYPORT) {
