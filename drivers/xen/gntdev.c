@@ -529,12 +529,14 @@ static int gntdev_release(struct inode *inode, struct file *flip)
 
 	pr_debug("priv %p\n", priv);
 
+	spin_lock(&priv->lock);
 	while (!list_empty(&priv->maps)) {
 		map = list_entry(priv->maps.next, struct grant_map, next);
 		list_del(&map->next);
 		gntdev_put_map(NULL /* already removed */, map);
 	}
 	WARN_ON(!list_empty(&priv->freeable_maps));
+	spin_unlock(&priv->lock);
 
 	if (use_ptemod)
 		mmu_notifier_unregister(&priv->mn, priv->mm);
