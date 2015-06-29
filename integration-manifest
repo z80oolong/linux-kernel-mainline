@@ -1,0 +1,18 @@
+origin/drm-intel-fixes b953c0d234bc72e8489d3bf51a276c5c4ec85345
+	Linux 4.1
+drm-upstream/drm-fixes fcee3c73a2c51982057b93fe599b7c68e16d0636
+	Merge tag 'drm-intel-fixes-2015-06-18' of git://anongit.freedesktop.org/drm-intel into drm-fixes
+origin/drm-intel-next-fixes 2059ac3b1304cb6a82f9d90762dea9f556831627
+	drm/i915: fix backlight after resume on 855gm
+origin/drm-intel-next-queued 031b698a77a70a6c394568034437b5486a44e868
+	drm/i915: Unconditionally do fb tracking invalidate in set_domain
+drm-upstream/drm-next c5fd936e992dd2829167d2adc63e151675ca6898
+	drm/nouveau: Pause between setting gpu to D3hot and cutting the power
+sound-upstream/for-next 4275554dccdf0afac07b2b638ba7456095629558
+	ALSA: hda - Add a fixup for Dell E7450
+origin/topic/drm-misc 1ba140a04d0623275fdc3f088a8e7964612f9718
+	drm/vgem: Set unique to "vgem"
+origin/topic/drm-fixes 2e7f43c41c042d6fed4d67aceeaae32d8f102e98
+	drm/plane-helper: Adapt cursor hack to transitional helpers
+origin/topic/atomic-conversion c0165304e10f317672e20f2b40770d74c51e287f
+	drm/i915: Only enable cursor if it can be enabled.
