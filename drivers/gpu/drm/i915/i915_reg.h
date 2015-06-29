@@ -50,12 +50,17 @@
 
 /* PCI config space */
 
-#define HPLLCC	0xc0 /* 855 only */
-#define   GC_CLOCK_CONTROL_MASK		(0xf << 0)
+#define HPLLCC	0xc0 /* 85x only */
+#define   GC_CLOCK_CONTROL_MASK		(0x7 << 0)
 #define   GC_CLOCK_133_200		(0 << 0)
 #define   GC_CLOCK_100_200		(1 << 0)
 #define   GC_CLOCK_100_133		(2 << 0)
-#define   GC_CLOCK_166_250		(3 << 0)
+#define   GC_CLOCK_133_266		(3 << 0)
+#define   GC_CLOCK_133_200_2		(4 << 0)
+#define   GC_CLOCK_133_266_2		(5 << 0)
+#define   GC_CLOCK_166_266		(6 << 0)
+#define   GC_CLOCK_166_250		(7 << 0)
+
 #define GCFGC2	0xda
 #define GCFGC	0xf0 /* 915+ only */
 #define   GC_LOW_FREQUENCY_ENABLE	(1 << 7)
@@ -410,6 +415,7 @@
 #define   DISPLAY_PLANE_A           (0<<20)
 #define   DISPLAY_PLANE_B           (1<<20)
 #define GFX_OP_PIPE_CONTROL(len)	((0x3<<29)|(0x3<<27)|(0x2<<24)|(len-2))
+#define   PIPE_CONTROL_FLUSH_L3				(1<<27)
 #define   PIPE_CONTROL_GLOBAL_GTT_IVB			(1<<24) /* gen7+ */
 #define   PIPE_CONTROL_MMIO_WRITE			(1<<23)
 #define   PIPE_CONTROL_STORE_DATA_INDEX			(1<<21)
@@ -426,6 +432,7 @@
 #define   PIPE_CONTROL_INDIRECT_STATE_DISABLE		(1<<9)
 #define   PIPE_CONTROL_NOTIFY				(1<<8)
 #define   PIPE_CONTROL_FLUSH_ENABLE			(1<<7) /* gen7+ */
+#define   PIPE_CONTROL_DC_FLUSH_ENABLE			(1<<5)
 #define   PIPE_CONTROL_VF_CACHE_INVALIDATE		(1<<4)
 #define   PIPE_CONTROL_CONST_CACHE_INVALIDATE		(1<<3)
 #define   PIPE_CONTROL_STATE_CACHE_INVALIDATE		(1<<2)
@@ -1456,6 +1463,9 @@ enum skl_disp_power_wells {
 #define RING_MAX_IDLE(base)	((base)+0x54)
 #define RING_HWS_PGA(base)	((base)+0x80)
 #define RING_HWS_PGA_GEN6(base)	((base)+0x2080)
+#define RING_RESET_CTL(base)	((base)+0xd0)
+#define   RESET_CTL_REQUEST_RESET  (1 << 0)
+#define   RESET_CTL_READY_TO_RESET (1 << 1)
 
 #define HSW_GTT_CACHE_EN	0x4024
 #define   GTT_CACHE_EN_ALL	0xF0007FFF
@@ -1945,6 +1955,9 @@ enum skl_disp_power_wells {
 #define   FBC_CTL_PLANE(plane)	((plane)<<0)
 #define FBC_FENCE_OFF		0x03218 /* BSpec typo has 321Bh */
 #define FBC_TAG			0x03300
+
+#define FBC_STATUS2		0x43214
+#define  FBC_COMPRESSION_MASK	0x7ff
 
 #define FBC_LL_SIZE		(1536)
 
@@ -2488,6 +2501,9 @@ enum skl_disp_power_wells {
 #define CLKCFG_MEM_800					(3 << 4)
 #define CLKCFG_MEM_MASK					(7 << 4)
 
+#define HPLLVCO                 (MCHBAR_MIRROR_BASE + 0xc38)
+#define HPLLVCO_MOBILE          (MCHBAR_MIRROR_BASE + 0xc0f)
+
 #define TSC1			0x11001
 #define   TSE			(1<<0)
 #define TR1			0x11006
@@ -2718,8 +2734,10 @@ enum skl_disp_power_wells {
 #define GEN6_GT_THREAD_STATUS_CORE_MASK 0x7
 
 #define GEN6_GT_PERF_STATUS	(MCHBAR_MIRROR_BASE_SNB + 0x5948)
+#define BXT_GT_PERF_STATUS      (MCHBAR_MIRROR_BASE_SNB + 0x7070)
 #define GEN6_RP_STATE_LIMITS	(MCHBAR_MIRROR_BASE_SNB + 0x5994)
 #define GEN6_RP_STATE_CAP	(MCHBAR_MIRROR_BASE_SNB + 0x5998)
+#define BXT_RP_STATE_CAP        0x138170
 
 #define INTERVAL_1_28_US(us)	(((us) * 100) >> 7)
 #define INTERVAL_1_33_US(us)	(((us) * 3)   >> 2)
@@ -5754,6 +5772,13 @@ enum skl_disp_power_wells {
 #define HSW_NDE_RSTWRN_OPT	0x46408
 #define  RESET_PCH_HANDSHAKE_ENABLE	(1<<4)
 
+#define SKL_DFSM			0x51000
+#define SKL_DFSM_CDCLK_LIMIT_MASK	(3 << 23)
+#define SKL_DFSM_CDCLK_LIMIT_675	(0 << 23)
+#define SKL_DFSM_CDCLK_LIMIT_540	(1 << 23)
+#define SKL_DFSM_CDCLK_LIMIT_450	(2 << 23)
+#define SKL_DFSM_CDCLK_LIMIT_337_5	(3 << 23)
+
 #define FF_SLICE_CS_CHICKEN2			0x20e4
 #define  GEN9_TSG_BARRIER_ACK_DISABLE		(1<<8)
 
@@ -5791,6 +5816,7 @@ enum skl_disp_power_wells {
 
 #define GEN8_L3SQCREG4				0xb118
 #define  GEN8_LQSC_RO_PERF_DIS			(1<<27)
+#define  GEN8_LQSC_FLUSH_COHERENT_LINES		(1<<21)
 
 /* GEN8 chicken */
 #define HDC_CHICKEN0				0x7300
@@ -6047,6 +6073,9 @@ enum skl_disp_power_wells {
 #define _VIDEO_DIP_CTL_A         0xe0200
 #define _VIDEO_DIP_DATA_A        0xe0208
 #define _VIDEO_DIP_GCP_A         0xe0210
+#define  GCP_COLOR_INDICATION		(1 << 2)
+#define  GCP_DEFAULT_PHASE_ENABLE	(1 << 1)
+#define  GCP_AV_MUTE			(1 << 0)
 
 #define _VIDEO_DIP_CTL_B         0xe1200
 #define _VIDEO_DIP_DATA_B        0xe1208
@@ -6186,6 +6215,7 @@ enum skl_disp_power_wells {
 #define _TRANSA_CHICKEN1	 0xf0060
 #define _TRANSB_CHICKEN1	 0xf1060
 #define TRANS_CHICKEN1(pipe) _PIPE(pipe, _TRANSA_CHICKEN1, _TRANSB_CHICKEN1)
+#define  TRANS_CHICKEN1_HDMIUNIT_GC_DISABLE	(1<<10)
 #define  TRANS_CHICKEN1_DP0UNIT_GC_DISABLE	(1<<4)
 #define _TRANSA_CHICKEN2	 0xf0064
 #define _TRANSB_CHICKEN2	 0xf1064
@@ -6370,6 +6400,8 @@ enum skl_disp_power_wells {
 #define PCH_PP_CONTROL		0xc7204
 #define  PANEL_UNLOCK_REGS	(0xabcd << 16)
 #define  PANEL_UNLOCK_MASK	(0xffff << 16)
+#define  BXT_POWER_CYCLE_DELAY_MASK	(0x1f0)
+#define  BXT_POWER_CYCLE_DELAY_SHIFT	4
 #define  EDP_FORCE_VDD		(1 << 3)
 #define  EDP_BLC_ENABLE		(1 << 2)
 #define  PANEL_POWER_RESET	(1 << 1)
@@ -6397,6 +6429,17 @@ enum skl_disp_power_wells {
 #define  PP_REFERENCE_DIVIDER_SHIFT	8
 #define  PANEL_POWER_CYCLE_DELAY_MASK	(0x1f)
 #define  PANEL_POWER_CYCLE_DELAY_SHIFT	0
+
+/* BXT PPS changes - 2nd set of PPS registers */
+#define _BXT_PP_STATUS2 	0xc7300
+#define _BXT_PP_CONTROL2 	0xc7304
+#define _BXT_PP_ON_DELAYS2	0xc7308
+#define _BXT_PP_OFF_DELAYS2	0xc730c
+
+#define BXT_PP_STATUS(n)	((!n) ? PCH_PP_STATUS : _BXT_PP_STATUS2)
+#define BXT_PP_CONTROL(n)	((!n) ? PCH_PP_CONTROL : _BXT_PP_CONTROL2)
+#define BXT_PP_ON_DELAYS(n)	((!n) ? PCH_PP_ON_DELAYS : _BXT_PP_ON_DELAYS2)
+#define BXT_PP_OFF_DELAYS(n)	((!n) ? PCH_PP_OFF_DELAYS : _BXT_PP_OFF_DELAYS2)
 
 #define PCH_DP_B		0xe4100
 #define PCH_DPB_AUX_CH_CTL	0xe4110
@@ -6698,6 +6741,7 @@ enum skl_disp_power_wells {
 #define	  GEN6_PCODE_READ_RC6VIDS		0x5
 #define     GEN6_ENCODE_RC6_VID(mv)		(((mv) - 245) / 5)
 #define     GEN6_DECODE_RC6_VID(vids)		(((vids) * 5) + 245)
+#define   BDW_PCODE_DISPLAY_FREQ_CHANGE_REQ	0x18
 #define   GEN9_PCODE_READ_MEM_LATENCY		0x6
 #define     GEN9_MEM_LATENCY_LEVEL_MASK		0xFF
 #define     GEN9_MEM_LATENCY_LEVEL_1_5_SHIFT	8
@@ -7160,6 +7204,7 @@ enum skl_disp_power_wells {
 #define  LCPLL_CLK_FREQ_337_5_BDW	(2<<26)
 #define  LCPLL_CLK_FREQ_675_BDW		(3<<26)
 #define  LCPLL_CD_CLOCK_DISABLE		(1<<25)
+#define  LCPLL_ROOT_CD_CLOCK_DISABLE	(1<<24)
 #define  LCPLL_CD2X_CLOCK_DISABLE	(1<<23)
 #define  LCPLL_POWER_DOWN_ALLOW		(1<<22)
 #define  LCPLL_CD_SOURCE_FCLK		(1<<21)
@@ -7262,12 +7307,6 @@ enum skl_disp_power_wells {
 #define DC_STATE_EN			0x45504
 #define  DC_STATE_EN_UPTO_DC5		(1<<0)
 #define  DC_STATE_EN_DC9		(1<<3)
-
-/*
-* SKL DC
-*/
-#define  DC_STATE_EN			0x45504
-#define  DC_STATE_EN_UPTO_DC5		(1<<0)
 #define  DC_STATE_EN_UPTO_DC6		(2<<0)
 #define  DC_STATE_EN_UPTO_DC5_DC6_MASK   0x3
 
