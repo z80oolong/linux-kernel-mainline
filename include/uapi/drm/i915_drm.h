@@ -354,6 +354,7 @@ typedef struct drm_i915_irq_wait {
 #define I915_PARAM_REVISION              32
 #define I915_PARAM_SUBSLICE_TOTAL	 33
 #define I915_PARAM_EU_TOTAL		 34
+#define I915_PARAM_HAS_GPU_RESET	 35
 
 typedef struct drm_i915_getparam {
 	int param;
@@ -1106,6 +1107,7 @@ struct drm_i915_gem_context_param {
 	__u32 size;
 	__u64 param;
 #define I915_CONTEXT_PARAM_BAN_PERIOD 0x1
+#define I915_CONTEXT_PARAM_NO_ZEROMAP 0x2
 	__u64 value;
 };
 
