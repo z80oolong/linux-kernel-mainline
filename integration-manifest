@@ -1,0 +1,20 @@
+origin/drm-intel-fixes b953c0d234bc72e8489d3bf51a276c5c4ec85345
+	Linux 4.1
+drm-upstream/drm-fixes fcee3c73a2c51982057b93fe599b7c68e16d0636
+	Merge tag 'drm-intel-fixes-2015-06-18' of git://anongit.freedesktop.org/drm-intel into drm-fixes
+origin/drm-intel-next-fixes ee46f3c7d79c334e8bdc9947503e329dc27c0b47
+	drm/i915: Clear pipe's pll hw state in hsw_dp_set_ddi_pll_sel()
+origin/drm-intel-next-queued 879495b413b5c1bd15db551fa3d4c5090cd2c52a
+	drm/i915/gtt: Per ppgtt scratch page
+drm-upstream/drm-next c5fd936e992dd2829167d2adc63e151675ca6898
+	drm/nouveau: Pause between setting gpu to D3hot and cutting the power
+sound-upstream/for-next 0755e74b8f04d17cea09fa342a788025b2b50e2e
+	ALSA: Fix uninintialized error return
+origin/topic/drm-misc 80d4ccc9df2d259ed4e814495435a0b8670d3416
+	drm: Remove useless blank line
+origin/topic/drm-fixes 2e7f43c41c042d6fed4d67aceeaae32d8f102e98
+	drm/plane-helper: Adapt cursor hack to transitional helpers
+origin/topic/atomic-conversion c0165304e10f317672e20f2b40770d74c51e287f
+	drm/i915: Only enable cursor if it can be enabled.
+origin/topic/kerneldoc 1ce161a842da5f90eeb98d529c542078cb91cccb
+	scripts/kernel-doc: Adding cross-reference links to html documentation.
