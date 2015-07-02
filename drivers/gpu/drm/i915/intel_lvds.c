@@ -942,12 +942,6 @@ void intel_lvds_init(struct drm_device *dev)
 	if (dmi_check_system(intel_no_lvds))
 		return;
 
-	pin = GMBUS_PIN_PANEL;
-	if (!lvds_is_present_in_vbt(dev, &pin)) {
-		DRM_DEBUG_KMS("LVDS is not present in VBT\n");
-		return;
-	}
-
 	if (HAS_PCH_SPLIT(dev)) {
 		if ((I915_READ(PCH_LVDS) & LVDS_DETECTED) == 0)
 			return;
@@ -955,6 +949,16 @@ void intel_lvds_init(struct drm_device *dev)
 			DRM_DEBUG_KMS("disable LVDS for eDP support\n");
 			return;
 		}
+	}
+
+	pin = GMBUS_PIN_PANEL;
+	if (!lvds_is_present_in_vbt(dev, &pin)) {
+		u32 reg = HAS_PCH_SPLIT(dev) ? PCH_LVDS : LVDS;
+		if ((I915_READ(reg) & LVDS_PORT_EN) == 0) {
+			DRM_DEBUG_KMS("LVDS is not present in VBT\n");
+			return;
+		}
+		DRM_DEBUG_KMS("LVDS is not present in VBT, but enabled anyway\n");
 	}
 
 	lvds_encoder = kzalloc(sizeof(*lvds_encoder), GFP_KERNEL);
@@ -1068,24 +1072,8 @@ void intel_lvds_init(struct drm_device *dev)
 			drm_mode_debug_printmodeline(scan);
 
 			fixed_mode = drm_mode_duplicate(dev, scan);
-			if (fixed_mode) {
-				downclock_mode =
-					intel_find_panel_downclock(dev,
-					fixed_mode, connector);
-				if (downclock_mode != NULL &&
-					i915.lvds_downclock) {
-					/* We found the downclock for LVDS. */
-					dev_priv->lvds_downclock_avail = true;
-					dev_priv->lvds_downclock =
-						downclock_mode->clock;
-					DRM_DEBUG_KMS("LVDS downclock is found"
-					" in EDID. Normal clock %dKhz, "
-					"downclock %dKhz\n",
-					fixed_mode->clock,
-					dev_priv->lvds_downclock);
-				}
+			if (fixed_mode)
 				goto out;
-			}
 		}
 	}
 
