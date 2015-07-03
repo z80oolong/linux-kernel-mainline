@@ -1,0 +1,18 @@
+origin/drm-intel-fixes b953c0d234bc72e8489d3bf51a276c5c4ec85345
+	Linux 4.1
+drm-upstream/drm-fixes fcee3c73a2c51982057b93fe599b7c68e16d0636
+	Merge tag 'drm-intel-fixes-2015-06-18' of git://anongit.freedesktop.org/drm-intel into drm-fixes
+origin/drm-intel-next-fixes ee46f3c7d79c334e8bdc9947503e329dc27c0b47
+	drm/i915: Clear pipe's pll hw state in hsw_dp_set_ddi_pll_sel()
+origin/drm-intel-next-queued 8776f02b7c77f17dcf1dfab9954648874f264c89
+	drm/i915/gtt: Per ppgtt scratch page
+drm-upstream/drm-next c5fd936e992dd2829167d2adc63e151675ca6898
+	drm/nouveau: Pause between setting gpu to D3hot and cutting the power
+sound-upstream/for-next 0689a86ae814f39af94a9736a0a5426dd82eb107
+	ALSA: usb-audio: Add MIDI support for Steinberg MI2/MI4
+origin/topic/drm-misc 1f96beec7a44f46bf277e2050a7a5a0308831d61
+	drm: remove redundant code form drm_ioc32.c
+origin/topic/drm-fixes e24ff467e12e1560de753313976c46e84fa6306a
+	drm/crtc: Fix edid length computation
+origin/topic/kerneldoc 1ce161a842da5f90eeb98d529c542078cb91cccb
+	scripts/kernel-doc: Adding cross-reference links to html documentation.
