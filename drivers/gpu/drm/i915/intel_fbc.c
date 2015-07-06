@@ -188,14 +188,15 @@ static void ilk_fbc_enable(struct drm_crtc *crtc)
 	struct drm_i915_gem_object *obj = intel_fb_obj(fb);
 	struct intel_crtc *intel_crtc = to_intel_crtc(crtc);
 	u32 dpfc_ctl;
+	int threshold = dev_priv->fbc.threshold;
 
 	dev_priv->fbc.enabled = true;
 
 	dpfc_ctl = DPFC_CTL_PLANE(intel_crtc->plane);
 	if (drm_format_plane_cpp(fb->pixel_format, 0) == 2)
-		dev_priv->fbc.threshold++;
+		threshold++;
 
-	switch (dev_priv->fbc.threshold) {
+	switch (threshold) {
 	case 4:
 	case 3:
 		dpfc_ctl |= DPFC_CTL_LIMIT_4X;
@@ -259,14 +260,18 @@ static void gen7_fbc_enable(struct drm_crtc *crtc)
 	struct drm_i915_gem_object *obj = intel_fb_obj(fb);
 	struct intel_crtc *intel_crtc = to_intel_crtc(crtc);
 	u32 dpfc_ctl;
+	int threshold = dev_priv->fbc.threshold;
 
 	dev_priv->fbc.enabled = true;
 
-	dpfc_ctl = IVB_DPFC_CTL_PLANE(intel_crtc->plane);
-	if (drm_format_plane_cpp(fb->pixel_format, 0) == 2)
-		dev_priv->fbc.threshold++;
+	dpfc_ctl = 0;
+	if (IS_IVYBRIDGE(dev))
+		dpfc_ctl |= IVB_DPFC_CTL_PLANE(intel_crtc->plane);
 
-	switch (dev_priv->fbc.threshold) {
+	if (drm_format_plane_cpp(fb->pixel_format, 0) == 2)
+		threshold++;
+
+	switch (threshold) {
 	case 4:
 	case 3:
 		dpfc_ctl |= DPFC_CTL_LIMIT_4X;
@@ -330,7 +335,7 @@ static void intel_fbc_work_fn(struct work_struct *__work)
 	struct drm_device *dev = work->crtc->dev;
 	struct drm_i915_private *dev_priv = dev->dev_private;
 
-	mutex_lock(&dev->struct_mutex);
+	mutex_lock(&dev_priv->fbc.lock);
 	if (work == dev_priv->fbc.fbc_work) {
 		/* Double check that we haven't switched fb without cancelling
 		 * the prior work.
@@ -345,13 +350,15 @@ static void intel_fbc_work_fn(struct work_struct *__work)
 
 		dev_priv->fbc.fbc_work = NULL;
 	}
-	mutex_unlock(&dev->struct_mutex);
+	mutex_unlock(&dev_priv->fbc.lock);
 
 	kfree(work);
 }
 
 static void intel_fbc_cancel_work(struct drm_i915_private *dev_priv)
 {
+	WARN_ON(!mutex_is_locked(&dev_priv->fbc.lock));
+
 	if (dev_priv->fbc.fbc_work == NULL)
 		return;
 
@@ -379,8 +386,7 @@ static void intel_fbc_enable(struct drm_crtc *crtc)
 	struct drm_device *dev = crtc->dev;
 	struct drm_i915_private *dev_priv = dev->dev_private;
 
-	if (!dev_priv->display.enable_fbc)
-		return;
+	WARN_ON(!mutex_is_locked(&dev_priv->fbc.lock));
 
 	intel_fbc_cancel_work(dev_priv);
 
@@ -413,6 +419,18 @@ static void intel_fbc_enable(struct drm_crtc *crtc)
 	schedule_delayed_work(&work->work, msecs_to_jiffies(50));
 }
 
+static void __intel_fbc_disable(struct drm_device *dev)
+{
+	struct drm_i915_private *dev_priv = dev->dev_private;
+
+	WARN_ON(!mutex_is_locked(&dev_priv->fbc.lock));
+
+	intel_fbc_cancel_work(dev_priv);
+
+	dev_priv->display.disable_fbc(dev);
+	dev_priv->fbc.crtc = NULL;
+}
+
 /**
  * intel_fbc_disable - disable FBC
  * @dev: the drm_device
@@ -423,23 +441,75 @@ void intel_fbc_disable(struct drm_device *dev)
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
 
-	intel_fbc_cancel_work(dev_priv);
-
-	if (!dev_priv->display.disable_fbc)
+	if (!dev_priv->display.enable_fbc)
 		return;
 
-	dev_priv->display.disable_fbc(dev);
-	dev_priv->fbc.crtc = NULL;
+	mutex_lock(&dev_priv->fbc.lock);
+	__intel_fbc_disable(dev);
+	mutex_unlock(&dev_priv->fbc.lock);
 }
 
-static bool set_no_fbc_reason(struct drm_i915_private *dev_priv,
+/*
+ * intel_fbc_disable_crtc - disable FBC if it's associated with crtc
+ * @crtc: the CRTC
+ *
+ * This function disables FBC if it's associated with the provided CRTC.
+ */
+void intel_fbc_disable_crtc(struct intel_crtc *crtc)
+{
+	struct drm_device *dev = crtc->base.dev;
+	struct drm_i915_private *dev_priv = dev->dev_private;
+
+	if (!dev_priv->display.enable_fbc)
+		return;
+
+	mutex_lock(&dev_priv->fbc.lock);
+	if (dev_priv->fbc.crtc == crtc)
+		__intel_fbc_disable(dev);
+	mutex_unlock(&dev_priv->fbc.lock);
+}
+
+const char *intel_no_fbc_reason_str(enum no_fbc_reason reason)
+{
+	switch (reason) {
+	case FBC_OK:
+		return "FBC enabled but currently disabled in hardware";
+	case FBC_UNSUPPORTED:
+		return "unsupported by this chipset";
+	case FBC_NO_OUTPUT:
+		return "no output";
+	case FBC_STOLEN_TOO_SMALL:
+		return "not enough stolen memory";
+	case FBC_UNSUPPORTED_MODE:
+		return "mode incompatible with compression";
+	case FBC_MODE_TOO_LARGE:
+		return "mode too large for compression";
+	case FBC_BAD_PLANE:
+		return "FBC unsupported on plane";
+	case FBC_NOT_TILED:
+		return "framebuffer not tiled or fenced";
+	case FBC_MULTIPLE_PIPES:
+		return "more than one pipe active";
+	case FBC_MODULE_PARAM:
+		return "disabled per module param";
+	case FBC_CHIP_DEFAULT:
+		return "disabled per chip default";
+	case FBC_ROTATION:
+		return "rotation unsupported";
+	default:
+		MISSING_CASE(reason);
+		return "unknown reason";
+	}
+}
+
+static void set_no_fbc_reason(struct drm_i915_private *dev_priv,
 			      enum no_fbc_reason reason)
 {
 	if (dev_priv->fbc.no_fbc_reason == reason)
-		return false;
+		return;
 
 	dev_priv->fbc.no_fbc_reason = reason;
-	return true;
+	DRM_DEBUG_KMS("Disabling FBC: %s\n", intel_no_fbc_reason_str(reason));
 }
 
 static struct drm_crtc *intel_fbc_find_crtc(struct drm_i915_private *dev_priv)
@@ -459,8 +529,7 @@ static struct drm_crtc *intel_fbc_find_crtc(struct drm_i915_private *dev_priv)
 		if (intel_crtc_active(tmp_crtc) &&
 		    to_intel_plane_state(tmp_crtc->primary->state)->visible) {
 			if (one_pipe_only && crtc) {
-				if (set_no_fbc_reason(dev_priv, FBC_MULTIPLE_PIPES))
-					DRM_DEBUG_KMS("more than one pipe active, disabling compression\n");
+				set_no_fbc_reason(dev_priv, FBC_MULTIPLE_PIPES);
 				return NULL;
 			}
 			crtc = tmp_crtc;
@@ -471,16 +540,150 @@ static struct drm_crtc *intel_fbc_find_crtc(struct drm_i915_private *dev_priv)
 	}
 
 	if (!crtc || crtc->primary->fb == NULL) {
-		if (set_no_fbc_reason(dev_priv, FBC_NO_OUTPUT))
-			DRM_DEBUG_KMS("no output, disabling\n");
+		set_no_fbc_reason(dev_priv, FBC_NO_OUTPUT);
 		return NULL;
 	}
 
 	return crtc;
 }
 
+static int find_compression_threshold(struct drm_device *dev,
+				      struct drm_mm_node *node,
+				      int size,
+				      int fb_cpp)
+{
+	struct drm_i915_private *dev_priv = dev->dev_private;
+	int compression_threshold = 1;
+	int ret;
+
+	/* HACK: This code depends on what we will do in *_enable_fbc. If that
+	 * code changes, this code needs to change as well.
+	 *
+	 * The enable_fbc code will attempt to use one of our 2 compression
+	 * thresholds, therefore, in that case, we only have 1 resort.
+	 */
+
+	/* Try to over-allocate to reduce reallocations and fragmentation. */
+	ret = i915_gem_stolen_insert_node(dev_priv, node, size <<= 1, 4096);
+	if (ret == 0)
+		return compression_threshold;
+
+again:
+	/* HW's ability to limit the CFB is 1:4 */
+	if (compression_threshold > 4 ||
+	    (fb_cpp == 2 && compression_threshold == 2))
+		return 0;
+
+	ret = i915_gem_stolen_insert_node(dev_priv, node, size >>= 1, 4096);
+	if (ret && INTEL_INFO(dev)->gen <= 4) {
+		return 0;
+	} else if (ret) {
+		compression_threshold <<= 1;
+		goto again;
+	} else {
+		return compression_threshold;
+	}
+}
+
+static int intel_fbc_alloc_cfb(struct drm_device *dev, int size, int fb_cpp)
+{
+	struct drm_i915_private *dev_priv = dev->dev_private;
+	struct drm_mm_node *uninitialized_var(compressed_llb);
+	int ret;
+
+	ret = find_compression_threshold(dev, &dev_priv->fbc.compressed_fb,
+					 size, fb_cpp);
+	if (!ret)
+		goto err_llb;
+	else if (ret > 1) {
+		DRM_INFO("Reducing the compressed framebuffer size. This may lead to less power savings than a non-reduced-size. Try to increase stolen memory size if available in BIOS.\n");
+
+	}
+
+	dev_priv->fbc.threshold = ret;
+
+	if (INTEL_INFO(dev_priv)->gen >= 5)
+		I915_WRITE(ILK_DPFC_CB_BASE, dev_priv->fbc.compressed_fb.start);
+	else if (IS_GM45(dev)) {
+		I915_WRITE(DPFC_CB_BASE, dev_priv->fbc.compressed_fb.start);
+	} else {
+		compressed_llb = kzalloc(sizeof(*compressed_llb), GFP_KERNEL);
+		if (!compressed_llb)
+			goto err_fb;
+
+		ret = i915_gem_stolen_insert_node(dev_priv, compressed_llb,
+						  4096, 4096);
+		if (ret)
+			goto err_fb;
+
+		dev_priv->fbc.compressed_llb = compressed_llb;
+
+		I915_WRITE(FBC_CFB_BASE,
+			   dev_priv->mm.stolen_base + dev_priv->fbc.compressed_fb.start);
+		I915_WRITE(FBC_LL_BASE,
+			   dev_priv->mm.stolen_base + compressed_llb->start);
+	}
+
+	dev_priv->fbc.uncompressed_size = size;
+
+	DRM_DEBUG_KMS("reserved %d bytes of contiguous stolen space for FBC\n",
+		      size);
+
+	return 0;
+
+err_fb:
+	kfree(compressed_llb);
+	i915_gem_stolen_remove_node(dev_priv, &dev_priv->fbc.compressed_fb);
+err_llb:
+	pr_info_once("drm: not enough stolen space for compressed buffer (need %d more bytes), disabling. Hint: you may be able to increase stolen memory size in the BIOS to avoid this.\n", size);
+	return -ENOSPC;
+}
+
+static void __intel_fbc_cleanup_cfb(struct drm_device *dev)
+{
+	struct drm_i915_private *dev_priv = dev->dev_private;
+
+	if (dev_priv->fbc.uncompressed_size == 0)
+		return;
+
+	i915_gem_stolen_remove_node(dev_priv, &dev_priv->fbc.compressed_fb);
+
+	if (dev_priv->fbc.compressed_llb) {
+		i915_gem_stolen_remove_node(dev_priv,
+					    dev_priv->fbc.compressed_llb);
+		kfree(dev_priv->fbc.compressed_llb);
+	}
+
+	dev_priv->fbc.uncompressed_size = 0;
+}
+
+void intel_fbc_cleanup_cfb(struct drm_device *dev)
+{
+	struct drm_i915_private *dev_priv = dev->dev_private;
+
+	if (!dev_priv->display.enable_fbc)
+		return;
+
+	mutex_lock(&dev_priv->fbc.lock);
+	__intel_fbc_cleanup_cfb(dev);
+	mutex_unlock(&dev_priv->fbc.lock);
+}
+
+static int intel_fbc_setup_cfb(struct drm_device *dev, int size, int fb_cpp)
+{
+	struct drm_i915_private *dev_priv = dev->dev_private;
+
+	if (size <= dev_priv->fbc.uncompressed_size)
+		return 0;
+
+	/* Release any current block */
+	__intel_fbc_cleanup_cfb(dev);
+
+	return intel_fbc_alloc_cfb(dev, size, fb_cpp);
+}
+
 /**
- * intel_fbc_update - enable/disable FBC as needed
+ * __intel_fbc_update - enable/disable FBC as needed, unlocked
  * @dev: the drm_device
  *
  * Set up the framebuffer compression hardware at mode set time.  We
@@ -498,7 +701,7 @@ static struct drm_crtc *intel_fbc_find_crtc(struct drm_i915_private *dev_priv)
  *
  * We need to enable/disable FBC on a global basis.
  */
-void intel_fbc_update(struct drm_device *dev)
+static void __intel_fbc_update(struct drm_device *dev)
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
 	struct drm_crtc *crtc = NULL;
@@ -508,22 +711,19 @@ void intel_fbc_update(struct drm_device *dev)
 	const struct drm_display_mode *adjusted_mode;
 	unsigned int max_width, max_height;
 
-	if (!HAS_FBC(dev))
-		return;
+	WARN_ON(!mutex_is_locked(&dev_priv->fbc.lock));
 
 	/* disable framebuffer compression in vGPU */
 	if (intel_vgpu_active(dev))
 		i915.enable_fbc = 0;
 
 	if (i915.enable_fbc < 0) {
-		if (set_no_fbc_reason(dev_priv, FBC_CHIP_DEFAULT))
-			DRM_DEBUG_KMS("disabled per chip default\n");
+		set_no_fbc_reason(dev_priv, FBC_CHIP_DEFAULT);
 		goto out_disable;
 	}
 
 	if (!i915.enable_fbc) {
-		if (set_no_fbc_reason(dev_priv, FBC_MODULE_PARAM))
-			DRM_DEBUG_KMS("fbc disabled per module param\n");
+		set_no_fbc_reason(dev_priv, FBC_MODULE_PARAM);
 		goto out_disable;
 	}
 
@@ -547,9 +747,7 @@ void intel_fbc_update(struct drm_device *dev)
 
 	if ((adjusted_mode->flags & DRM_MODE_FLAG_INTERLACE) ||
 	    (adjusted_mode->flags & DRM_MODE_FLAG_DBLSCAN)) {
-		if (set_no_fbc_reason(dev_priv, FBC_UNSUPPORTED_MODE))
-			DRM_DEBUG_KMS("mode incompatible with compression, "
-				      "disabling\n");
+		set_no_fbc_reason(dev_priv, FBC_UNSUPPORTED_MODE);
 		goto out_disable;
 	}
 
@@ -565,14 +763,12 @@ void intel_fbc_update(struct drm_device *dev)
 	}
 	if (intel_crtc->config->pipe_src_w > max_width ||
 	    intel_crtc->config->pipe_src_h > max_height) {
-		if (set_no_fbc_reason(dev_priv, FBC_MODE_TOO_LARGE))
-			DRM_DEBUG_KMS("mode too large for compression, disabling\n");
+		set_no_fbc_reason(dev_priv, FBC_MODE_TOO_LARGE);
 		goto out_disable;
 	}
 	if ((INTEL_INFO(dev)->gen < 4 || HAS_DDI(dev)) &&
 	    intel_crtc->plane != PLANE_A) {
-		if (set_no_fbc_reason(dev_priv, FBC_BAD_PLANE))
-			DRM_DEBUG_KMS("plane not A, disabling compression\n");
+		set_no_fbc_reason(dev_priv, FBC_BAD_PLANE);
 		goto out_disable;
 	}
 
@@ -581,14 +777,12 @@ void intel_fbc_update(struct drm_device *dev)
 	 */
 	if (obj->tiling_mode != I915_TILING_X ||
 	    obj->fence_reg == I915_FENCE_REG_NONE) {
-		if (set_no_fbc_reason(dev_priv, FBC_NOT_TILED))
-			DRM_DEBUG_KMS("framebuffer not tiled or fenced, disabling compression\n");
+		set_no_fbc_reason(dev_priv, FBC_NOT_TILED);
 		goto out_disable;
 	}
 	if (INTEL_INFO(dev)->gen <= 4 && !IS_G4X(dev) &&
 	    crtc->primary->state->rotation != BIT(DRM_ROTATE_0)) {
-		if (set_no_fbc_reason(dev_priv, FBC_UNSUPPORTED_MODE))
-			DRM_DEBUG_KMS("Rotation unsupported, disabling\n");
+		set_no_fbc_reason(dev_priv, FBC_ROTATION);
 		goto out_disable;
 	}
 
@@ -596,10 +790,9 @@ void intel_fbc_update(struct drm_device *dev)
 	if (in_dbg_master())
 		goto out_disable;
 
-	if (i915_gem_stolen_setup_compression(dev, obj->base.size,
-					      drm_format_plane_cpp(fb->pixel_format, 0))) {
-		if (set_no_fbc_reason(dev_priv, FBC_STOLEN_TOO_SMALL))
-			DRM_DEBUG_KMS("framebuffer too large, disabling compression\n");
+	if (intel_fbc_setup_cfb(dev, obj->base.size,
+				drm_format_plane_cpp(fb->pixel_format, 0))) {
+		set_no_fbc_reason(dev_priv, FBC_STOLEN_TOO_SMALL);
 		goto out_disable;
 	}
 
@@ -638,7 +831,7 @@ void intel_fbc_update(struct drm_device *dev)
 		 * some point. And we wait before enabling FBC anyway.
 		 */
 		DRM_DEBUG_KMS("disabling active FBC for update\n");
-		intel_fbc_disable(dev);
+		__intel_fbc_disable(dev);
 	}
 
 	intel_fbc_enable(crtc);
@@ -649,9 +842,27 @@ out_disable:
 	/* Multiple disables should be harmless */
 	if (intel_fbc_enabled(dev)) {
 		DRM_DEBUG_KMS("unsupported config, disabling FBC\n");
-		intel_fbc_disable(dev);
+		__intel_fbc_disable(dev);
 	}
-	i915_gem_stolen_cleanup_compression(dev);
+	__intel_fbc_cleanup_cfb(dev);
+}
+
+/*
+ * intel_fbc_update - enable/disable FBC as needed
+ * @dev: the drm_device
+ *
+ * This function reevaluates the overall state and enables or disables FBC.
+ */
+void intel_fbc_update(struct drm_device *dev)
+{
+	struct drm_i915_private *dev_priv = dev->dev_private;
+
+	if (!dev_priv->display.enable_fbc)
+		return;
+
+	mutex_lock(&dev_priv->fbc.lock);
+	__intel_fbc_update(dev);
+	mutex_unlock(&dev_priv->fbc.lock);
 }
 
 void intel_fbc_invalidate(struct drm_i915_private *dev_priv,
@@ -661,8 +872,13 @@ void intel_fbc_invalidate(struct drm_i915_private *dev_priv,
 	struct drm_device *dev = dev_priv->dev;
 	unsigned int fbc_bits;
 
+	if (!dev_priv->display.enable_fbc)
+		return;
+
 	if (origin == ORIGIN_GTT)
 		return;
+
+	mutex_lock(&dev_priv->fbc.lock);
 
 	if (dev_priv->fbc.enabled)
 		fbc_bits = INTEL_FRONTBUFFER_PRIMARY(dev_priv->fbc.crtc->pipe);
@@ -675,7 +891,9 @@ void intel_fbc_invalidate(struct drm_i915_private *dev_priv,
 	dev_priv->fbc.busy_bits |= (fbc_bits & frontbuffer_bits);
 
 	if (dev_priv->fbc.busy_bits)
-		intel_fbc_disable(dev);
+		__intel_fbc_disable(dev);
+
+	mutex_unlock(&dev_priv->fbc.lock);
 }
 
 void intel_fbc_flush(struct drm_i915_private *dev_priv,
@@ -683,13 +901,21 @@ void intel_fbc_flush(struct drm_i915_private *dev_priv,
 {
 	struct drm_device *dev = dev_priv->dev;
 
-	if (!dev_priv->fbc.busy_bits)
+	if (!dev_priv->display.enable_fbc)
 		return;
+
+	mutex_lock(&dev_priv->fbc.lock);
+
+	if (!dev_priv->fbc.busy_bits)
+		goto out;
 
 	dev_priv->fbc.busy_bits &= ~frontbuffer_bits;
 
 	if (!dev_priv->fbc.busy_bits)
-		intel_fbc_update(dev);
+		__intel_fbc_update(dev);
+
+out:
+	mutex_unlock(&dev_priv->fbc.lock);
 }
 
 /**
@@ -701,6 +927,8 @@ void intel_fbc_flush(struct drm_i915_private *dev_priv,
 void intel_fbc_init(struct drm_i915_private *dev_priv)
 {
 	enum pipe pipe;
+
+	mutex_init(&dev_priv->fbc.lock);
 
 	if (!HAS_FBC(dev_priv)) {
 		dev_priv->fbc.enabled = false;
