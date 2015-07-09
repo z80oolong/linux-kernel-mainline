@@ -1,0 +1,18 @@
+origin/drm-intel-fixes b52b374eb348a5738cc946d2efa4913e2a1729dc
+	drm/i915: avoid leaking DMA mappings
+drm-upstream/drm-fixes fcee3c73a2c51982057b93fe599b7c68e16d0636
+	Merge tag 'drm-intel-fixes-2015-06-18' of git://anongit.freedesktop.org/drm-intel into drm-fixes
+origin/drm-intel-next-fixes ee46f3c7d79c334e8bdc9947503e329dc27c0b47
+	drm/i915: Clear pipe's pll hw state in hsw_dp_set_ddi_pll_sel()
+origin/drm-intel-next-queued d04df7325ac9def8c4a68b49822c1d0a0c5379c6
+	drm/i915: fbdev restore mode needs to invalidate frontbuffer
+drm-upstream/drm-next c5fd936e992dd2829167d2adc63e151675ca6898
+	drm/nouveau: Pause between setting gpu to D3hot and cutting the power
+sound-upstream/for-next 24d9b755ab2b44ec56723cd8e6b578985a1f1c76
+	ALSA: hda: Delete an unnecessary check before the function call "kobject_put"
+origin/topic/drm-misc 1055e0687f581cf988bb2239a00d1396e18ef114
+	drm/fourcc: Add formats R8, RG88, GR88
+origin/topic/drm-fixes d4acc1651588835b802a2049f4f3a2adcc1af750
+	Documentation: drm: Fix tablulation in KMS properties table
+origin/topic/kerneldoc 1ce161a842da5f90eeb98d529c542078cb91cccb
+	scripts/kernel-doc: Adding cross-reference links to html documentation.
