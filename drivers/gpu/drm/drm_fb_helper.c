@@ -744,6 +744,26 @@ void drm_fb_helper_unlink_fbi(struct drm_fb_helper *fb_helper)
 }
 EXPORT_SYMBOL(drm_fb_helper_unlink_fbi);
 
+ssize_t drm_fb_helper_sys_read(struct fb_info *info, char __user *buf,
+			size_t count, loff_t *ppos)
+{
+	if (info)
+		return fb_sys_read(info, buf, count, ppos);
+
+	return -ENODEV;
+}
+EXPORT_SYMBOL(drm_fb_helper_sys_read);
+
+ssize_t drm_fb_helper_sys_write(struct fb_info *info, const char __user *buf,
+			size_t count, loff_t *ppos)
+{
+	if (info)
+		return fb_sys_write(info, buf, count, ppos);
+
+	return -ENODEV;
+}
+EXPORT_SYMBOL(drm_fb_helper_sys_write);
+
 static int setcolreg(struct drm_crtc *crtc, u16 red, u16 green,
 		     u16 blue, u16 regno, struct fb_info *info)
 {
