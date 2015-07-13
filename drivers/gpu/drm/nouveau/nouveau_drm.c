@@ -316,7 +316,8 @@ static int nouveau_drm_probe(struct pci_dev *pdev,
 	boot = pdev->resource[PCI_ROM_RESOURCE].flags & IORESOURCE_ROM_SHADOW;
 #endif
 	if (nouveau_modeset != 2)
-		remove_conflicting_framebuffers(aper, "nouveaufb", boot);
+		drm_fb_helper_remove_conflicting_framebuffers(aper, "nouveaufb",
+			boot);
 	kfree(aper);
 
 	ret = nvkm_device_create(pdev, NVKM_BUS_PCI,
