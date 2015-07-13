@@ -812,6 +812,13 @@ void drm_fb_helper_cfb_imageblit(struct fb_info *info,
 }
 EXPORT_SYMBOL(drm_fb_helper_cfb_imageblit);
 
+void drm_fb_helper_set_suspend(struct drm_fb_helper *fb_helper, int state)
+{
+	if (fb_helper->fbdev)
+		fb_set_suspend(fb_helper->fbdev, state);
+}
+EXPORT_SYMBOL(drm_fb_helper_set_suspend);
+
 static int setcolreg(struct drm_crtc *crtc, u16 red, u16 green,
 		     u16 blue, u16 regno, struct fb_info *info)
 {
