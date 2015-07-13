@@ -764,6 +764,54 @@ ssize_t drm_fb_helper_sys_write(struct fb_info *info, const char __user *buf,
 }
 EXPORT_SYMBOL(drm_fb_helper_sys_write);
 
+void drm_fb_helper_sys_fillrect(struct fb_info *info,
+		const struct fb_fillrect *rect)
+{
+	if (info)
+		sys_fillrect(info, rect);
+}
+EXPORT_SYMBOL(drm_fb_helper_sys_fillrect);
+
+void drm_fb_helper_sys_copyarea(struct fb_info *info,
+		const struct fb_copyarea *area)
+{
+	if (info)
+		sys_copyarea(info, area);
+}
+EXPORT_SYMBOL(drm_fb_helper_sys_copyarea);
+
+void drm_fb_helper_sys_imageblit(struct fb_info *info,
+		const struct fb_image *image)
+{
+	if (info)
+		sys_imageblit(info, image);
+}
+EXPORT_SYMBOL(drm_fb_helper_sys_imageblit);
+
+void drm_fb_helper_cfb_fillrect(struct fb_info *info,
+		const struct fb_fillrect *rect)
+{
+	if (info)
+		cfb_fillrect(info, rect);
+}
+EXPORT_SYMBOL(drm_fb_helper_cfb_fillrect);
+
+void drm_fb_helper_cfb_copyarea(struct fb_info *info,
+		const struct fb_copyarea *area)
+{
+	if (info)
+		cfb_copyarea(info, area);
+}
+EXPORT_SYMBOL(drm_fb_helper_cfb_copyarea);
+
+void drm_fb_helper_cfb_imageblit(struct fb_info *info,
+		const struct fb_image *image)
+{
+	if (info)
+		cfb_imageblit(info, image);
+}
+EXPORT_SYMBOL(drm_fb_helper_cfb_imageblit);
+
 static int setcolreg(struct drm_crtc *crtc, u16 red, u16 green,
 		     u16 blue, u16 regno, struct fb_info *info)
 {
