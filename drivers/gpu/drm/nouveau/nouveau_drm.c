@@ -317,7 +317,8 @@ static int nouveau_drm_probe(struct pci_dev *pdev,
 	boot = pdev->resource[PCI_ROM_RESOURCE].flags & IORESOURCE_ROM_SHADOW;
 #endif
 	if (nouveau_modeset != 2)
-		remove_conflicting_framebuffers(aper, "nouveaufb", boot);
+		drm_fb_helper_remove_conflicting_framebuffers(aper, "nouveaufb",
+			boot);
 	kfree(aper);
 
 	ret = nvkm_device_create(pdev, NVKM_BUS_PCI,
@@ -943,7 +944,8 @@ static struct drm_driver
 driver_stub = {
 	.driver_features =
 		DRIVER_USE_AGP |
-		DRIVER_GEM | DRIVER_MODESET | DRIVER_PRIME | DRIVER_RENDER,
+		DRIVER_GEM | DRIVER_MODESET | DRIVER_PRIME | DRIVER_RENDER |
+		DRIVER_KMS_LEGACY_CONTEXT,
 
 	.load = nouveau_drm_load,
 	.unload = nouveau_drm_unload,

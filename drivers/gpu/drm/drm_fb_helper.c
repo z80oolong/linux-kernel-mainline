@@ -667,6 +667,59 @@ out_free:
 }
 EXPORT_SYMBOL(drm_fb_helper_init);
 
+struct fb_info *drm_fb_helper_alloc_fbi(struct drm_fb_helper *fb_helper)
+{
+	struct device *dev = fb_helper->dev->dev;
+	struct fb_info *info;
+	int ret;
+
+	info = framebuffer_alloc(0, dev);
+	if (!info)
+		return ERR_PTR(-ENOMEM);
+
+	ret = fb_alloc_cmap(&info->cmap, 256, 0);
+	if (ret)
+		goto err_release;
+
+	info->apertures = alloc_apertures(1);
+	if (!info->apertures) {
+		ret = -ENOMEM;
+		goto err_free_cmap;
+	}
+
+	fb_helper->fbdev = info;
+
+	return info;
+
+err_free_cmap:
+	fb_dealloc_cmap(&info->cmap);
+err_release:
+	framebuffer_release(info);
+	return ERR_PTR(ret);
+}
+EXPORT_SYMBOL(drm_fb_helper_alloc_fbi);
+
+void drm_fb_helper_unregister_fbi(struct drm_fb_helper *fb_helper)
+{
+	if (fb_helper->fbdev)
+		unregister_framebuffer(fb_helper->fbdev);
+}
+EXPORT_SYMBOL(drm_fb_helper_unregister_fbi);
+
+void drm_fb_helper_release_fbi(struct drm_fb_helper *fb_helper)
+{
+	struct fb_info *info = fb_helper->fbdev;
+
+	if (info) {
+		if (info->cmap.len)
+			fb_dealloc_cmap(&info->cmap);
+		framebuffer_release(info);
+	}
+
+	fb_helper->fbdev = NULL;
+}
+EXPORT_SYMBOL(drm_fb_helper_release_fbi);
+
 void drm_fb_helper_fini(struct drm_fb_helper *fb_helper)
 {
 	if (!list_empty(&fb_helper->kernel_fb_list)) {
@@ -683,6 +736,95 @@ void drm_fb_helper_fini(struct drm_fb_helper *fb_helper)
 
 }
 EXPORT_SYMBOL(drm_fb_helper_fini);
+
+void drm_fb_helper_unlink_fbi(struct drm_fb_helper *fb_helper)
+{
+	if (fb_helper->fbdev)
+		unlink_framebuffer(fb_helper->fbdev);
+}
+EXPORT_SYMBOL(drm_fb_helper_unlink_fbi);
+
+ssize_t drm_fb_helper_sys_read(struct fb_info *info, char __user *buf,
+			size_t count, loff_t *ppos)
+{
+	if (info)
+		return fb_sys_read(info, buf, count, ppos);
+
+	return -ENODEV;
+}
+EXPORT_SYMBOL(drm_fb_helper_sys_read);
+
+ssize_t drm_fb_helper_sys_write(struct fb_info *info, const char __user *buf,
+			size_t count, loff_t *ppos)
+{
+	if (info)
+		return fb_sys_write(info, buf, count, ppos);
+
+	return -ENODEV;
+}
+EXPORT_SYMBOL(drm_fb_helper_sys_write);
+
+void drm_fb_helper_sys_fillrect(struct fb_info *info,
+		const struct fb_fillrect *rect)
+{
+	if (info)
+		sys_fillrect(info, rect);
+}
+EXPORT_SYMBOL(drm_fb_helper_sys_fillrect);
+
+void drm_fb_helper_sys_copyarea(struct fb_info *info,
+		const struct fb_copyarea *area)
+{
+	if (info)
+		sys_copyarea(info, area);
+}
+EXPORT_SYMBOL(drm_fb_helper_sys_copyarea);
+
+void drm_fb_helper_sys_imageblit(struct fb_info *info,
+		const struct fb_image *image)
+{
+	if (info)
+		sys_imageblit(info, image);
+}
+EXPORT_SYMBOL(drm_fb_helper_sys_imageblit);
+
+void drm_fb_helper_cfb_fillrect(struct fb_info *info,
+		const struct fb_fillrect *rect)
+{
+	if (info)
+		cfb_fillrect(info, rect);
+}
+EXPORT_SYMBOL(drm_fb_helper_cfb_fillrect);
+
+void drm_fb_helper_cfb_copyarea(struct fb_info *info,
+		const struct fb_copyarea *area)
+{
+	if (info)
+		cfb_copyarea(info, area);
+}
+EXPORT_SYMBOL(drm_fb_helper_cfb_copyarea);
+
+void drm_fb_helper_cfb_imageblit(struct fb_info *info,
+		const struct fb_image *image)
+{
+	if (info)
+		cfb_imageblit(info, image);
+}
+EXPORT_SYMBOL(drm_fb_helper_cfb_imageblit);
+
+void drm_fb_helper_set_suspend(struct drm_fb_helper *fb_helper, int state)
+{
+	if (fb_helper->fbdev)
+		fb_set_suspend(fb_helper->fbdev, state);
+}
+EXPORT_SYMBOL(drm_fb_helper_set_suspend);
+
+int drm_fb_helper_remove_conflicting_framebuffers(struct apertures_struct *a,
+		const char *name, bool primary)
+{
+	return remove_conflicting_framebuffers(a, name, primary);
+}
+EXPORT_SYMBOL(drm_fb_helper_remove_conflicting_framebuffers);
 
 static int setcolreg(struct drm_crtc *crtc, u16 red, u16 green,
 		     u16 blue, u16 regno, struct fb_info *info)

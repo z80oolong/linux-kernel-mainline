@@ -56,7 +56,8 @@ static int cirrus_kick_out_firmware_fb(struct pci_dev *pdev)
 #ifdef CONFIG_X86
 	primary = pdev->resource[PCI_ROM_RESOURCE].flags & IORESOURCE_ROM_SHADOW;
 #endif
-	remove_conflicting_framebuffers(ap, "cirrusdrmfb", primary);
+	drm_fb_helper_remove_conflicting_framebuffers(ap, "cirrusdrmfb",
+		primary);
 	kfree(ap);
 
 	return 0;
@@ -92,7 +93,7 @@ static int cirrus_pm_suspend(struct device *dev)
 
 	if (cdev->mode_info.gfbdev) {
 		console_lock();
-		fb_set_suspend(cdev->mode_info.gfbdev->helper.fbdev, 1);
+		drm_fb_helper_set_suspend(&cdev->mode_info.gfbdev->helper, 1);
 		console_unlock();
 	}
 
@@ -109,7 +110,7 @@ static int cirrus_pm_resume(struct device *dev)
 
 	if (cdev->mode_info.gfbdev) {
 		console_lock();
-		fb_set_suspend(cdev->mode_info.gfbdev->helper.fbdev, 0);
+		drm_fb_helper_set_suspend(&cdev->mode_info.gfbdev->helper, 0);
 		console_unlock();
 	}
 
