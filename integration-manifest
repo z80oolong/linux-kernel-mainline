@@ -1,0 +1,18 @@
+origin/drm-intel-fixes bbf470202d697b7d57cc3febad578ec77fd7bded
+	drm/i915: fix oops in primary_check_plane
+drm-upstream/drm-fixes 2d28b633c3fa8f53b919a5de86eb1c8e78dde818
+	Merge tag 'omapdrm-4.2-fixes' of git://git.kernel.org/pub/scm/linux/kernel/git/tomba/linux into drm-fixes
+origin/drm-intel-next-fixes ee46f3c7d79c334e8bdc9947503e329dc27c0b47
+	drm/i915: Clear pipe's pll hw state in hsw_dp_set_ddi_pll_sel()
+origin/drm-intel-next-queued e4ca061275ec6a48b66c6edebe08644e666994c0
+	drm/i915: Don't forget to mark crtc as inactive after disable
+drm-upstream/drm-next c5fd936e992dd2829167d2adc63e151675ca6898
+	drm/nouveau: Pause between setting gpu to D3hot and cutting the power
+sound-upstream/for-next 3ce095c16263630dde46d6051854073edaacf3d7
+	ALSA: aoa: Drop owner assignment from i2c_driver
+origin/topic/drm-misc 6198447760ed3c684fbcc93b5f91b4e84861e8f3
+	drm/fb_cma_helper: Use new drm_fb_helper functions
+origin/topic/drm-fixes d4acc1651588835b802a2049f4f3a2adcc1af750
+	Documentation: drm: Fix tablulation in KMS properties table
+origin/topic/kerneldoc 1ce161a842da5f90eeb98d529c542078cb91cccb
+	scripts/kernel-doc: Adding cross-reference links to html documentation.
