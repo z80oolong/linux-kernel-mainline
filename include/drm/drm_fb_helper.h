@@ -168,6 +168,9 @@ void drm_fb_helper_cfb_imageblit(struct fb_info *info,
 
 void drm_fb_helper_set_suspend(struct drm_fb_helper *fb_helper, int state);
 
+int drm_fb_helper_remove_conflicting_framebuffers(struct apertures_struct *a,
+		const char *name, bool primary);
+
 int drm_fb_helper_setcmap(struct fb_cmap *cmap, struct fb_info *info);
 
 int drm_fb_helper_hotplug_event(struct drm_fb_helper *fb_helper);

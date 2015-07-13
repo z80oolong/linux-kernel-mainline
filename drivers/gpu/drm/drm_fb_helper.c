@@ -819,6 +819,13 @@ void drm_fb_helper_set_suspend(struct drm_fb_helper *fb_helper, int state)
 }
 EXPORT_SYMBOL(drm_fb_helper_set_suspend);
 
+int drm_fb_helper_remove_conflicting_framebuffers(struct apertures_struct *a,
+		const char *name, bool primary)
+{
+	return remove_conflicting_framebuffers(a, name, primary);
+}
+EXPORT_SYMBOL(drm_fb_helper_remove_conflicting_framebuffers);
+
 static int setcolreg(struct drm_crtc *crtc, u16 red, u16 green,
 		     u16 blue, u16 regno, struct fb_info *info)
 {
