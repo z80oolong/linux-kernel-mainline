@@ -1,0 +1,18 @@
+origin/drm-intel-fixes ccfb8b2ed4d4e12c3c35de3db5fbbbaa11277736
+	drm/i915: Do not call intel_crtc_disable if the crtc is already disabled.
+drm-upstream/drm-fixes 2d28b633c3fa8f53b919a5de86eb1c8e78dde818
+	Merge tag 'omapdrm-4.2-fixes' of git://git.kernel.org/pub/scm/linux/kernel/git/tomba/linux into drm-fixes
+origin/drm-intel-next-fixes ee46f3c7d79c334e8bdc9947503e329dc27c0b47
+	drm/i915: Clear pipe's pll hw state in hsw_dp_set_ddi_pll_sel()
+origin/drm-intel-next-queued 264954811af62dcfe17fc44cef379b315bb066eb
+	drm/i915: Invert fastboot check
+drm-upstream/drm-next c5fd936e992dd2829167d2adc63e151675ca6898
+	drm/nouveau: Pause between setting gpu to D3hot and cutting the power
+sound-upstream/for-next 3ce095c16263630dde46d6051854073edaacf3d7
+	ALSA: aoa: Drop owner assignment from i2c_driver
+origin/topic/drm-misc ec081cb337a1edc793d7aa53baa9b8afa096678d
+	drm: Fix warning with make xmldocs caused by drm_irq.c
+origin/topic/drm-fixes c631d5f90e7ee246536c72f80ade86e9ef4d2f13
+	drm: Provide compat ioctl for addfb2.1
+origin/topic/kerneldoc 1ce161a842da5f90eeb98d529c542078cb91cccb
+	scripts/kernel-doc: Adding cross-reference links to html documentation.
