@@ -1,0 +1,18 @@
+origin/drm-intel-fixes e9308884878942c618a42cab122df80fbf458dc9
+	drm/ttm: improve uncached page deallocation.
+drm-upstream/drm-fixes e9308884878942c618a42cab122df80fbf458dc9
+	drm/ttm: improve uncached page deallocation.
+origin/drm-intel-next-fixes ee46f3c7d79c334e8bdc9947503e329dc27c0b47
+	drm/i915: Clear pipe's pll hw state in hsw_dp_set_ddi_pll_sel()
+origin/drm-intel-next-queued 4b0c8bb016e7f36e2d6ec230f9177f88def690d5
+	drm/i915/skl: Drop the preliminary_hw_support flag
+drm-upstream/drm-next c5fd936e992dd2829167d2adc63e151675ca6898
+	drm/nouveau: Pause between setting gpu to D3hot and cutting the power
+sound-upstream/for-next 3ce095c16263630dde46d6051854073edaacf3d7
+	ALSA: aoa: Drop owner assignment from i2c_driver
+origin/topic/drm-misc f9fe4b9b2ad4f2b801fdff3d634b07c9f9fc4327
+	drm/mgag200: remove unneeded variable
+origin/topic/drm-fixes e9308884878942c618a42cab122df80fbf458dc9
+	drm/ttm: improve uncached page deallocation.
+origin/topic/kerneldoc 1ce161a842da5f90eeb98d529c542078cb91cccb
+	scripts/kernel-doc: Adding cross-reference links to html documentation.
