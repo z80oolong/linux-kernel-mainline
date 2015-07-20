@@ -1,0 +1,18 @@
+origin/drm-intel-fixes 52721d9d3334c1cb1f76219a161084094ec634dc
+	Linux 4.2-rc3
+drm-upstream/drm-fixes e9308884878942c618a42cab122df80fbf458dc9
+	drm/ttm: improve uncached page deallocation.
+origin/drm-intel-next-fixes ee46f3c7d79c334e8bdc9947503e329dc27c0b47
+	drm/i915: Clear pipe's pll hw state in hsw_dp_set_ddi_pll_sel()
+origin/drm-intel-next-queued dd92d8de833613993b337cb4ff853587e1600aef
+	Partially revert "drm/i915: s/mdelay/msleep/" in ilk rps code
+drm-upstream/drm-next c5fd936e992dd2829167d2adc63e151675ca6898
+	drm/nouveau: Pause between setting gpu to D3hot and cutting the power
+sound-upstream/for-next fbce23a0b95763dfc4961ce6240e055c39f497ed
+	ALSA: hda - Check the return value from pm_runtime_get/put*()
+origin/topic/drm-misc f9fe4b9b2ad4f2b801fdff3d634b07c9f9fc4327
+	drm/mgag200: remove unneeded variable
+origin/topic/drm-fixes 52721d9d3334c1cb1f76219a161084094ec634dc
+	Linux 4.2-rc3
+origin/topic/kerneldoc 1ce161a842da5f90eeb98d529c542078cb91cccb
+	scripts/kernel-doc: Adding cross-reference links to html documentation.
