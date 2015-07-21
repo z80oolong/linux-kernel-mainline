@@ -1,0 +1,20 @@
+origin/drm-intel-fixes 648a9bc5308d952f2c80772301b339f73026f013
+	drm/i915: Use two 32bit reads for select 64bit REG_READ ioctls
+drm-upstream/drm-fixes e9308884878942c618a42cab122df80fbf458dc9
+	drm/ttm: improve uncached page deallocation.
+origin/drm-intel-next-fixes ee46f3c7d79c334e8bdc9947503e329dc27c0b47
+	drm/i915: Clear pipe's pll hw state in hsw_dp_set_ddi_pll_sel()
+origin/drm-intel-next-queued b8bb08ec48fb4eafefbc7899b50ec5c6216465b1
+	drm/i915: remove redundant if check
+drm-upstream/drm-next c5fd936e992dd2829167d2adc63e151675ca6898
+	drm/nouveau: Pause between setting gpu to D3hot and cutting the power
+sound-upstream/for-next fbce23a0b95763dfc4961ce6240e055c39f497ed
+	ALSA: hda - Check the return value from pm_runtime_get/put*()
+origin/topic/drm-misc f9fe4b9b2ad4f2b801fdff3d634b07c9f9fc4327
+	drm/mgag200: remove unneeded variable
+origin/topic/drm-fixes 52721d9d3334c1cb1f76219a161084094ec634dc
+	Linux 4.2-rc3
+origin/topic/kerneldoc 1ce161a842da5f90eeb98d529c542078cb91cccb
+	scripts/kernel-doc: Adding cross-reference links to html documentation.
+origin/topic/crc-pmic b029e66fa8e39ba10dcc47b114be8da8b082493b
+	drm/i915: Backlight control using CRC PMIC based PWM driver
