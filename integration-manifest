@@ -1,0 +1,22 @@
+origin/drm-intel-fixes 648a9bc5308d952f2c80772301b339f73026f013
+	drm/i915: Use two 32bit reads for select 64bit REG_READ ioctls
+drm-upstream/drm-fixes e9308884878942c618a42cab122df80fbf458dc9
+	drm/ttm: improve uncached page deallocation.
+origin/drm-intel-next-fixes ee46f3c7d79c334e8bdc9947503e329dc27c0b47
+	drm/i915: Clear pipe's pll hw state in hsw_dp_set_ddi_pll_sel()
+origin/drm-intel-next-queued 63c88d2204bb33d060e22318b3d50162b7019add
+	drm/i915/bxt: add support for HPD long/short pulse detection on HPD_PORT_A pin
+drm-upstream/drm-next c5fd936e992dd2829167d2adc63e151675ca6898
+	drm/nouveau: Pause between setting gpu to D3hot and cutting the power
+sound-upstream/for-next fbce23a0b95763dfc4961ce6240e055c39f497ed
+	ALSA: hda - Check the return value from pm_runtime_get/put*()
+origin/topic/drm-misc f9fe4b9b2ad4f2b801fdff3d634b07c9f9fc4327
+	drm/mgag200: remove unneeded variable
+origin/topic/drm-fixes 5677d67ae3949f09f57357241b88222d49b8c782
+	drm: Stop resetting connector state to unknown
+origin/topic/kerneldoc 1ce161a842da5f90eeb98d529c542078cb91cccb
+	scripts/kernel-doc: Adding cross-reference links to html documentation.
+origin/topic/crc-pmic 04cbfe68c3190f23bcfec230bfd832b533f35554
+	mfd: Add GPIOLIB dependency if INTEL_SOC_PMIC is to be enabled
+origin/topic/connector-locking 3fdefa399e4644399ce3e74e65a75122d52dba6a
+	drm: gc now dead mode_group code
