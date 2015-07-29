@@ -1,0 +1,22 @@
+origin/drm-intel-fixes ee0a227b7ac6e75f28e10269f81c7ec6eb600952
+	drm/i915: Replace WARN inside I915_READ64_2x32 with retry loop
+drm-upstream/drm-fixes 520e8bfc35066d4344adf13081e59bfde30aa36d
+	Merge branch 'linux-4.2' of git://anongit.freedesktop.org/git/nouveau/linux-2.6 into drm-fixes
+origin/drm-intel-next-fixes ee46f3c7d79c334e8bdc9947503e329dc27c0b47
+	drm/i915: Clear pipe's pll hw state in hsw_dp_set_ddi_pll_sel()
+origin/drm-intel-next-queued 8453580cb8834dedffda86bcb64f13befc90eb03
+	drm/i915: Fix command parser table validator
+drm-upstream/drm-next dcd14dd957f02ef679c61325a2221a0574bdcab3
+	Merge tag 'topic/connector-locking-2015-07-23' of git://anongit.freedesktop.org/drm-intel into drm-next
+sound-upstream/for-next fbce23a0b95763dfc4961ce6240e055c39f497ed
+	ALSA: hda - Check the return value from pm_runtime_get/put*()
+origin/topic/drm-misc a8a7af8607a2551ce9699ffea7ccc7bd54b59064
+	drm: Remove __drm_modeset_lock_all
+origin/topic/drm-fixes 5677d67ae3949f09f57357241b88222d49b8c782
+	drm: Stop resetting connector state to unknown
+origin/topic/kerneldoc f6d6913425a560c3cd213096e34834e797ef83f8
+	drm/doc: Convert to markdown
+origin/topic/crc-pmic 04cbfe68c3190f23bcfec230bfd832b533f35554
+	mfd: Add GPIOLIB dependency if INTEL_SOC_PMIC is to be enabled
+origin/topic/connector-locking 3fdefa399e4644399ce3e74e65a75122d52dba6a
+	drm: gc now dead mode_group code
