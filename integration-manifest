@@ -1,0 +1,22 @@
+origin/drm-intel-fixes 5eb3e5a5e11d14f9deb2a4b83555443b69ab9940
+	drm/i915: Declare the swizzling unknown for L-shaped configurations
+drm-upstream/drm-fixes bdce3e7c729907e303396690b2b23b972c6717be
+	Merge branch 'msm-fixes-4.2' of git://people.freedesktop.org/~robclark/linux into drm-fixes
+origin/drm-intel-next-fixes ee46f3c7d79c334e8bdc9947503e329dc27c0b47
+	drm/i915: Clear pipe's pll hw state in hsw_dp_set_ddi_pll_sel()
+origin/drm-intel-next-queued 8453580cb8834dedffda86bcb64f13befc90eb03
+	drm/i915: Fix command parser table validator
+drm-upstream/drm-next dcd14dd957f02ef679c61325a2221a0574bdcab3
+	Merge tag 'topic/connector-locking-2015-07-23' of git://anongit.freedesktop.org/drm-intel into drm-next
+sound-upstream/for-next 527c465a3c8716d93201ae34b7fc52679610596d
+	Merge branch 'for-linus' into for-next
+origin/topic/drm-misc 1c473be11958fa8f01ea543ef8bc1e3f70fab69e
+	drm: Fixup locking WARNINGs in drm_mode_config_reset
+origin/topic/drm-fixes 5677d67ae3949f09f57357241b88222d49b8c782
+	drm: Stop resetting connector state to unknown
+origin/topic/kerneldoc f6d6913425a560c3cd213096e34834e797ef83f8
+	drm/doc: Convert to markdown
+origin/topic/crc-pmic 04cbfe68c3190f23bcfec230bfd832b533f35554
+	mfd: Add GPIOLIB dependency if INTEL_SOC_PMIC is to be enabled
+origin/topic/connector-locking 3fdefa399e4644399ce3e74e65a75122d52dba6a
+	drm: gc now dead mode_group code
