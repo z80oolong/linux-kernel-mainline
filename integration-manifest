@@ -1,0 +1,24 @@
+origin/drm-intel-fixes d2944cf21305c754fa8b2d6c1eea05ad5dad7944
+	drm/i915: Commit planes on each crtc separately.
+drm-upstream/drm-fixes bdce3e7c729907e303396690b2b23b972c6717be
+	Merge branch 'msm-fixes-4.2' of git://people.freedesktop.org/~robclark/linux into drm-fixes
+origin/drm-intel-next-fixes ee46f3c7d79c334e8bdc9947503e329dc27c0b47
+	drm/i915: Clear pipe's pll hw state in hsw_dp_set_ddi_pll_sel()
+origin/drm-intel-next-queued 2881c509b40af1b326152da418d45d1eb4593728
+	drm/i915: clflush on pin_to_display after pwrite to UC bo in LLC
+drm-upstream/drm-next dcd14dd957f02ef679c61325a2221a0574bdcab3
+	Merge tag 'topic/connector-locking-2015-07-23' of git://anongit.freedesktop.org/drm-intel into drm-next
+sound-upstream/for-next 41450b1b5ba101bf470b4fdf0407b30696e86bd3
+	Merge branch 'for-linus' into for-next
+origin/topic/drm-misc b90180b057f77fe5c47a033aaa13a0f6578e5a01
+	drm/irq: More pipe/crtc consistency cleanups
+origin/topic/drm-fixes 4772ff03df8094fd99d28de5fcf5df3a3e9c68bb
+	drm/dp/mst: Remove port after removing connector.
+origin/topic/kerneldoc 86fea2bafc9b25f0915dd46039305ec3bfb0aaf4
+	scripts/kernel-doc Allow struct arguments documentation in struct body
+origin/topic/crc-pmic 04cbfe68c3190f23bcfec230bfd832b533f35554
+	mfd: Add GPIOLIB dependency if INTEL_SOC_PMIC is to be enabled
+origin/topic/connector-locking 3fdefa399e4644399ce3e74e65a75122d52dba6a
+	drm: gc now dead mode_group code
+origin/topic/mst-fixes 6ea76f3cade4734e73e3da842005820558b8b828
+	drm/atomic-helpers: Make encoder picking more robust
