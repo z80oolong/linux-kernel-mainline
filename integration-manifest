@@ -1,0 +1,24 @@
+origin/drm-intel-fixes d2944cf21305c754fa8b2d6c1eea05ad5dad7944
+	drm/i915: Commit planes on each crtc separately.
+drm-upstream/drm-fixes d211d87e14d0c1b28a60cb6b512d162634ca6a99
+	Revert "drm/nouveau/fifo/gk104: kick channels when deactivating them"
+origin/drm-intel-next-fixes 75067ddecf21271631bc018d2fb23ddd09b66aae
+	drm/i915: Per-DDI I_boost override
+origin/drm-intel-next-queued 66e2806656b12bbb98ff36b7beb1538b87cb2f2f
+	drm/i915: remove excessive scaler debugging messages
+drm-upstream/drm-next 8f9cb50789e76f3e224e8861adf650e55c747af4
+	Merge tag 'drm-amdkfd-next-fixes-2015-08-05' of git://people.freedesktop.org/~gabbayo/linux into drm-next
+sound-upstream/for-next bc18e31c3042f14fa5f2ff5c21136e2fdf4140f8
+	ALSA: usb-audio: Fix parameter block size for UAC2 control requests
+origin/topic/drm-misc e8b4855b5dd3e285d0ec18ed15468025abc1be9a
+	drm: WARN_ON if a modeset driver uses legacy suspend/resume helpers
+origin/topic/drm-fixes 4772ff03df8094fd99d28de5fcf5df3a3e9c68bb
+	drm/dp/mst: Remove port after removing connector.
+origin/topic/kerneldoc 86fea2bafc9b25f0915dd46039305ec3bfb0aaf4
+	scripts/kernel-doc Allow struct arguments documentation in struct body
+origin/topic/crc-pmic 04cbfe68c3190f23bcfec230bfd832b533f35554
+	mfd: Add GPIOLIB dependency if INTEL_SOC_PMIC is to be enabled
+origin/topic/connector-locking 3fdefa399e4644399ce3e74e65a75122d52dba6a
+	drm: gc now dead mode_group code
+origin/topic/mst-fixes 6ea76f3cade4734e73e3da842005820558b8b828
+	drm/atomic-helpers: Make encoder picking more robust
