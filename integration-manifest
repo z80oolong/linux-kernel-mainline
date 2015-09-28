@@ -1,0 +1,24 @@
+origin/drm-intel-fixes dfc53c5e73f8b73abf920241e45eab87335ae742
+	drm/i915: Consider HW CSB write pointer before resetting the sw read pointer
+drm-upstream/drm-fixes fd03420b5624617a708fb9b13634b41b37c22cfa
+	Merge tag 'drm-intel-fixes-2015-09-24' of git://anongit.freedesktop.org/drm-intel into drm-fixes
+origin/drm-intel-next-fixes 824257857fd81f5e749831ff9cd63566b5a86abe
+	drm/i915: Allow DSI dual link to be configured on any pipe
+origin/drm-intel-next-queued 590d5b04c3154aec8985afa30f559e53d4b1329a
+	drm/i915/gen8: Move WaHdcDisableFetchWhenMasked to common init fn
+drm-upstream/drm-next 73bf1b7be7aab60d7c651402441dd0b0b4991098
+	Merge branch 'drm-next-4.3' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream/for-next 0b2c8c12f92996debdd7a2c2aebb33242e30922a
+	Merge tag 'asoc-v4.3-rc2' of git://git.kernel.org/pub/scm/linux/kernel/git/broonie/sound into for-next
+origin/topic/drm-misc cf6483050e9bf13979415d9fd388554d8c8f3477
+	drm/irq: Add drm_crtc_vblank_count_and_time()
+origin/topic/drm-fixes f36203be608a38a5b5523a7aa52cc72f757b9679
+	drm/dp: Add dp_aux_i2c_speed_khz module param to set the assume i2c bus speed
+origin/topic/kerneldoc a6333fcc6ddce4533c280b288ed7c3f0d61b76b5
+	scripts/kernel-doc: Processing -nofunc for functions only
+origin/topic/crc-pmic 04cbfe68c3190f23bcfec230bfd832b533f35554
+	mfd: Add GPIOLIB dependency if INTEL_SOC_PMIC is to be enabled
+origin/topic/connector-locking 3fdefa399e4644399ce3e74e65a75122d52dba6a
+	drm: gc now dead mode_group code
+origin/topic/mst-fixes 6ea76f3cade4734e73e3da842005820558b8b828
+	drm/atomic-helpers: Make encoder picking more robust
