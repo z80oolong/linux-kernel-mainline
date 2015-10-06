@@ -1,0 +1,24 @@
+origin/drm-intel-fixes 049e6dde7e57f0054fdc49102e7ef4830c698b46
+	Linux 4.3-rc4
+drm-upstream/drm-fixes ccf03d6995fa4b784f5b987726ba98f4859bf326
+	drm/dp/mst: add some defines for logical/physical ports
+origin/drm-intel-next-fixes 824257857fd81f5e749831ff9cd63566b5a86abe
+	drm/i915: Allow DSI dual link to be configured on any pipe
+origin/drm-intel-next-queued dcf07a2b492b0efd400d858bc9a15f26a5c22fc2
+	drm/i915: shrinker_control->nr_to_scan is now unsigned long
+drm-upstream/drm-next d4070ff71363a2b6598633f23558f809600ebad2
+	Merge tag 'drm-intel-next-2015-09-11' of git://anongit.freedesktop.org/drm-intel into drm-next
+sound-upstream/for-next a04267fd87b62cd03d2a2ebb05a5b38d272e8d11
+	ALSA: hdac: Fix to check if stream not in use in release
+origin/topic/drm-misc 88e72717c2de4181d8a6de1b04315953ad2bebdf
+	drm/irq: Use unsigned int pipe in public API
+origin/topic/drm-fixes f36203be608a38a5b5523a7aa52cc72f757b9679
+	drm/dp: Add dp_aux_i2c_speed_khz module param to set the assume i2c bus speed
+origin/topic/kerneldoc a6333fcc6ddce4533c280b288ed7c3f0d61b76b5
+	scripts/kernel-doc: Processing -nofunc for functions only
+origin/topic/crc-pmic 04cbfe68c3190f23bcfec230bfd832b533f35554
+	mfd: Add GPIOLIB dependency if INTEL_SOC_PMIC is to be enabled
+origin/topic/connector-locking 3fdefa399e4644399ce3e74e65a75122d52dba6a
+	drm: gc now dead mode_group code
+origin/topic/mst-fixes 6ea76f3cade4734e73e3da842005820558b8b828
+	drm/atomic-helpers: Make encoder picking more robust
