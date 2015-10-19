@@ -1,0 +1,24 @@
+origin/drm-intel-fixes 18e9345b0db9fe7bd18c3c43967789fe0a2fdb52
+	drm/i915: Add primary plane to mask if it's visible
+drm-upstream/drm-fixes d549f545e690c3cbdeb33df3579eae3230eb8904
+	drm/virtio: use %llu format string form atomic64_t
+origin/drm-intel-next-fixes 606bb5e0b28b540685fb94c22902cd9a948a3779
+	drm/i915: Use round to closest when computing the CEA 1.001 pixel clocks
+origin/drm-intel-next-queued 024c9045221fe45482863c47c4b4c47d37f97cbf
+	drm/i915/skl: Eliminate usage of pipe_wm_parameters from SKL-style WM (v4)
+drm-upstream/drm-next c76af02d90ee9e9d2ef478fc6f874ad2abcf3ec9
+	via_drm.h: move struct via_file_private definition to drivers/gpu/drm/via/via_drv.h
+sound-upstream/for-next 9a30ae2df29c27eca58581862928ee2c7bbdfa76
+	ALSA: firewire-tascam: off by one in identify_model()
+origin/topic/drm-misc 5ddf10bc9f6f615d27877d7a125f277042e0a046
+	drm/edid: Round to closest when computing the CEA/HDMI alternate clock
+origin/topic/drm-fixes f36203be608a38a5b5523a7aa52cc72f757b9679
+	drm/dp: Add dp_aux_i2c_speed_khz module param to set the assume i2c bus speed
+origin/topic/kerneldoc a6333fcc6ddce4533c280b288ed7c3f0d61b76b5
+	scripts/kernel-doc: Processing -nofunc for functions only
+origin/topic/crc-pmic 04cbfe68c3190f23bcfec230bfd832b533f35554
+	mfd: Add GPIOLIB dependency if INTEL_SOC_PMIC is to be enabled
+origin/topic/connector-locking 3fdefa399e4644399ce3e74e65a75122d52dba6a
+	drm: gc now dead mode_group code
+origin/topic/mst-fixes 6ea76f3cade4734e73e3da842005820558b8b828
+	drm/atomic-helpers: Make encoder picking more robust
