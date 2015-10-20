@@ -1,0 +1,24 @@
+origin/drm-intel-fixes 18e9345b0db9fe7bd18c3c43967789fe0a2fdb52
+	drm/i915: Add primary plane to mask if it's visible
+drm-upstream/drm-fixes d3df6963cc1842b8d556daa00fec91b66616e134
+	drm: fix mutex leak in drm_dp_get_mst_branch_device
+origin/drm-intel-next-fixes 606bb5e0b28b540685fb94c22902cd9a948a3779
+	drm/i915: Use round to closest when computing the CEA 1.001 pixel clocks
+origin/drm-intel-next-queued fbcc1a0c3e36d6ddc19eb6a527518eaeef77645a
+	drm/i915: Break out common code from gen8_gt_irq_handler
+drm-upstream/drm-next affa0e033b04996700434312c76df3c78f683870
+	Merge tag 'topic/drm-misc-2015-10-19' of git://anongit.freedesktop.org/drm-intel into drm-next
+sound-upstream/for-next f937b43d48f1080e39de723d15680b2ad5d7e6fd
+	ALSA: firewire-tascam: clear extra MIDI bytes in an asynchronous transaction
+origin/topic/drm-misc 5d170139eb10ae12e1bd076245c42b35453d8324
+	vga_switcheroo: Constify vga_switcheroo_handler
+origin/topic/drm-fixes f36203be608a38a5b5523a7aa52cc72f757b9679
+	drm/dp: Add dp_aux_i2c_speed_khz module param to set the assume i2c bus speed
+origin/topic/kerneldoc a6333fcc6ddce4533c280b288ed7c3f0d61b76b5
+	scripts/kernel-doc: Processing -nofunc for functions only
+origin/topic/crc-pmic 04cbfe68c3190f23bcfec230bfd832b533f35554
+	mfd: Add GPIOLIB dependency if INTEL_SOC_PMIC is to be enabled
+origin/topic/connector-locking 3fdefa399e4644399ce3e74e65a75122d52dba6a
+	drm: gc now dead mode_group code
+origin/topic/mst-fixes 6ea76f3cade4734e73e3da842005820558b8b828
+	drm/atomic-helpers: Make encoder picking more robust
