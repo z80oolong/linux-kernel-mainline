@@ -194,7 +194,7 @@ static int mga_g200se_set_plls(struct mga_device *mdev, long clock)
 			}
 		}
 
-		fvv = pllreffreq * testn / testm;
+		fvv = pllreffreq * n / m;
 		fvv = (fvv - 800000) / 50000;
 
 		if (fvv > 15)
