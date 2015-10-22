@@ -285,8 +285,6 @@ struct snd_pcm_hw_constraint_ranges {
 	unsigned int mask;
 };
 
-struct snd_pcm_hwptr_log;
-
 /*
  * userspace-provided audio timestamp config to kernel,
  * structure is for internal use only and filled with dedicated unpack routine
@@ -404,10 +402,6 @@ struct snd_pcm_runtime {
 	struct snd_pcm_hardware hw;
 	struct snd_pcm_hw_constraints hw_constraints;
 
-	/* -- interrupt callbacks -- */
-	void (*transfer_ack_begin)(struct snd_pcm_substream *substream);
-	void (*transfer_ack_end)(struct snd_pcm_substream *substream);
-
 	/* -- timer -- */
 	unsigned int timer_resolution;	/* timer resolution */
 	int tstamp_type;		/* timestamp type */
@@ -427,10 +421,6 @@ struct snd_pcm_runtime {
 #if defined(CONFIG_SND_PCM_OSS) || defined(CONFIG_SND_PCM_OSS_MODULE)
 	/* -- OSS things -- */
 	struct snd_pcm_oss_runtime oss;
-#endif
-
-#ifdef CONFIG_SND_PCM_XRUN_DEBUG
-	struct snd_pcm_hwptr_log *hwptr_log;
 #endif
 };
 
@@ -1117,10 +1107,16 @@ static inline void snd_pcm_set_runtime_buffer(struct snd_pcm_substream *substrea
  *  Timer interface
  */
 
+#ifdef CONFIG_SND_PCM_TIMER
 void snd_pcm_timer_resolution_change(struct snd_pcm_substream *substream);
 void snd_pcm_timer_init(struct snd_pcm_substream *substream);
 void snd_pcm_timer_done(struct snd_pcm_substream *substream);
-
+#else
+static inline void
+snd_pcm_timer_resolution_change(struct snd_pcm_substream *substream) {}
+static inline void snd_pcm_timer_init(struct snd_pcm_substream *substream) {}
+static inline void snd_pcm_timer_done(struct snd_pcm_substream *substream) {}
+#endif
 /**
  * snd_pcm_gettime - Fill the timespec depending on the timestamp mode
  * @runtime: PCM runtime instance
