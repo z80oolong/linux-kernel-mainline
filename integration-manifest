@@ -1,0 +1,24 @@
+origin/drm-intel-fixes 18e9345b0db9fe7bd18c3c43967789fe0a2fdb52
+	drm/i915: Add primary plane to mask if it's visible
+drm-upstream/drm-fixes c50f13f911b90a722308bffbf26187ff3890aa1e
+	Merge branch 'drm-fixes-4.3' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+origin/drm-intel-next-fixes f9e3dc786a585e1ec371c446c62dcc77d0548629
+	drm/i915: add hotplug activation period to hotplug update mask
+origin/drm-intel-next-queued 7de1691a8b1c902bc4d10015e1dbe674ead49461
+	drm/i915: Grab execlist spinlock to avoid post-reset concurrency issues.
+drm-upstream/drm-next 2b5f900e4fb18d85fc62d4efcf4e7016fc384806
+	Merge branch 'drm/next/du' of git://linuxtv.org/pinchartl/fbdev into drm-next
+sound-upstream/for-next 53e597b1d194910bef53ed0632da329fef497904
+	ALSA: Remove transfer_ack_{begin,end} callbacks from struct snd_pcm_runtime
+origin/topic/drm-misc b110ae706c75458561c03526014f88821cda7f9b
+	drm/gem: Update/Polish docs
+origin/topic/drm-fixes f36203be608a38a5b5523a7aa52cc72f757b9679
+	drm/dp: Add dp_aux_i2c_speed_khz module param to set the assume i2c bus speed
+origin/topic/kerneldoc 85b45d356f0a954342a56ca0228748b532b52114
+	scripts/kernel-doc: Processing -nofunc for functions only
+origin/topic/crc-pmic 04cbfe68c3190f23bcfec230bfd832b533f35554
+	mfd: Add GPIOLIB dependency if INTEL_SOC_PMIC is to be enabled
+origin/topic/connector-locking 3fdefa399e4644399ce3e74e65a75122d52dba6a
+	drm: gc now dead mode_group code
+origin/topic/mst-fixes 6ea76f3cade4734e73e3da842005820558b8b828
+	drm/atomic-helpers: Make encoder picking more robust
