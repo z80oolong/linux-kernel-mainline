@@ -2738,6 +2738,8 @@ static void i915_gem_reset_ring_status(struct drm_i915_private *dev_priv,
 static void i915_gem_reset_ring_cleanup(struct drm_i915_private *dev_priv,
 					struct intel_engine_cs *ring)
 {
+	struct intel_ringbuffer *buffer;
+
 	while (!list_empty(&ring->active_list)) {
 		struct drm_i915_gem_object *obj;
 
@@ -2753,18 +2755,23 @@ static void i915_gem_reset_ring_cleanup(struct drm_i915_private *dev_priv,
 	 * are the ones that keep the context and ringbuffer backing objects
 	 * pinned in place.
 	 */
-	while (!list_empty(&ring->execlist_queue)) {
-		struct drm_i915_gem_request *submit_req;
 
-		submit_req = list_first_entry(&ring->execlist_queue,
-				struct drm_i915_gem_request,
-				execlist_link);
-		list_del(&submit_req->execlist_link);
+	if (i915.enable_execlists) {
+		spin_lock_irq(&ring->execlist_lock);
+		while (!list_empty(&ring->execlist_queue)) {
+			struct drm_i915_gem_request *submit_req;
 
-		if (submit_req->ctx != ring->default_context)
-			intel_lr_context_unpin(submit_req);
+			submit_req = list_first_entry(&ring->execlist_queue,
+					struct drm_i915_gem_request,
+					execlist_link);
+			list_del(&submit_req->execlist_link);
 
-		i915_gem_request_unreference(submit_req);
+			if (submit_req->ctx != ring->default_context)
+				intel_lr_context_unpin(submit_req);
+
+			i915_gem_request_unreference(submit_req);
+		}
+		spin_unlock_irq(&ring->execlist_lock);
 	}
 
 	/*
@@ -2782,6 +2789,18 @@ static void i915_gem_reset_ring_cleanup(struct drm_i915_private *dev_priv,
 					   list);
 
 		i915_gem_request_retire(request);
+	}
+
+	/* Having flushed all requests from all queues, we know that all
+	 * ringbuffers must now be empty. However, since we do not reclaim
+	 * all space when retiring the request (to prevent HEADs colliding
+	 * with rapid ringbuffer wraparound) the amount of available space
+	 * upon reset is less than when we start. Do one more pass over
+	 * all the ringbuffers to reset last_retired_head.
+	 */
+	list_for_each_entry(buffer, &ring->buffers, link) {
+		buffer->last_retired_head = buffer->tail;
+		intel_ring_update_space(buffer);
 	}
 }
 
@@ -3826,7 +3845,7 @@ int i915_gem_set_caching_ioctl(struct drm_device *dev, void *data,
 		 * cacheline, whereas normally such cachelines would get
 		 * invalidated.
 		 */
-		if (IS_BROXTON(dev) && INTEL_REVID(dev) < BXT_REVID_B0)
+		if (IS_BXT_REVID(dev, 0, BXT_REVID_A1))
 			return -ENODEV;
 
 		level = I915_CACHE_LLC;
