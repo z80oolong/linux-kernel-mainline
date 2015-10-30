@@ -1253,18 +1253,21 @@ static int i915_frequency_info(struct seq_file *m, void *unused)
 
 		max_freq = (IS_BROXTON(dev) ? rp_state_cap >> 0 :
 			    rp_state_cap >> 16) & 0xff;
-		max_freq *= (IS_SKYLAKE(dev) ? GEN9_FREQ_SCALER : 1);
+		max_freq *= (IS_SKYLAKE(dev) || IS_KABYLAKE(dev) ?
+			     GEN9_FREQ_SCALER : 1);
 		seq_printf(m, "Lowest (RPN) frequency: %dMHz\n",
 			   intel_gpu_freq(dev_priv, max_freq));
 
 		max_freq = (rp_state_cap & 0xff00) >> 8;
-		max_freq *= (IS_SKYLAKE(dev) ? GEN9_FREQ_SCALER : 1);
+		max_freq *= (IS_SKYLAKE(dev) || IS_KABYLAKE(dev) ?
+			     GEN9_FREQ_SCALER : 1);
 		seq_printf(m, "Nominal (RP1) frequency: %dMHz\n",
 			   intel_gpu_freq(dev_priv, max_freq));
 
 		max_freq = (IS_BROXTON(dev) ? rp_state_cap >> 16 :
 			    rp_state_cap >> 0) & 0xff;
-		max_freq *= (IS_SKYLAKE(dev) ? GEN9_FREQ_SCALER : 1);
+		max_freq *= (IS_SKYLAKE(dev) || IS_KABYLAKE(dev) ?
+			     GEN9_FREQ_SCALER : 1);
 		seq_printf(m, "Max non-overclocked (RP0) frequency: %dMHz\n",
 			   intel_gpu_freq(dev_priv, max_freq));
 		seq_printf(m, "Max overclocked frequency: %dMHz\n",
@@ -1524,7 +1527,7 @@ static int gen6_drpc_info(struct seq_file *m)
 		seq_printf(m, "RC information accurate: %s\n", yesno(count < 51));
 	}
 
-	gt_core_status = readl(dev_priv->regs + GEN6_GT_CORE_STATUS);
+	gt_core_status = I915_READ_FW(GEN6_GT_CORE_STATUS);
 	trace_i915_reg_rw(false, GEN6_GT_CORE_STATUS, gt_core_status, 4, true);
 
 	rpmodectl1 = I915_READ(GEN6_RP_CONTROL);
@@ -1802,7 +1805,7 @@ static int i915_ring_freq_table(struct seq_file *m, void *unused)
 	if (ret)
 		goto out;
 
-	if (IS_SKYLAKE(dev)) {
+	if (IS_SKYLAKE(dev) || IS_KABYLAKE(dev)) {
 		/* Convert GT frequency to 50 HZ units */
 		min_gpu_freq =
 			dev_priv->rps.min_freq_softlimit / GEN9_FREQ_SCALER;
@@ -1822,7 +1825,8 @@ static int i915_ring_freq_table(struct seq_file *m, void *unused)
 				       &ia_freq);
 		seq_printf(m, "%d\t\t%d\t\t\t\t%d\n",
 			   intel_gpu_freq(dev_priv, (gpu_freq *
-				(IS_SKYLAKE(dev) ? GEN9_FREQ_SCALER : 1))),
+				(IS_SKYLAKE(dev) || IS_KABYLAKE(dev) ?
+				 GEN9_FREQ_SCALER : 1))),
 			   ((ia_freq >> 0) & 0xff) * 100,
 			   ((ia_freq >> 8) & 0xff) * 100);
 	}
@@ -2403,6 +2407,12 @@ static int i915_guc_load_status_info(struct seq_file *m, void *data)
 		guc_fw->guc_fw_major_wanted, guc_fw->guc_fw_minor_wanted);
 	seq_printf(m, "\tversion found: %d.%d\n",
 		guc_fw->guc_fw_major_found, guc_fw->guc_fw_minor_found);
+	seq_printf(m, "\theader: offset is %d; size = %d\n",
+		guc_fw->header_offset, guc_fw->header_size);
+	seq_printf(m, "\tuCode: offset is %d; size = %d\n",
+		guc_fw->ucode_offset, guc_fw->ucode_size);
+	seq_printf(m, "\tRSA: offset is %d; size = %d\n",
+		guc_fw->rsa_offset, guc_fw->rsa_size);
 
 	tmp = I915_READ(GUC_STATUS);
 
@@ -5024,7 +5034,7 @@ static void gen9_sseu_device_status(struct drm_device *dev,
 
 		stat->slice_total++;
 
-		if (IS_SKYLAKE(dev))
+		if (IS_SKYLAKE(dev) || IS_KABYLAKE(dev))
 			ss_cnt = INTEL_INFO(dev)->subslice_per_slice;
 
 		for (ss = 0; ss < ss_max; ss++) {
