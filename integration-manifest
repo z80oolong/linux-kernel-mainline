@@ -1,0 +1,24 @@
+origin/drm-intel-fixes 6a13feb9c82803e2b815eca72fa7a9f5561d7861
+	Linux 4.3
+drm-upstream/drm-fixes 8731b269f01e16193390c7276e70530366b8d626
+	drm: Correct arguments to list_tail_add in create blob ioctl
+origin/drm-intel-next-fixes 99106bc17e667989b4c0af0a6afcbd6ddbada8fb
+	drm/i915: Do graphics device reset under forcewake
+origin/drm-intel-next-queued e588fa18c1cc490fa75c0b4bd1d4f7758ccd33cf
+	drm/i915: Make intel_dp_source_supports_hbr2() take an intel_dp pointer
+drm-upstream/drm-next e02328f47bd75fde9decf9657ec7d769b370f857
+	vga_switcheroo: Drop client power state VGA_SWITCHEROO_INIT
+sound-upstream/for-next 5cf92c8b3dc5da59e05dc81bdc069cedf6f38313
+	ALSA: hda - Add Intel Lewisburg device IDs Audio
+origin/topic/drm-misc 364b19868ecd11b91d83c921b55022f70c6c64c6
+	drm/dp: add eDP DPCD backlight control bit definitions
+origin/topic/drm-fixes 6172180c6b37ea164bf8a9bad70bb348d0a16563
+	drm: Use userspace compatible type in fourcc_mod_code macro
+origin/topic/kerneldoc 85b45d356f0a954342a56ca0228748b532b52114
+	scripts/kernel-doc: Processing -nofunc for functions only
+origin/topic/crc-pmic 04cbfe68c3190f23bcfec230bfd832b533f35554
+	mfd: Add GPIOLIB dependency if INTEL_SOC_PMIC is to be enabled
+origin/topic/connector-locking 3fdefa399e4644399ce3e74e65a75122d52dba6a
+	drm: gc now dead mode_group code
+origin/topic/mst-fixes 6ea76f3cade4734e73e3da842005820558b8b828
+	drm/atomic-helpers: Make encoder picking more robust
