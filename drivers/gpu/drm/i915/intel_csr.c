@@ -47,21 +47,10 @@
 MODULE_FIRMWARE(I915_CSR_SKL);
 MODULE_FIRMWARE(I915_CSR_BXT);
 
-/*
-* SKL CSR registers for DC5 and DC6
-*/
-#define CSR_PROGRAM(i)			(0x80000 + (i) * 4)
-#define CSR_SSP_BASE_ADDR_GEN9		0x00002FC0
-#define CSR_HTP_ADDR_SKL		0x00500034
-#define CSR_SSP_BASE			0x8F074
-#define CSR_HTP_SKL			0x8F004
-#define CSR_LAST_WRITE			0x8F034
-#define CSR_LAST_WRITE_VALUE		0xc003b400
-/* MMIO address range for CSR program (0x80000 - 0x82FFF) */
+#define SKL_CSR_VERSION_REQUIRED	CSR_VERSION(1, 23)
+
 #define CSR_MAX_FW_SIZE			0x2FFF
 #define CSR_DEFAULT_FW_OFFSET		0xFFFFFFFF
-#define CSR_MMIO_START_RANGE	0x80000
-#define CSR_MMIO_END_RANGE		0x8FFFF
 
 struct intel_css_header {
 	/* 0x09 for DMC */
@@ -303,10 +292,8 @@ static void finish_csr_load(const struct firmware *fw, void *context)
 	uint32_t *dmc_payload;
 	bool fw_loaded = false;
 
-	if (!fw) {
-		i915_firmware_load_error_print(csr->fw_path, 0);
+	if (!fw)
 		goto out;
-	}
 
 	if ((stepping == -ENODATA) || (substepping == -ENODATA)) {
 		DRM_ERROR("Unknown stepping info, firmware loading failed\n");
@@ -321,6 +308,20 @@ static void finish_csr_load(const struct firmware *fw, void *context)
 			(css_header->header_len * 4));
 		goto out;
 	}
+
+	csr->version = css_header->version;
+
+	if (IS_SKYLAKE(dev) && csr->version < SKL_CSR_VERSION_REQUIRED) {
+		DRM_INFO("Refusing to load old Skylake DMC firmware v%u.%u,"
+			 " please upgrade to v%u.%u or later"
+			 " [https://01.org/linuxgraphics/intel-linux-graphics-firmwares].\n",
+			 CSR_VERSION_MAJOR(csr->version),
+			 CSR_VERSION_MINOR(csr->version),
+			 CSR_VERSION_MAJOR(SKL_CSR_VERSION_REQUIRED),
+			 CSR_VERSION_MINOR(SKL_CSR_VERSION_REQUIRED));
+		goto out;
+	}
+
 	readcount += sizeof(struct intel_css_header);
 
 	/* Extract Package Header information*/
@@ -402,12 +403,19 @@ static void finish_csr_load(const struct firmware *fw, void *context)
 	intel_csr_load_program(dev);
 	fw_loaded = true;
 
-	DRM_DEBUG_KMS("Finished loading %s\n", dev_priv->csr.fw_path);
 out:
-	if (fw_loaded)
+	if (fw_loaded) {
 		intel_runtime_pm_put(dev_priv);
-	else
+
+		DRM_INFO("Finished loading %s (v%u.%u)\n",
+			 dev_priv->csr.fw_path,
+			 CSR_VERSION_MAJOR(csr->version),
+			 CSR_VERSION_MINOR(csr->version));
+	} else {
 		intel_csr_load_status_set(dev_priv, FW_FAILED);
+
+		i915_firmware_load_error_print(csr->fw_path, 0);
+	}
 
 	release_firmware(fw);
 }

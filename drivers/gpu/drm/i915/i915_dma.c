@@ -28,7 +28,6 @@
 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
-#include <linux/async.h>
 #include <drm/drmP.h>
 #include <drm/drm_crtc_helper.h>
 #include <drm/drm_fb_helper.h>
@@ -338,7 +337,7 @@ static void i915_switcheroo_set_state(struct pci_dev *pdev, enum vga_switcheroo_
 		i915_resume_switcheroo(dev);
 		dev->switch_power_state = DRM_SWITCH_POWER_ON;
 	} else {
-		pr_err("switched off\n");
+		pr_info("switched off\n");
 		dev->switch_power_state = DRM_SWITCH_POWER_CHANGING;
 		i915_suspend_switcheroo(dev, pmm);
 		dev->switch_power_state = DRM_SWITCH_POWER_OFF;
@@ -437,7 +436,7 @@ static int i915_load_modeset_init(struct drm_device *dev)
 	 * scanning against hotplug events. Hence do this first and ignore the
 	 * tiny window where we will loose hotplug notifactions.
 	 */
-	async_schedule(intel_fbdev_initial_config, dev_priv);
+	intel_fbdev_initial_config_async(dev);
 
 	drm_kms_helper_poll_init(dev);
 
@@ -663,7 +662,8 @@ static void gen9_sseu_info_init(struct drm_device *dev)
 	 * supports EU power gating on devices with more than one EU
 	 * pair per subslice.
 	*/
-	info->has_slice_pg = (IS_SKYLAKE(dev) && (info->slice_total > 1));
+	info->has_slice_pg = ((IS_SKYLAKE(dev) || IS_KABYLAKE(dev)) &&
+			       (info->slice_total > 1));
 	info->has_subslice_pg = (IS_BROXTON(dev) && (info->subslice_total > 1));
 	info->has_eu_pg = (info->eu_per_subslice > 2);
 }
@@ -1131,6 +1131,8 @@ int i915_driver_unload(struct drm_device *dev)
 	struct drm_i915_private *dev_priv = dev->dev_private;
 	int ret;
 
+	intel_fbdev_fini(dev);
+
 	i915_audio_component_cleanup(dev_priv);
 
 	ret = i915_gem_suspend(dev);
@@ -1152,8 +1154,6 @@ int i915_driver_unload(struct drm_device *dev)
 	arch_phys_wc_del(dev_priv->gtt.mtrr);
 
 	acpi_video_unregister();
-
-	intel_fbdev_fini(dev);
 
 	drm_vblank_cleanup(dev);
 
