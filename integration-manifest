@@ -1,0 +1,24 @@
+origin/drm-intel-fixes fd0fe6acf1dd88aabfbf383f7e4c16315387a7b7
+	drm/i915: get runtime PM reference around GEM set_caching IOCTL
+drm-upstream/drm-fixes 5bad7d29a7bcffb2dbc28ea2728eeb3af13784f2
+	Revert "drm/rockchip: Convert the probe function to the generic drm_of_component_probe()"
+origin/drm-intel-next-fixes 816d2206f0f9953ca854e4ff1a2749a5cbd62715
+	Merge tag 'drm-intel-next-fixes-2015-11-06' of git://anongit.freedesktop.org/drm-intel into drm-next
+origin/drm-intel-next-queued 1f38089cb73aa39a20d8efddadd6779fc361a892
+	drm/i915: Model PSR AUX register selection more like the normal AUX code
+drm-upstream/drm-next f20780f3e8feec0eebcf9fb41e1d90202fffaeff
+	Merge branch 'drm-sti-next-2015-11-03' of http://git.linaro.org/people/benjamin.gaignard/kernel into drm-next
+sound-upstream/for-next 3c7a09358729e64119669f454fb1ac3c5cd20b63
+	ALSA: ua101: replace le16_to_cpu() with usb_endpoint_maxp()
+origin/topic/drm-misc 1c2260589ad88bc6e5a41f2e95e40655dbce2427
+	drm: Describe the Rotation property bits.
+origin/topic/drm-fixes 6172180c6b37ea164bf8a9bad70bb348d0a16563
+	drm: Use userspace compatible type in fourcc_mod_code macro
+origin/topic/kerneldoc 5416dc1a465b5108e936870e761e4fd7a8217e41
+	scripts/kernel-doc: Improve Markdown results
+origin/topic/crc-pmic 04cbfe68c3190f23bcfec230bfd832b533f35554
+	mfd: Add GPIOLIB dependency if INTEL_SOC_PMIC is to be enabled
+origin/topic/connector-locking 3fdefa399e4644399ce3e74e65a75122d52dba6a
+	drm: gc now dead mode_group code
+origin/topic/mst-fixes 6ea76f3cade4734e73e3da842005820558b8b828
+	drm/atomic-helpers: Make encoder picking more robust
