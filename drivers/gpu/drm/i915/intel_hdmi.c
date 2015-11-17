@@ -1108,6 +1108,13 @@ static void intel_disable_hdmi(struct intel_encoder *encoder)
 	 * matching DP port to be enabled on transcoder A.
 	 */
 	if (HAS_PCH_IBX(dev) && crtc->pipe == PIPE_B) {
+		/*
+		 * We get CPU/PCH FIFO underruns on the other pipe when
+		 * doing the workaround. Sweep them under the rug.
+		 */
+		intel_set_cpu_fifo_underrun_reporting(dev_priv, PIPE_A, false);
+		intel_set_pch_fifo_underrun_reporting(dev_priv, PIPE_A, false);
+
 		temp &= ~SDVO_PIPE_B_SELECT;
 		temp |= SDVO_ENABLE;
 		/*
@@ -1122,6 +1129,10 @@ static void intel_disable_hdmi(struct intel_encoder *encoder)
 		temp &= ~SDVO_ENABLE;
 		I915_WRITE(intel_hdmi->hdmi_reg, temp);
 		POSTING_READ(intel_hdmi->hdmi_reg);
+
+		intel_wait_for_vblank_if_active(dev_priv->dev, PIPE_A);
+		intel_set_cpu_fifo_underrun_reporting(dev_priv, PIPE_A, true);
+		intel_set_pch_fifo_underrun_reporting(dev_priv, PIPE_A, true);
 	}
 
 	intel_hdmi->set_infoframes(&encoder->base, false, NULL);
@@ -1335,21 +1346,17 @@ intel_hdmi_set_edid(struct drm_connector *connector, bool force)
 {
 	struct drm_i915_private *dev_priv = to_i915(connector->dev);
 	struct intel_hdmi *intel_hdmi = intel_attached_hdmi(connector);
-	struct intel_encoder *intel_encoder =
-		&hdmi_to_dig_port(intel_hdmi)->base;
-	enum intel_display_power_domain power_domain;
 	struct edid *edid = NULL;
 	bool connected = false;
 
-	power_domain = intel_display_port_power_domain(intel_encoder);
-	intel_display_power_get(dev_priv, power_domain);
+	intel_display_power_get(dev_priv, POWER_DOMAIN_GMBUS);
 
 	if (force)
 		edid = drm_get_edid(connector,
 				    intel_gmbus_get_adapter(dev_priv,
 				    intel_hdmi->ddc_bus));
 
-	intel_display_power_put(dev_priv, power_domain);
+	intel_display_power_put(dev_priv, POWER_DOMAIN_GMBUS);
 
 	to_intel_connector(connector)->detect_edid = edid;
 	if (edid && edid->input & DRM_EDID_INPUT_DIGITAL) {
@@ -2039,7 +2046,7 @@ void intel_hdmi_init_connector(struct intel_digital_port *intel_dig_port,
 		 * On BXT A0/A1, sw needs to activate DDIA HPD logic and
 		 * interrupts to check the external panel connection.
 		 */
-		if (IS_BROXTON(dev_priv) && (INTEL_REVID(dev) < BXT_REVID_B0))
+		if (IS_BXT_REVID(dev_priv, 0, BXT_REVID_A1))
 			intel_encoder->hpd_pin = HPD_PORT_A;
 		else
 			intel_encoder->hpd_pin = HPD_PORT_B;

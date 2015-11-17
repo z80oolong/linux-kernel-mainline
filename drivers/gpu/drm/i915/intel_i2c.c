@@ -74,7 +74,7 @@ static const struct gmbus_pin *get_gmbus_pin(struct drm_i915_private *dev_priv,
 {
 	if (IS_BROXTON(dev_priv))
 		return &gmbus_pins_bxt[pin];
-	else if (IS_SKYLAKE(dev_priv))
+	else if (IS_SKYLAKE(dev_priv) || IS_KABYLAKE(dev_priv))
 		return &gmbus_pins_skl[pin];
 	else if (IS_BROADWELL(dev_priv))
 		return &gmbus_pins_bdw[pin];
@@ -89,7 +89,7 @@ bool intel_gmbus_is_valid_pin(struct drm_i915_private *dev_priv,
 
 	if (IS_BROXTON(dev_priv))
 		size = ARRAY_SIZE(gmbus_pins_bxt);
-	else if (IS_SKYLAKE(dev_priv))
+	else if (IS_SKYLAKE(dev_priv) || IS_KABYLAKE(dev_priv))
 		size = ARRAY_SIZE(gmbus_pins_skl);
 	else if (IS_BROADWELL(dev_priv))
 		size = ARRAY_SIZE(gmbus_pins_bdw);
@@ -483,7 +483,7 @@ gmbus_xfer(struct i2c_adapter *adapter,
 	int i = 0, inc, try = 0;
 	int ret = 0;
 
-	intel_aux_display_runtime_get(dev_priv);
+	intel_display_power_get(dev_priv, POWER_DOMAIN_GMBUS);
 	mutex_lock(&dev_priv->gmbus_mutex);
 
 	if (bus->force_bit) {
@@ -595,7 +595,9 @@ timeout:
 
 out:
 	mutex_unlock(&dev_priv->gmbus_mutex);
-	intel_aux_display_runtime_put(dev_priv);
+
+	intel_display_power_put(dev_priv, POWER_DOMAIN_GMBUS);
+
 	return ret;
 }
 
