@@ -74,7 +74,7 @@ static int kern_do_signal(struct pt_regs *regs)
 	struct siginfo info;
 	int sig, handled_sig = 0;
 
-	while ((sig = get_signal_to_deliver(&info, &ka_copy, regs, NULL)) > 0) {
+	if ((sig = get_signal_to_deliver(&info, &ka_copy, regs, NULL)) > 0) {
 		handled_sig = 1;
 		/* Whee!  Actually deliver the signal.  */
 		handle_signal(regs, sig, &ka_copy, &info);
