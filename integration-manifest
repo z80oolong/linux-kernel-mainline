@@ -1,0 +1,26 @@
+origin/drm-intel-fixes 0b466dc238cb660bbdb9ef6e121e1757057484c3
+	drm/i915: Mark uneven memory banks on gen4 desktop as unknown swizzling
+drm-upstream/drm-fixes 2d591ab18a77e25def2c483b495e07b42a3ea79f
+	Merge tag 'drm-intel-fixes-2015-11-19' of git://anongit.freedesktop.org/drm-intel into drm-fixes
+origin/drm-intel-next-fixes 816d2206f0f9953ca854e4ff1a2749a5cbd62715
+	Merge tag 'drm-intel-next-fixes-2015-11-06' of git://anongit.freedesktop.org/drm-intel into drm-next
+origin/drm-intel-next-queued 2e35c8833bc737a0c87a18e9b8c0de8495467d97
+	drm/i915: remove duplicate definition of for_each_power_domain
+drm-upstream/drm-next f20780f3e8feec0eebcf9fb41e1d90202fffaeff
+	Merge branch 'drm-sti-next-2015-11-03' of http://git.linaro.org/people/benjamin.gaignard/kernel into drm-next
+sound-upstream/for-next efdbe3c3edb6c8c98a8be863f60916780a5375c1
+	ALSA: midi: constify snd_rawmidi_global_ops structures
+origin/topic/drm-fixes 5481c8fb1da2a573861095fbea078f30c664d0bd
+	drm/atomic-helper: Check encoder/crtc constraints
+origin/topic/drm-misc 87069f4493b2101a71a92b7b9565f488a605a88f
+	drm/mm: use list_next_entry
+origin/topic/kerneldoc 1c56404cb748a01609a3cfcf482a167b3cd7480d
+	drm: Enable markdown^Wasciidoc for gpu.tmpl
+origin/topic/crc-pmic 04cbfe68c3190f23bcfec230bfd832b533f35554
+	mfd: Add GPIOLIB dependency if INTEL_SOC_PMIC is to be enabled
+origin/topic/connector-locking 3fdefa399e4644399ce3e74e65a75122d52dba6a
+	drm: gc now dead mode_group code
+origin/topic/mst-fixes 6ea76f3cade4734e73e3da842005820558b8b828
+	drm/atomic-helpers: Make encoder picking more robust
+origin/topic/core-for-CI 64a93eaebb44c35c50e10144923189c8558d043d
+	PCI / PM: tune down RPM suspend error message with EBUSY and EAGAIN retval
