@@ -2034,12 +2034,12 @@ static int canon_copy_from_read_buf(struct tty_struct *tty,
 	size_t eol;
 	size_t tail;
 	int ret, found = 0;
-	bool eof_push = 0;
 
 	/* N.B. avoid overrun if nr == 0 */
-	n = min(*nr, read_cnt(ldata));
-	if (!n)
+	if (!*nr)
 		return 0;
+
+	n = min(*nr + 1, read_cnt(ldata));
 
 	tail = ldata->read_tail & (N_TTY_BUF_SIZE - 1);
 	size = min_t(size_t, tail + n, N_TTY_BUF_SIZE);
@@ -2061,12 +2061,11 @@ static int canon_copy_from_read_buf(struct tty_struct *tty,
 	n = eol - tail;
 	if (n > 4096)
 		n += 4096;
-	n += found;
-	c = n;
+	c = n + found;
 
-	if (found && read_buf(ldata, eol) == __DISABLED_CHAR) {
-		n--;
-		eof_push = !n && ldata->read_tail != ldata->line_start;
+	if (!found || read_buf(ldata, eol) != __DISABLED_CHAR) {
+		c = min(*nr, c);
+		n = c;
 	}
 
 	n_tty_trace("%s: eol:%zu found:%d n:%zu c:%zu size:%zu more:%zu\n",
@@ -2094,7 +2093,7 @@ static int canon_copy_from_read_buf(struct tty_struct *tty,
 		ldata->line_start = ldata->read_tail;
 		tty_audit_push(tty);
 	}
-	return eof_push ? -EAGAIN : 0;
+	return 0;
 }
 
 extern ssize_t redirected_tty_write(struct file *, const char __user *,
@@ -2282,10 +2281,7 @@ static ssize_t n_tty_read(struct tty_struct *tty, struct file *file,
 
 		if (ldata->icanon && !L_EXTPROC(tty)) {
 			retval = canon_copy_from_read_buf(tty, &b, &nr);
-			if (retval == -EAGAIN) {
-				retval = 0;
-				continue;
-			} else if (retval)
+			if (retval)
 				break;
 		} else {
 			int uncopied;
