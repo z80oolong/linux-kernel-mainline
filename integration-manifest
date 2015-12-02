@@ -1,0 +1,24 @@
+origin/drm-intel-fixes 0f5a9be15797f78c9a34e432f26c796165b6e49a
+	drm/i915: take a power domain reference while checking the HDMI live status
+drm-upstream/drm-fixes c936a69981435b994a1ffe1e2a9ccf70aeb09a54
+	Merge branch 'drm-fixes-rockchip-2015-12-02' of https://github.com/markyzq/kernel-drm-rockchip into drm-fixes
+origin/drm-intel-next-fixes 816d2206f0f9953ca854e4ff1a2749a5cbd62715
+	Merge tag 'drm-intel-next-fixes-2015-11-06' of git://anongit.freedesktop.org/drm-intel into drm-next
+origin/drm-intel-next-queued bffce907d64042b5683ed3076e839d0249606264
+	drm/i915: abstract i2c bit banging fallback in gmbus xfer
+drm-upstream/drm-next 80d69009ef67d0753c1c30c62056a04275898531
+	Merge tag 'drm-intel-next-2015-11-20-merged' of git://anongit.freedesktop.org/drm-intel into drm-next
+sound-upstream/for-next 82bd59bcb310898ea3a0303b847935a85ea24d8c
+	ALSA: usx2y: fix inconsistent indenting on if statement
+origin/topic/drm-fixes 5481c8fb1da2a573861095fbea078f30c664d0bd
+	drm/atomic-helper: Check encoder/crtc constraints
+origin/topic/drm-misc 1494276000db789c6d2acd85747be4707051c801
+	drm/atomic-helper: Implement subsystem-level suspend/resume
+origin/topic/kerneldoc a638906d302fd07aa772252d008c41f0d88391b2
+	drm: Enable markdown^Wasciidoc for gpu.tmpl
+origin/topic/crc-pmic 04cbfe68c3190f23bcfec230bfd832b533f35554
+	mfd: Add GPIOLIB dependency if INTEL_SOC_PMIC is to be enabled
+origin/topic/connector-locking 3fdefa399e4644399ce3e74e65a75122d52dba6a
+	drm: gc now dead mode_group code
+origin/topic/core-for-CI 64a93eaebb44c35c50e10144923189c8558d043d
+	PCI / PM: tune down RPM suspend error message with EBUSY and EAGAIN retval
