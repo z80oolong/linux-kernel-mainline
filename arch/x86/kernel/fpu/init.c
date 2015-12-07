@@ -15,7 +15,7 @@
  */
 static void fpu__init_cpu_ctx_switch(void)
 {
-	if (!cpu_has_eager_fpu)
+	if (!boot_cpu_has(X86_FEATURE_EAGER_FPU))
 		stts();
 	else
 		clts();
@@ -321,7 +321,7 @@ static void __init fpu__init_system_ctx_switch(void)
 	WARN_ON_FPU(current->thread.fpu.fpstate_active);
 	current_thread_info()->status = 0;
 
-	if (cpu_has_xsaveopt && eagerfpu != DISABLE)
+	if (boot_cpu_has(X86_FEATURE_XSAVEOPT) && eagerfpu != DISABLE)
 		eagerfpu = ENABLE;
 
 	if (xfeatures_mask & XFEATURE_MASK_EAGER)
