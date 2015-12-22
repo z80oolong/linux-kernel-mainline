@@ -5370,6 +5370,7 @@ static void modeset_put_power_domains(struct drm_i915_private *dev_priv,
 
 static void modeset_update_crtc_power_domains(struct drm_atomic_state *state)
 {
+	struct intel_atomic_state *intel_state = to_intel_atomic_state(state);
 	struct drm_device *dev = state->dev;
 	struct drm_i915_private *dev_priv = dev->dev_private;
 	unsigned long put_domains[I915_MAX_PIPES] = {};
@@ -5383,13 +5384,9 @@ static void modeset_update_crtc_power_domains(struct drm_atomic_state *state)
 				modeset_get_crtc_power_domains(crtc);
 	}
 
-	if (dev_priv->display.modeset_commit_cdclk) {
-		unsigned int cdclk = to_intel_atomic_state(state)->cdclk;
-
-		if (cdclk != dev_priv->cdclk_freq &&
-		    !WARN_ON(!state->allow_modeset))
-			dev_priv->display.modeset_commit_cdclk(state);
-	}
+	if (dev_priv->display.modeset_commit_cdclk &&
+	    intel_state->dev_cdclk != dev_priv->cdclk_freq)
+		dev_priv->display.modeset_commit_cdclk(state);
 
 	for (i = 0; i < I915_MAX_PIPES; i++)
 		if (put_domains[i])
@@ -6063,21 +6060,30 @@ static int broxton_calc_cdclk(struct drm_i915_private *dev_priv,
 static int intel_mode_max_pixclk(struct drm_device *dev,
 				 struct drm_atomic_state *state)
 {
-	struct intel_crtc *intel_crtc;
-	struct intel_crtc_state *crtc_state;
-	int max_pixclk = 0;
+	struct intel_atomic_state *intel_state = to_intel_atomic_state(state);
+	struct drm_i915_private *dev_priv = dev->dev_private;
+	struct drm_crtc *crtc;
+	struct drm_crtc_state *crtc_state;
+	unsigned max_pixclk = 0, i;
+	enum pipe pipe;
 
-	for_each_intel_crtc(dev, intel_crtc) {
-		crtc_state = intel_atomic_get_crtc_state(state, intel_crtc);
-		if (IS_ERR(crtc_state))
-			return PTR_ERR(crtc_state);
+	memcpy(intel_state->min_pixclk, dev_priv->min_pixclk,
+	       sizeof(intel_state->min_pixclk));
 
-		if (!crtc_state->base.enable)
-			continue;
+	for_each_crtc_in_state(state, crtc, crtc_state, i) {
+		int pixclk = 0;
 
-		max_pixclk = max(max_pixclk,
-				 crtc_state->base.adjusted_mode.crtc_clock);
+		if (crtc_state->enable)
+			pixclk = crtc_state->adjusted_mode.crtc_clock;
+
+		intel_state->min_pixclk[i] = pixclk;
 	}
+
+	if (!intel_state->active_crtcs)
+		return 0;
+
+	for_each_pipe(dev_priv, pipe)
+		max_pixclk = max(intel_state->min_pixclk[pipe], max_pixclk);
 
 	return max_pixclk;
 }
@@ -6087,12 +6093,17 @@ static int valleyview_modeset_calc_cdclk(struct drm_atomic_state *state)
 	struct drm_device *dev = state->dev;
 	struct drm_i915_private *dev_priv = dev->dev_private;
 	int max_pixclk = intel_mode_max_pixclk(dev, state);
+	struct intel_atomic_state *intel_state =
+		to_intel_atomic_state(state);
 
 	if (max_pixclk < 0)
 		return max_pixclk;
 
-	to_intel_atomic_state(state)->cdclk =
+	intel_state->cdclk = intel_state->dev_cdclk =
 		valleyview_calc_cdclk(dev_priv, max_pixclk);
+
+	if (!intel_state->active_crtcs)
+		intel_state->dev_cdclk = valleyview_calc_cdclk(dev_priv, 0);
 
 	return 0;
 }
@@ -6102,12 +6113,17 @@ static int broxton_modeset_calc_cdclk(struct drm_atomic_state *state)
 	struct drm_device *dev = state->dev;
 	struct drm_i915_private *dev_priv = dev->dev_private;
 	int max_pixclk = intel_mode_max_pixclk(dev, state);
+	struct intel_atomic_state *intel_state =
+		to_intel_atomic_state(state);
 
 	if (max_pixclk < 0)
 		return max_pixclk;
 
-	to_intel_atomic_state(state)->cdclk =
+	intel_state->cdclk = intel_state->dev_cdclk =
 		broxton_calc_cdclk(dev_priv, max_pixclk);
+
+	if (!intel_state->active_crtcs)
+		intel_state->dev_cdclk = broxton_calc_cdclk(dev_priv, 0);
 
 	return 0;
 }
@@ -6151,8 +6167,10 @@ static void vlv_program_pfi_credits(struct drm_i915_private *dev_priv)
 static void valleyview_modeset_commit_cdclk(struct drm_atomic_state *old_state)
 {
 	struct drm_device *dev = old_state->dev;
-	unsigned int req_cdclk = to_intel_atomic_state(old_state)->cdclk;
 	struct drm_i915_private *dev_priv = dev->dev_private;
+	struct intel_atomic_state *old_intel_state =
+		to_intel_atomic_state(old_state);
+	unsigned req_cdclk = old_intel_state->dev_cdclk;
 
 	/*
 	 * FIXME: We can end up here with all power domains off, yet
@@ -6383,6 +6401,9 @@ static void intel_crtc_disable_noatomic(struct drm_crtc *crtc)
 	for_each_power_domain(domain, domains)
 		intel_display_power_put(dev_priv, domain);
 	intel_crtc->enabled_power_domains = 0;
+
+	dev_priv->active_crtcs &= ~(1 << intel_crtc->pipe);
+	dev_priv->min_pixclk[intel_crtc->pipe] = 0;
 }
 
 /*
@@ -9671,7 +9692,9 @@ void hsw_disable_pc8(struct drm_i915_private *dev_priv)
 static void broxton_modeset_commit_cdclk(struct drm_atomic_state *old_state)
 {
 	struct drm_device *dev = old_state->dev;
-	unsigned int req_cdclk = to_intel_atomic_state(old_state)->cdclk;
+	struct intel_atomic_state *old_intel_state =
+		to_intel_atomic_state(old_state);
+	unsigned int req_cdclk = old_intel_state->dev_cdclk;
 
 	broxton_set_cdclk(dev, req_cdclk);
 }
@@ -9679,28 +9702,40 @@ static void broxton_modeset_commit_cdclk(struct drm_atomic_state *old_state)
 /* compute the max rate for new configuration */
 static int ilk_max_pixel_rate(struct drm_atomic_state *state)
 {
-	struct intel_crtc *intel_crtc;
+	struct intel_atomic_state *intel_state = to_intel_atomic_state(state);
+	struct drm_i915_private *dev_priv = state->dev->dev_private;
+	struct drm_crtc *crtc;
+	struct drm_crtc_state *cstate;
 	struct intel_crtc_state *crtc_state;
-	int max_pixel_rate = 0;
+	unsigned max_pixel_rate = 0, i;
+	enum pipe pipe;
 
-	for_each_intel_crtc(state->dev, intel_crtc) {
+	memcpy(intel_state->min_pixclk, dev_priv->min_pixclk,
+	       sizeof(intel_state->min_pixclk));
+
+	for_each_crtc_in_state(state, crtc, cstate, i) {
 		int pixel_rate;
 
-		crtc_state = intel_atomic_get_crtc_state(state, intel_crtc);
-		if (IS_ERR(crtc_state))
-			return PTR_ERR(crtc_state);
-
-		if (!crtc_state->base.enable)
+		crtc_state = to_intel_crtc_state(cstate);
+		if (!crtc_state->base.enable) {
+			intel_state->min_pixclk[i] = 0;
 			continue;
+		}
 
 		pixel_rate = ilk_pipe_pixel_rate(crtc_state);
 
 		/* pixel rate mustn't exceed 95% of cdclk with IPS on BDW */
-		if (IS_BROADWELL(state->dev) && crtc_state->ips_enabled)
+		if (IS_BROADWELL(dev_priv) && crtc_state->ips_enabled)
 			pixel_rate = DIV_ROUND_UP(pixel_rate * 100, 95);
 
-		max_pixel_rate = max(max_pixel_rate, pixel_rate);
+		intel_state->min_pixclk[i] = pixel_rate;
 	}
+
+	if (!intel_state->active_crtcs)
+		return 0;
+
+	for_each_pipe(dev_priv, pipe)
+		max_pixel_rate = max(intel_state->min_pixclk[pipe], max_pixel_rate);
 
 	return max_pixel_rate;
 }
@@ -9785,6 +9820,7 @@ static void broadwell_set_cdclk(struct drm_device *dev, int cdclk)
 static int broadwell_modeset_calc_cdclk(struct drm_atomic_state *state)
 {
 	struct drm_i915_private *dev_priv = to_i915(state->dev);
+	struct intel_atomic_state *intel_state = to_intel_atomic_state(state);
 	int max_pixclk = ilk_max_pixel_rate(state);
 	int cdclk;
 
@@ -9807,7 +9843,9 @@ static int broadwell_modeset_calc_cdclk(struct drm_atomic_state *state)
 		return -EINVAL;
 	}
 
-	to_intel_atomic_state(state)->cdclk = cdclk;
+	intel_state->cdclk = intel_state->dev_cdclk = cdclk;
+	if (!intel_state->active_crtcs)
+		intel_state->dev_cdclk = 337500;
 
 	return 0;
 }
@@ -9815,7 +9853,9 @@ static int broadwell_modeset_calc_cdclk(struct drm_atomic_state *state)
 static void broadwell_modeset_commit_cdclk(struct drm_atomic_state *old_state)
 {
 	struct drm_device *dev = old_state->dev;
-	unsigned int req_cdclk = to_intel_atomic_state(old_state)->cdclk;
+	struct intel_atomic_state *old_intel_state =
+		to_intel_atomic_state(old_state);
+	unsigned req_cdclk = old_intel_state->dev_cdclk;
 
 	broadwell_set_cdclk(dev, req_cdclk);
 }
@@ -11833,8 +11873,13 @@ int intel_plane_atomic_calc_changes(struct drm_crtc_state *crtc_state,
 	if (!was_crtc_enabled && WARN_ON(was_visible))
 		was_visible = false;
 
-	if (!is_crtc_enabled && WARN_ON(visible))
-		visible = false;
+	/*
+	 * Visibility is calculated as if the crtc was on, but
+	 * after scaler setup everything depends on it being off
+	 * when the crtc isn't active.
+	 */
+	if (!is_crtc_enabled)
+		to_intel_plane_state(plane_state)->visible = visible = false;
 
 	if (!was_visible && !visible)
 		return 0;
@@ -12270,18 +12315,22 @@ static void intel_dump_pipe_config(struct intel_crtc *crtc,
 static bool check_digital_port_conflicts(struct drm_atomic_state *state)
 {
 	struct drm_device *dev = state->dev;
-	struct intel_encoder *encoder;
 	struct drm_connector *connector;
-	struct drm_connector_state *connector_state;
 	unsigned int used_ports = 0;
-	int i;
 
 	/*
 	 * Walk the connector list instead of the encoder
 	 * list to detect the problem on ddi platforms
 	 * where there's just one encoder per digital port.
 	 */
-	for_each_connector_in_state(state, connector, connector_state, i) {
+	drm_for_each_connector(connector, dev) {
+		struct drm_connector_state *connector_state;
+		struct intel_encoder *encoder;
+
+		connector_state = drm_atomic_get_existing_connector_state(state, connector);
+		if (!connector_state)
+			connector_state = connector->state;
+
 		if (!connector_state->best_encoder)
 			continue;
 
@@ -13204,13 +13253,25 @@ static int intel_modeset_all_pipes(struct drm_atomic_state *state)
 
 static int intel_modeset_checks(struct drm_atomic_state *state)
 {
-	struct drm_device *dev = state->dev;
-	struct drm_i915_private *dev_priv = dev->dev_private;
-	int ret;
+	struct intel_atomic_state *intel_state = to_intel_atomic_state(state);
+	struct drm_i915_private *dev_priv = state->dev->dev_private;
+	struct drm_crtc *crtc;
+	struct drm_crtc_state *crtc_state;
+	int ret = 0, i;
 
 	if (!check_digital_port_conflicts(state)) {
 		DRM_DEBUG_KMS("rejecting conflicting digital port configuration\n");
 		return -EINVAL;
+	}
+
+	intel_state->modeset = true;
+	intel_state->active_crtcs = dev_priv->active_crtcs;
+
+	for_each_crtc_in_state(state, crtc, crtc_state, i) {
+		if (crtc_state->active)
+			intel_state->active_crtcs |= 1 << i;
+		else
+			intel_state->active_crtcs &= ~(1 << i);
 	}
 
 	/*
@@ -13221,22 +13282,19 @@ static int intel_modeset_checks(struct drm_atomic_state *state)
 	 * adjusted_mode bits in the crtc directly.
 	 */
 	if (dev_priv->display.modeset_calc_cdclk) {
-		unsigned int cdclk;
-
 		ret = dev_priv->display.modeset_calc_cdclk(state);
 
-		cdclk = to_intel_atomic_state(state)->cdclk;
-		if (!ret && cdclk != dev_priv->cdclk_freq)
+		if (!ret && intel_state->dev_cdclk != dev_priv->cdclk_freq)
 			ret = intel_modeset_all_pipes(state);
 
 		if (ret < 0)
 			return ret;
 	} else
-		to_intel_atomic_state(state)->cdclk = dev_priv->cdclk_freq;
+		to_intel_atomic_state(state)->cdclk = dev_priv->atomic_cdclk_freq;
 
 	intel_modeset_clear_plls(state);
 
-	if (IS_HASWELL(dev))
+	if (IS_HASWELL(dev_priv))
 		return haswell_mode_set_planes_workaround(state);
 
 	return 0;
@@ -13454,12 +13512,12 @@ static int intel_atomic_commit(struct drm_device *dev,
 			       struct drm_atomic_state *state,
 			       bool async)
 {
+	struct intel_atomic_state *intel_state = to_intel_atomic_state(state);
 	struct drm_i915_private *dev_priv = dev->dev_private;
 	struct drm_crtc_state *crtc_state;
 	struct drm_crtc *crtc;
-	int ret = 0;
-	int i;
-	bool any_ms = false;
+	int ret = 0, i;
+	bool hw_check = intel_state->modeset;
 
 	ret = intel_atomic_prepare_commit(dev, state, async);
 	if (ret) {
@@ -13470,13 +13528,19 @@ static int intel_atomic_commit(struct drm_device *dev,
 	drm_atomic_helper_swap_state(dev, state);
 	dev_priv->wm.config = to_intel_atomic_state(state)->wm_config;
 
+	if (intel_state->modeset) {
+		memcpy(dev_priv->min_pixclk, intel_state->min_pixclk,
+		       sizeof(intel_state->min_pixclk));
+		dev_priv->active_crtcs = intel_state->active_crtcs;
+		dev_priv->atomic_cdclk_freq = intel_state->cdclk;
+	}
+
 	for_each_crtc_in_state(state, crtc, crtc_state, i) {
 		struct intel_crtc *intel_crtc = to_intel_crtc(crtc);
 
 		if (!needs_modeset(crtc->state))
 			continue;
 
-		any_ms = true;
 		intel_pre_plane_update(intel_crtc);
 
 		if (crtc_state->active) {
@@ -13501,7 +13565,7 @@ static int intel_atomic_commit(struct drm_device *dev,
 	 * update the the output configuration. */
 	intel_modeset_update_crtc_state(state);
 
-	if (any_ms) {
+	if (intel_state->modeset) {
 		intel_shared_dpll_commit(state);
 
 		drm_atomic_helper_update_legacy_modeset_state(state->dev, state);
@@ -13528,7 +13592,7 @@ static int intel_atomic_commit(struct drm_device *dev,
 			put_domains = modeset_get_crtc_power_domains(crtc);
 
 			/* make sure intel_modeset_check_state runs */
-			any_ms = true;
+			hw_check = true;
 		}
 
 		if (!modeset)
@@ -13555,7 +13619,7 @@ static int intel_atomic_commit(struct drm_device *dev,
 	drm_atomic_helper_cleanup_planes(dev, state);
 	mutex_unlock(&dev->struct_mutex);
 
-	if (any_ms)
+	if (hw_check)
 		intel_modeset_check_state(dev, state);
 
 	drm_atomic_state_free(state);
@@ -13846,7 +13910,7 @@ skl_max_scale(struct intel_crtc *intel_crtc, struct intel_crtc_state *crtc_state
 	struct drm_i915_private *dev_priv;
 	int crtc_clock, cdclk;
 
-	if (!intel_crtc || !crtc_state)
+	if (!intel_crtc || !crtc_state->base.enable)
 		return DRM_PLANE_HELPER_NO_SCALING;
 
 	dev = intel_crtc->base.dev;
@@ -15190,7 +15254,12 @@ static void i915_disable_vga(struct drm_device *dev)
 
 void intel_modeset_init_hw(struct drm_device *dev)
 {
+	struct drm_i915_private *dev_priv = dev->dev_private;
+
 	intel_update_cdclk(dev);
+
+	dev_priv->atomic_cdclk_freq = dev_priv->cdclk_freq;
+
 	intel_prepare_ddi(dev);
 	intel_init_clock_gating(dev);
 	intel_enable_gt_powersave(dev);
@@ -15587,16 +15656,40 @@ static void intel_modeset_readout_hw_state(struct drm_device *dev)
 	struct intel_connector *connector;
 	int i;
 
+	dev_priv->active_crtcs = 0;
+
 	for_each_intel_crtc(dev, crtc) {
-		__drm_atomic_helper_crtc_destroy_state(&crtc->base, crtc->base.state);
-		memset(crtc->config, 0, sizeof(*crtc->config));
-		crtc->config->base.crtc = &crtc->base;
+		struct intel_crtc_state *crtc_state = crtc->config;
+		int pixclk = 0;
 
-		crtc->active = dev_priv->display.get_pipe_config(crtc,
-								 crtc->config);
+		__drm_atomic_helper_crtc_destroy_state(&crtc->base, &crtc_state->base);
+		memset(crtc_state, 0, sizeof(*crtc_state));
+		crtc_state->base.crtc = &crtc->base;
 
-		crtc->base.state->active = crtc->active;
-		crtc->base.enabled = crtc->active;
+		crtc_state->base.active = crtc_state->base.enable =
+			dev_priv->display.get_pipe_config(crtc, crtc_state);
+
+		crtc->base.enabled = crtc_state->base.enable;
+		crtc->active = crtc_state->base.active;
+
+		if (crtc_state->base.active) {
+			dev_priv->active_crtcs |= 1 << crtc->pipe;
+
+			if (IS_BROADWELL(dev_priv)) {
+				pixclk = ilk_pipe_pixel_rate(crtc_state);
+
+				/* pixel rate mustn't exceed 95% of cdclk with IPS on BDW */
+				if (crtc_state->ips_enabled)
+					pixclk = DIV_ROUND_UP(pixclk * 100, 95);
+			} else if (IS_VALLEYVIEW(dev_priv) ||
+				   IS_CHERRYVIEW(dev_priv) ||
+				   IS_BROXTON(dev_priv))
+				pixclk = crtc_state->base.adjusted_mode.crtc_clock;
+			else
+				WARN_ON(dev_priv->display.modeset_calc_cdclk);
+		}
+
+		dev_priv->min_pixclk[crtc->pipe] = pixclk;
 
 		readout_plane_state(crtc);
 
