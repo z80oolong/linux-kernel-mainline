@@ -1,0 +1,26 @@
+origin/drm-intel-fixes 3d8acd1f667b45c531401c8f0c2033072e32a05d
+	drm/i915: increase the tries for HDMI hotplug live status checking
+drm-upstream/drm-fixes 1957d62c29be413d77da2e69737f4251e5449fbd
+	Merge branch 'exynos-drm-fixes' of git://git.kernel.org/pub/scm/linux/kernel/git/daeinki/drm-exynos into drm-fixes
+origin/drm-intel-next-fixes d5f384de5bf16aa79095a1af5da65b9ffc3fe71d
+	drm/i915: Move Braswell stop_machine GGTT insertion workaround
+origin/drm-intel-next-queued eba51190f3c6ffcb685fc100a4234095b0146150
+	drm/i915: Fix whitespace (trivial)
+drm-upstream/drm-next df83690ec2af3a4201ca538cdb8e61f960109c4e
+	Merge branch 'drm-rockchip-next-2015-12-28' of https://github.com/markyzq/kernel-drm-rockchip into drm-next
+sound-upstream/for-next f80e39e0225c01ee68764ef7594c3a29ab5ebabb
+	Merge tag 'asoc-v4.5' of git://git.kernel.org/pub/scm/linux/kernel/git/broonie/sound into for-next
+sound-upstream/for-linus c7b60a89516beb20a352ec85c73a8fccd5becf26
+	ALSA: hda - Add keycode map for alc input device
+origin/topic/drm-fixes 5481c8fb1da2a573861095fbea078f30c664d0bd
+	drm/atomic-helper: Check encoder/crtc constraints
+origin/topic/drm-misc e112e593b215c394c0303dbf0534db0928e87967
+	drm: use dev_name as default unique name in drm_dev_alloc()
+origin/topic/kerneldoc 8ba718e60a1091dec68a0b3e513393b48b894654
+	drm: Enable markdown^Wasciidoc for gpu.tmpl
+origin/topic/crc-pmic 04cbfe68c3190f23bcfec230bfd832b533f35554
+	mfd: Add GPIOLIB dependency if INTEL_SOC_PMIC is to be enabled
+origin/topic/connector-locking 3fdefa399e4644399ce3e74e65a75122d52dba6a
+	drm: gc now dead mode_group code
+origin/topic/core-for-CI 527e9316f8ec44bd53d90fb9f611fa7ffff52bb9
+	Linux 4.4-rc4
