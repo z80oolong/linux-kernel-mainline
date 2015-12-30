@@ -538,8 +538,8 @@ void intel_lrc_irq_handler(struct intel_engine_cs *ring)
 				WARN(1, "Preemption without Lite Restore\n");
 		}
 
-		 if ((status & GEN8_CTX_STATUS_ACTIVE_IDLE) ||
-		     (status & GEN8_CTX_STATUS_ELEMENT_SWITCH)) {
+		if ((status & GEN8_CTX_STATUS_ACTIVE_IDLE) ||
+		    (status & GEN8_CTX_STATUS_ELEMENT_SWITCH)) {
 			if (execlists_check_remove_request(ring, status_id))
 				submit_contexts++;
 		}
@@ -1698,7 +1698,7 @@ static int gen8_emit_flush_render(struct drm_i915_gem_request *request,
 	struct intel_ringbuffer *ringbuf = request->ringbuf;
 	struct intel_engine_cs *ring = ringbuf->ring;
 	u32 scratch_addr = ring->scratch.gtt_offset + 2 * CACHELINE_BYTES;
-	bool vf_flush_wa;
+	bool vf_flush_wa = false;
 	u32 flags = 0;
 	int ret;
 
@@ -1719,14 +1719,14 @@ static int gen8_emit_flush_render(struct drm_i915_gem_request *request,
 		flags |= PIPE_CONTROL_STATE_CACHE_INVALIDATE;
 		flags |= PIPE_CONTROL_QW_WRITE;
 		flags |= PIPE_CONTROL_GLOBAL_GTT_IVB;
-	}
 
-	/*
-	 * On GEN9+ Before VF_CACHE_INVALIDATE we need to emit a NULL pipe
-	 * control.
-	 */
-	vf_flush_wa = INTEL_INFO(ring->dev)->gen >= 9 &&
-		      flags & PIPE_CONTROL_VF_CACHE_INVALIDATE;
+		/*
+		 * On GEN9: before VF_CACHE_INVALIDATE we need to emit a NULL
+		 * pipe control.
+		 */
+		if (IS_GEN9(ring->dev))
+			vf_flush_wa = true;
+	}
 
 	ret = intel_logical_ring_begin(request, vf_flush_wa ? 12 : 6);
 	if (ret)
