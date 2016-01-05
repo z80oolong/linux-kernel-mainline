@@ -538,8 +538,8 @@ void intel_lrc_irq_handler(struct intel_engine_cs *ring)
 				WARN(1, "Preemption without Lite Restore\n");
 		}
 
-		 if ((status & GEN8_CTX_STATUS_ACTIVE_IDLE) ||
-		     (status & GEN8_CTX_STATUS_ELEMENT_SWITCH)) {
+		if ((status & GEN8_CTX_STATUS_ACTIVE_IDLE) ||
+		    (status & GEN8_CTX_STATUS_ELEMENT_SWITCH)) {
 			if (execlists_check_remove_request(ring, status_id))
 				submit_contexts++;
 		}
@@ -666,6 +666,19 @@ int intel_logical_ring_alloc_request_extras(struct drm_i915_gem_request *request
 
 	if (request->ctx != request->ring->default_context) {
 		ret = intel_lr_context_pin(request);
+		if (ret)
+			return ret;
+	}
+
+	if (i915.enable_guc_submission) {
+		/*
+		 * Check that the GuC has space for the request before
+		 * going any further, as the i915_add_request() call
+		 * later on mustn't fail ...
+		 */
+		struct intel_guc *guc = &request->i915->guc;
+
+		ret = i915_guc_wq_check_space(guc->execbuf_client);
 		if (ret)
 			return ret;
 	}
@@ -1698,7 +1711,7 @@ static int gen8_emit_flush_render(struct drm_i915_gem_request *request,
 	struct intel_ringbuffer *ringbuf = request->ringbuf;
 	struct intel_engine_cs *ring = ringbuf->ring;
 	u32 scratch_addr = ring->scratch.gtt_offset + 2 * CACHELINE_BYTES;
-	bool vf_flush_wa;
+	bool vf_flush_wa = false;
 	u32 flags = 0;
 	int ret;
 
@@ -1719,14 +1732,14 @@ static int gen8_emit_flush_render(struct drm_i915_gem_request *request,
 		flags |= PIPE_CONTROL_STATE_CACHE_INVALIDATE;
 		flags |= PIPE_CONTROL_QW_WRITE;
 		flags |= PIPE_CONTROL_GLOBAL_GTT_IVB;
-	}
 
-	/*
-	 * On GEN9+ Before VF_CACHE_INVALIDATE we need to emit a NULL pipe
-	 * control.
-	 */
-	vf_flush_wa = INTEL_INFO(ring->dev)->gen >= 9 &&
-		      flags & PIPE_CONTROL_VF_CACHE_INVALIDATE;
+		/*
+		 * On GEN9: before VF_CACHE_INVALIDATE we need to emit a NULL
+		 * pipe control.
+		 */
+		if (IS_GEN9(ring->dev))
+			vf_flush_wa = true;
+	}
 
 	ret = intel_logical_ring_begin(request, vf_flush_wa ? 12 : 6);
 	if (ret)
@@ -2386,7 +2399,21 @@ void intel_lr_context_free(struct intel_context *ctx)
 	}
 }
 
-static uint32_t get_lr_context_size(struct intel_engine_cs *ring)
+/**
+ * intel_lr_context_size() - return the size of the context for an engine
+ * @ring: which engine to find the context size for
+ *
+ * Each engine may require a different amount of space for a context image,
+ * so when allocating (or copying) an image, this function can be used to
+ * find the right size for the specific engine.
+ *
+ * Return: size (in bytes) of an engine-specific context image
+ *
+ * Note: this size includes the HWSP, which is part of the context image
+ * in LRC mode, but does not include the "shared data page" used with
+ * GuC submission. The caller should account for this if using the GuC.
+ */
+uint32_t intel_lr_context_size(struct intel_engine_cs *ring)
 {
 	int ret = 0;
 
@@ -2454,7 +2481,7 @@ int intel_lr_context_deferred_alloc(struct intel_context *ctx,
 	WARN_ON(ctx->legacy_hw_ctx.rcs_state != NULL);
 	WARN_ON(ctx->engine[ring->id].state);
 
-	context_size = round_up(get_lr_context_size(ring), 4096);
+	context_size = round_up(intel_lr_context_size(ring), 4096);
 
 	/* One extra page as the sharing data between driver and GuC */
 	context_size += PAGE_SIZE * LRC_PPHWSP_PN;
