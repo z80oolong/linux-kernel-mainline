@@ -246,7 +246,18 @@ struct intel_atomic_state {
 	struct drm_atomic_state base;
 
 	unsigned int cdclk;
-	bool dpll_set;
+
+	/*
+	 * Calculated device cdclk, can be different from cdclk
+	 * only when all crtc's are DPMS off.
+	 */
+	unsigned int dev_cdclk;
+
+	bool dpll_set, modeset;
+
+	unsigned int active_crtcs;
+	unsigned int min_pixclk[I915_MAX_PIPES];
+
 	struct intel_shared_dpll_config shared_dpll[I915_NUM_PLLS];
 	struct intel_wm_config wm_config;
 };
@@ -1442,8 +1453,10 @@ static inline void
 assert_rpm_wakelock_held(struct drm_i915_private *dev_priv)
 {
 	assert_rpm_device_not_suspended(dev_priv);
-	WARN_ONCE(!atomic_read(&dev_priv->pm.wakeref_count),
-		  "RPM wakelock ref not held during HW access");
+	/* FIXME: Needs to be converted back to WARN_ONCE, but currently causes
+	 * too much noise. */
+	if (!atomic_read(&dev_priv->pm.wakeref_count))
+		DRM_DEBUG_DRIVER("RPM wakelock ref not held during HW access");
 }
 
 static inline int
