@@ -1,0 +1,26 @@
+origin/drm-intel-fixes 168309855a7d1e16db751e9c647119fe2d2dc878
+	Linux 4.4-rc8
+drm-upstream/drm-fixes 1957d62c29be413d77da2e69737f4251e5449fbd
+	Merge branch 'exynos-drm-fixes' of git://git.kernel.org/pub/scm/linux/kernel/git/daeinki/drm-exynos into drm-fixes
+origin/drm-intel-next-fixes d5f384de5bf16aa79095a1af5da65b9ffc3fe71d
+	drm/i915: Move Braswell stop_machine GGTT insertion workaround
+origin/drm-intel-next-queued 31d10b5701964ed8806193807279ee7b4235e491
+	drm/i915: Allow fuzzy matching in intel_compare_link_m_n
+drm-upstream/drm-next c11b8989635166c5a1e6aac1853a847bd664f8db
+	Merge tag 'omapdrm-4.5-resolved' of git://git.kernel.org/pub/scm/linux/kernel/git/tomba/linux into drm-next
+sound-upstream/for-next ca9ea7a5ffda53ce9e9f3e14b9b104d85db47c7d
+	Merge branch 'for-linus' into for-next
+sound-upstream/for-linus c7b60a89516beb20a352ec85c73a8fccd5becf26
+	ALSA: hda - Add keycode map for alc input device
+origin/topic/drm-fixes 5481c8fb1da2a573861095fbea078f30c664d0bd
+	drm/atomic-helper: Check encoder/crtc constraints
+origin/topic/drm-misc 14de6c44d149c68df1800ded42bbab51485ef67a
+	drm/atomic: Remove drm_atomic_connectors_for_crtc.
+origin/topic/kerneldoc 8ba718e60a1091dec68a0b3e513393b48b894654
+	drm: Enable markdown^Wasciidoc for gpu.tmpl
+origin/topic/crc-pmic 04cbfe68c3190f23bcfec230bfd832b533f35554
+	mfd: Add GPIOLIB dependency if INTEL_SOC_PMIC is to be enabled
+origin/topic/connector-locking 3fdefa399e4644399ce3e74e65a75122d52dba6a
+	drm: gc now dead mode_group code
+origin/topic/core-for-CI 527e9316f8ec44bd53d90fb9f611fa7ffff52bb9
+	Linux 4.4-rc4
