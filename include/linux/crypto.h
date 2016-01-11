@@ -594,6 +594,7 @@ struct ablkcipher_tfm {
 
 	unsigned int ivsize;
 	unsigned int reqsize;
+	bool has_setkey;
 };
 
 struct aead_tfm {
@@ -995,6 +996,13 @@ static inline int crypto_ablkcipher_setkey(struct crypto_ablkcipher *tfm,
 	struct ablkcipher_tfm *crt = crypto_ablkcipher_crt(tfm);
 
 	return crt->setkey(crt->base, key, keylen);
+}
+
+static inline bool crypto_ablkcipher_has_setkey(struct crypto_ablkcipher *tfm)
+{
+	struct ablkcipher_tfm *crt = crypto_ablkcipher_crt(tfm);
+
+	return crt->has_setkey;
 }
 
 /**
