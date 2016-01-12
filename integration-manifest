@@ -1,0 +1,26 @@
+origin/drm-intel-fixes afd2ff9b7e1b367172f18ba7f693dfb62bdcb2dc
+	Linux 4.4
+drm-upstream/drm-fixes 3bea6a4c7895fc94965a219a8da9bcf753667901
+	Merge branch 'linux-4.4' of git://github.com/skeggsb/linux into drm-fixes
+origin/drm-intel-next-fixes d5f384de5bf16aa79095a1af5da65b9ffc3fe71d
+	drm/i915: Move Braswell stop_machine GGTT insertion workaround
+origin/drm-intel-next-queued 1892faa9ec5d51b07d646cbd5597cd30e049aa51
+	drm/i915/gen9: Set PIN_ZONE_4G end to 4GB - 1 page
+drm-upstream/drm-next 8a0d560f3e651808ae0a3d9ab9fe476e59de132b
+	drm/amdgpu/powerplay: include asm/div64.h for do_div()
+sound-upstream/for-next 98070576c4f77509459c83cd2358617ef0769a38
+	ALSA: hda - Fix white noise on Dell Latitude E5550
+sound-upstream/for-linus 98070576c4f77509459c83cd2358617ef0769a38
+	ALSA: hda - Fix white noise on Dell Latitude E5550
+origin/topic/drm-fixes 5481c8fb1da2a573861095fbea078f30c664d0bd
+	drm/atomic-helper: Check encoder/crtc constraints
+origin/topic/drm-misc 3d7b75fdae9c81dd71c7573dbc285af90e0924fa
+	apple-gmux: Add initial documentation
+origin/topic/kerneldoc 8ba718e60a1091dec68a0b3e513393b48b894654
+	drm: Enable markdown^Wasciidoc for gpu.tmpl
+origin/topic/crc-pmic 04cbfe68c3190f23bcfec230bfd832b533f35554
+	mfd: Add GPIOLIB dependency if INTEL_SOC_PMIC is to be enabled
+origin/topic/connector-locking 3fdefa399e4644399ce3e74e65a75122d52dba6a
+	drm: gc now dead mode_group code
+origin/topic/core-for-CI 527e9316f8ec44bd53d90fb9f611fa7ffff52bb9
+	Linux 4.4-rc4
