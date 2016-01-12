@@ -1865,15 +1865,13 @@ i830_dispatch_execbuffer(struct drm_i915_gem_request *req,
 		offset = cs_offset;
 	}
 
-	ret = intel_ring_begin(req, 4);
+	ret = intel_ring_begin(req, 2);
 	if (ret)
 		return ret;
 
-	intel_ring_emit(ring, MI_BATCH_BUFFER);
+	intel_ring_emit(ring, MI_BATCH_BUFFER_START | MI_BATCH_GTT);
 	intel_ring_emit(ring, offset | (dispatch_flags & I915_DISPATCH_SECURE ?
 					0 : MI_BATCH_NON_SECURE));
-	intel_ring_emit(ring, offset + len - 8);
-	intel_ring_emit(ring, MI_NOOP);
 	intel_ring_advance(ring);
 
 	return 0;
@@ -1899,6 +1897,17 @@ i915_dispatch_execbuffer(struct drm_i915_gem_request *req,
 	return 0;
 }
 
+static void cleanup_phys_status_page(struct intel_engine_cs *ring)
+{
+	struct drm_i915_private *dev_priv = to_i915(ring->dev);
+
+	if (!dev_priv->status_page_dmah)
+		return;
+
+	drm_pci_free(ring->dev, dev_priv->status_page_dmah);
+	ring->status_page.page_addr = NULL;
+}
+
 static void cleanup_status_page(struct intel_engine_cs *ring)
 {
 	struct drm_i915_gem_object *obj;
@@ -1915,9 +1924,9 @@ static void cleanup_status_page(struct intel_engine_cs *ring)
 
 static int init_status_page(struct intel_engine_cs *ring)
 {
-	struct drm_i915_gem_object *obj;
+	struct drm_i915_gem_object *obj = ring->status_page.obj;
 
-	if ((obj = ring->status_page.obj) == NULL) {
+	if (obj == NULL) {
 		unsigned flags;
 		int ret;
 
@@ -2162,7 +2171,7 @@ static int intel_init_ring_buffer(struct drm_device *dev,
 		if (ret)
 			goto error;
 	} else {
-		BUG_ON(ring->id != RCS);
+		WARN_ON(ring->id != RCS);
 		ret = init_phys_status_page(ring);
 		if (ret)
 			goto error;
@@ -2208,7 +2217,12 @@ void intel_cleanup_ring_buffer(struct intel_engine_cs *ring)
 	if (ring->cleanup)
 		ring->cleanup(ring);
 
-	cleanup_status_page(ring);
+	if (I915_NEED_GFX_HWS(ring->dev)) {
+		cleanup_status_page(ring);
+	} else {
+		WARN_ON(ring->id != RCS);
+		cleanup_phys_status_page(ring);
+	}
 
 	i915_cmd_parser_fini_ring(ring);
 	i915_gem_batch_pool_fini(&ring->batch_pool);
