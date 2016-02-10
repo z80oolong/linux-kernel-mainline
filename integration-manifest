@@ -1,0 +1,26 @@
+origin/drm-intel-fixes ed3f9fd1e865975ceefdb2a43b453e090b1fd787
+	drm/i915: fix error path in intel_setup_gmbus()
+drm-upstream/drm-fixes 6739b3d7bc18a5373efd863b11831e8f515fffe1
+	Merge branch 'drm-fixes-mst' of git://people.freedesktop.org/~airlied/linux into drm-fixes
+origin/drm-intel-next-fixes 48ea1e32c39db94c59b63580b965222c7782112f
+	drm/i915/gen9: Set PIN_ZONE_4G end to 4GB - 1 page
+origin/drm-intel-next-queued 2417c8c03f508841b85bf61acc91836b7b0e2560
+	drm/i915: fix error path in intel_setup_gmbus()
+drm-upstream/drm-next 10c1b6183a163aca59ba92b88f2b4c4cecd20d4c
+	drm/tegra: drop unused variable.
+sound-upstream/for-next fa9a435debadd9e6feac04a9bccdd7b3be4c3e02
+	Merge branch 'topic/hda-mst' into for-next
+sound-upstream/for-linus 397da2d0ab0d1398242622d80a74df7245395c63
+	Merge branch 'topic/core-fixes' into for-linus
+origin/topic/drm-fixes 3725af8869d64d1a912e21aebe76d42b32862463
+	drm/qxl: fix cursor position with non-zero hotspot
+origin/topic/drm-misc e24bfdd5052ca65e99fb835838da9d64b36ddc88
+	apple-gmux: Fix build breakage if !CONFIG_ACPI
+origin/topic/kerneldoc 418645fdcc72b92df6817ec249e216700baa757a
+	drm: Enable markdown^Wasciidoc for gpu.tmpl
+origin/topic/crc-pmic 04cbfe68c3190f23bcfec230bfd832b533f35554
+	mfd: Add GPIOLIB dependency if INTEL_SOC_PMIC is to be enabled
+origin/topic/connector-locking 3fdefa399e4644399ce3e74e65a75122d52dba6a
+	drm: gc now dead mode_group code
+origin/topic/core-for-CI c20a7f9009d15c7250517c079075f3917d121566
+	component: add support for releasing match data
