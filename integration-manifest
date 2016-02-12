@@ -1,0 +1,20 @@
+origin/drm-intel-fixes ed3f9fd1e865975ceefdb2a43b453e090b1fd787
+	drm/i915: fix error path in intel_setup_gmbus()
+drm-upstream/drm-fixes c92a428f408b23215d1a27f652742094bfc50577
+	Merge branch 'drm-fixes-4.5' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+origin/drm-intel-next-fixes 48ea1e32c39db94c59b63580b965222c7782112f
+	drm/i915/gen9: Set PIN_ZONE_4G end to 4GB - 1 page
+origin/drm-intel-next-queued 05fd934ba585ea8c9f129f15f11327adb1f96fe3
+	Merge tag 'topic/drm-misc-2016-02-12' into drm-intel-next-queued
+drm-upstream/drm-next 5443ce86fa37e7d3cc63d2067d05e3388fdeec17
+	drm: virtio-gpu: set atomic flag
+sound-upstream/for-linus 86c2ee16704522a546c0ee1e8238096e3c391468
+	Merge tag 'asoc-fix-v4.5-rc4' of git://git.kernel.org/pub/scm/linux/kernel/git/broonie/sound into for-linus
+origin/topic/drm-fixes 3725af8869d64d1a912e21aebe76d42b32862463
+	drm/qxl: fix cursor position with non-zero hotspot
+origin/topic/drm-misc c11e391da2a8fe973c3c2398452000bed505851e
+	dma-buf: Add ioctls to allow userspace to flush
+origin/topic/kerneldoc 418645fdcc72b92df6817ec249e216700baa757a
+	drm: Enable markdown^Wasciidoc for gpu.tmpl
+origin/topic/core-for-CI e4bed0e5559330ab1ecf1e1aa58c2da702fec1d0
+	component: remove device from master match list on failed add
