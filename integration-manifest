@@ -1,0 +1,20 @@
+origin/drm-intel-fixes ed3f9fd1e865975ceefdb2a43b453e090b1fd787
+	drm/i915: fix error path in intel_setup_gmbus()
+drm-upstream/drm-fixes bdbe58e6c60e49930d9c33e7d2b9a7789ed8c1a9
+	Merge tag 'drm-intel-fixes-2016-02-12' of git://anongit.freedesktop.org/drm-intel into drm-fixes
+origin/drm-intel-next-fixes 48ea1e32c39db94c59b63580b965222c7782112f
+	drm/i915/gen9: Set PIN_ZONE_4G end to 4GB - 1 page
+origin/drm-intel-next-queued 59bbf84d8958a6e6cf579c8ddcca88e3f3924dbd
+	drm/i915: Update DRIVER_DATE to 20160214
+drm-upstream/drm-next 5443ce86fa37e7d3cc63d2067d05e3388fdeec17
+	drm: virtio-gpu: set atomic flag
+sound-upstream/for-linus 07d86ca93db7e5cdf4743564d98292042ec21af7
+	ALSA: usb-audio: avoid freeing umidi object twice
+origin/topic/drm-fixes 3725af8869d64d1a912e21aebe76d42b32862463
+	drm/qxl: fix cursor position with non-zero hotspot
+origin/topic/drm-misc 4d32c0d82380bb6985250839d8cee8a102137685
+	drm/i915: Set aux.dev to the drm_connector device, instead of drm_device.
+origin/topic/kerneldoc 418645fdcc72b92df6817ec249e216700baa757a
+	drm: Enable markdown^Wasciidoc for gpu.tmpl
+origin/topic/core-for-CI e4bed0e5559330ab1ecf1e1aa58c2da702fec1d0
+	component: remove device from master match list on failed add
