@@ -176,13 +176,15 @@ static int drm_dp_dpcd_access(struct drm_dp_aux *aux, u8 request,
 {
 	struct drm_dp_aux_msg msg;
 	unsigned int retry;
-	int err;
+	int err = 0;
 
 	memset(&msg, 0, sizeof(msg));
 	msg.address = offset;
 	msg.request = request;
 	msg.buffer = buffer;
 	msg.size = size;
+
+	mutex_lock(&aux->hw_mutex);
 
 	/*
 	 * The specification doesn't give any recommendation on how often to
@@ -192,25 +194,24 @@ static int drm_dp_dpcd_access(struct drm_dp_aux *aux, u8 request,
 	 */
 	for (retry = 0; retry < 32; retry++) {
 
-		mutex_lock(&aux->hw_mutex);
 		err = aux->transfer(aux, &msg);
-		mutex_unlock(&aux->hw_mutex);
 		if (err < 0) {
 			if (err == -EBUSY)
 				continue;
 
-			return err;
+			goto unlock;
 		}
 
 
 		switch (msg.reply & DP_AUX_NATIVE_REPLY_MASK) {
 		case DP_AUX_NATIVE_REPLY_ACK:
 			if (err < size)
-				return -EPROTO;
-			return err;
+				err = -EPROTO;
+			goto unlock;
 
 		case DP_AUX_NATIVE_REPLY_NACK:
-			return -EIO;
+			err = -EIO;
+			goto unlock;
 
 		case DP_AUX_NATIVE_REPLY_DEFER:
 			usleep_range(400, 500);
@@ -219,7 +220,11 @@ static int drm_dp_dpcd_access(struct drm_dp_aux *aux, u8 request,
 	}
 
 	DRM_DEBUG_KMS("too many retries, giving up\n");
-	return -EIO;
+	err = -EIO;
+
+unlock:
+	mutex_unlock(&aux->hw_mutex);
+	return err;
 }
 
 /**
@@ -408,9 +413,7 @@ static int drm_dp_i2c_do_msg(struct drm_dp_aux *aux, struct drm_dp_aux_msg *msg)
 	 * before giving up the AUX transaction.
 	 */
 	for (retry = 0; retry < 7; retry++) {
-		mutex_lock(&aux->hw_mutex);
 		err = aux->transfer(aux, msg);
-		mutex_unlock(&aux->hw_mutex);
 		if (err < 0) {
 			if (err == -EBUSY)
 				continue;
@@ -492,6 +495,8 @@ static int drm_dp_i2c_xfer(struct i2c_adapter *adapter, struct i2c_msg *msgs,
 
 	memset(&msg, 0, sizeof(msg));
 
+	mutex_lock(&aux->hw_mutex);
+
 	for (i = 0; i < num; i++) {
 		msg.address = msgs[i].addr;
 		msg.request = (msgs[i].flags & I2C_M_RD) ?
@@ -535,6 +540,8 @@ static int drm_dp_i2c_xfer(struct i2c_adapter *adapter, struct i2c_msg *msgs,
 	msg.buffer = NULL;
 	msg.size = 0;
 	(void)drm_dp_i2c_do_msg(aux, &msg);
+
+	mutex_unlock(&aux->hw_mutex);
 
 	return err;
 }
