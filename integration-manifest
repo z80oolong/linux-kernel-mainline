@@ -1,0 +1,22 @@
+origin/drm-intel-fixes 9b18572e83bfd5378b3fcff3acf123f7bddf558a
+	drm/i915/gen9: Verify and enforce dc6 state writes
+drm-upstream/drm-fixes 3772e72720c6bfe1c1fc592ac3d6270559b4ce09
+	Merge branch 'linux-4.5' of git://github.com/skeggsb/linux into drm-fixes
+origin/drm-intel-next-fixes 48ea1e32c39db94c59b63580b965222c7782112f
+	drm/i915/gen9: Set PIN_ZONE_4G end to 4GB - 1 page
+origin/drm-intel-next-queued 032b612e055ecc52dc67aaf04dace8534d94ac80
+	drm/i915: Remove update_sprite_watermarks.
+drm-upstream/drm-next 0041ee4d3642f9ad80a479fbe51a4bc7f3cd8294
+	Merge branch 'drm/next/du' of git://linuxtv.org/pinchartl/fbdev into drm-next
+sound-upstream/for-linus 2ae955774f29bbd7d16149cb0ae8d0319bf2ecc4
+	ALSA: hda - Fixup speaker pass-through control for nid 0x14 on ALC225
+origin/topic/drm-fixes 3725af8869d64d1a912e21aebe76d42b32862463
+	drm/qxl: fix cursor position with non-zero hotspot
+origin/topic/drm-misc a6ddd2f1b99f1c00b4e00289b13c3e451c7130b0
+	drm/udl: Use module_usb_driver
+origin/topic/kerneldoc 418645fdcc72b92df6817ec249e216700baa757a
+	drm: Enable markdown^Wasciidoc for gpu.tmpl
+origin/topic/core-for-CI 5d22014f687fa83c7524b49bb2dbc4d1bfff7793
+	kernel/cpu: Distinctive name for cpu_hotplug.dep_map
+origin/topic/mode_fixup-optional cc92da5173fb348668487a7db1004067e78c30a5
+	drm/tilcdc: removed optional dummy encoder mode_fixup function.
