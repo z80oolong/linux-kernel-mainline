@@ -1,0 +1,24 @@
+origin/drm-intel-fixes eda908967feecf7575a8ab74f1695b0445cf324e
+	drm/i915: Balance assert_rpm_wakelock_held() for !IS_ENABLED(CONFIG_PM)
+drm-upstream/drm-fixes f0511e66114a6414cfca92d7b94118913a0c11ff
+	Merge branch 'drm-fixes-4.5' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+origin/drm-intel-next-fixes 48ea1e32c39db94c59b63580b965222c7782112f
+	drm/i915/gen9: Set PIN_ZONE_4G end to 4GB - 1 page
+origin/drm-intel-next-queued 24a65e624bcdc726c7711ae90efeffaf0a8e9f32
+	drm/i915/hangcheck: Prevent long walks across full-ppgtt
+drm-upstream/drm-next 42e85606784376e4f2d5355694b0b241dc8c29ae
+	Merge tag 'imx-drm-next-20160301' of git://git.pengutronix.de/git/pza/linux into drm-next
+sound-upstream/for-next 35383a24129a47a0b8365ed17d3dcd2f75175929
+	ALSA: compress: allow writes in SNDRV_PCM_STATE_PREPARED state
+sound-upstream/for-linus 790b415c98de62602810b0eedce26f0f9d6ddd78
+	ALSA: hda - hdmi defer to register acomp eld notifier
+origin/topic/drm-fixes 3725af8869d64d1a912e21aebe76d42b32862463
+	drm/qxl: fix cursor position with non-zero hotspot
+origin/topic/drm-misc 9459545b9c966bd221e6e3129b635a4b0a9cf6c2
+	drm/atomic: Pass connector and state to update_connector_routing.
+origin/topic/kerneldoc 418645fdcc72b92df6817ec249e216700baa757a
+	drm: Enable markdown^Wasciidoc for gpu.tmpl
+origin/topic/core-for-CI 1d05ec51bfcbb93e60795a68b5b473abe0d55fac
+	intel_pstate: Update frequencies of policy->cpus only from ->set_policy()
+origin/topic/mode_fixup-optional b282e969b19997c8ff03f8ef9a6e765e7199093a
+	drm/ast: removed optional dummy crtc mode_fixup function.
