@@ -1,0 +1,22 @@
+origin/drm-intel-fixes 2f791908a70e95768596f5bb9e6de4f441d7bf13
+	drm/i915: Fix bogus dig_port_map[] assignment for pre-HSW
+drm-upstream/drm-fixes 848819c5447eb318a787467e8435a07c733e16c9
+	Merge tag 'imx-drm-fixes-2016-02-19' of git://git.pengutronix.de/git/pza/linux into drm-fixes
+origin/drm-intel-next-fixes 48ea1e32c39db94c59b63580b965222c7782112f
+	drm/i915/gen9: Set PIN_ZONE_4G end to 4GB - 1 page
+origin/drm-intel-next-queued 842e03076ffb655e35c72f6c95fe216cc856f42b
+	drm/i915: Update state before setting watermarks, v2.
+drm-upstream/drm-next 550e3b23a53c88adfa46e64f9d442743e65d47da
+	Merge branch 'drm-next-4.6' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream/for-next 7cafc65b3aa1b6970f92211c55712f115d876cfc
+	ALSA: dice: force to add two pcm devices for listed models
+sound-upstream/for-linus ad09ef2cce91e3a98a32e3bb0a5982a6e8920aa1
+	Merge tag 'asoc-fix-v4.5-rc6' of git://git.kernel.org/pub/scm/linux/kernel/git/broonie/sound into for-linus
+origin/topic/drm-fixes 3725af8869d64d1a912e21aebe76d42b32862463
+	drm/qxl: fix cursor position with non-zero hotspot
+origin/topic/drm-misc 562c5b4d898613bec97f482098e7507f52c914cb
+	drm: fix blob pointer check
+origin/topic/kerneldoc 418645fdcc72b92df6817ec249e216700baa757a
+	drm: Enable markdown^Wasciidoc for gpu.tmpl
+origin/topic/core-for-CI 1d05ec51bfcbb93e60795a68b5b473abe0d55fac
+	intel_pstate: Update frequencies of policy->cpus only from ->set_policy()
