@@ -1,0 +1,22 @@
+origin/drm-intel-fixes 0bbca274a31c2366414d8d3f95e03d1c4674d93f
+	drm/i915: Actually retry with bit-banging after GMBUS timeout
+drm-upstream/drm-fixes 848819c5447eb318a787467e8435a07c733e16c9
+	Merge tag 'imx-drm-fixes-2016-02-19' of git://git.pengutronix.de/git/pza/linux into drm-fixes
+origin/drm-intel-next-fixes 48ea1e32c39db94c59b63580b965222c7782112f
+	drm/i915/gen9: Set PIN_ZONE_4G end to 4GB - 1 page
+origin/drm-intel-next-queued 842e03076ffb655e35c72f6c95fe216cc856f42b
+	drm/i915: Update state before setting watermarks, v2.
+drm-upstream/drm-next 550e3b23a53c88adfa46e64f9d442743e65d47da
+	Merge branch 'drm-next-4.6' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream/for-next 0ab1ace856205d10cbc1924b2d931c01ffd216a6
+	ALSA: pcm: Avoid "BUG:" string for warnings again
+sound-upstream/for-linus 6ef2f68fa38bf415830f67903d87180d933e0f47
+	ALSA: hda - fix the mic mute button and led problem for a Lenovo AIO
+origin/topic/drm-fixes 3725af8869d64d1a912e21aebe76d42b32862463
+	drm/qxl: fix cursor position with non-zero hotspot
+origin/topic/drm-misc 562c5b4d898613bec97f482098e7507f52c914cb
+	drm: fix blob pointer check
+origin/topic/kerneldoc 418645fdcc72b92df6817ec249e216700baa757a
+	drm: Enable markdown^Wasciidoc for gpu.tmpl
+origin/topic/core-for-CI 1d05ec51bfcbb93e60795a68b5b473abe0d55fac
+	intel_pstate: Update frequencies of policy->cpus only from ->set_policy()
