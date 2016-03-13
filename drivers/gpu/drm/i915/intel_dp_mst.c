@@ -33,7 +33,6 @@
 static bool intel_dp_mst_compute_config(struct intel_encoder *encoder,
 					struct intel_crtc_state *pipe_config)
 {
-	struct drm_device *dev = encoder->base.dev;
 	struct intel_dp_mst_encoder *intel_mst = enc_to_mst(&encoder->base);
 	struct intel_digital_port *intel_dig_port = intel_mst->primary;
 	struct intel_dp *intel_dp = &intel_dig_port->dp;
@@ -91,9 +90,6 @@ static bool intel_dp_mst_compute_config(struct intel_encoder *encoder,
 			       &pipe_config->dp_m_n);
 
 	pipe_config->dp_m_n.tu = slots;
-
-	if (IS_HASWELL(dev) || IS_BROADWELL(dev))
-		hsw_dp_set_ddi_pll_sel(pipe_config);
 
 	return true;
 
@@ -184,7 +180,9 @@ static void intel_mst_pre_enable_dp(struct intel_encoder *encoder)
 	intel_mst->port = found->port;
 
 	if (intel_dp->active_mst_links == 0) {
-		intel_ddi_clk_select(encoder, intel_crtc->config);
+		intel_prepare_ddi_buffer(&intel_dig_port->base);
+
+		intel_ddi_clk_select(&intel_dig_port->base, intel_crtc->config);
 
 		intel_dp_set_link_params(intel_dp, intel_crtc->config);
 
@@ -369,12 +367,17 @@ static enum drm_mode_status
 intel_dp_mst_mode_valid(struct drm_connector *connector,
 			struct drm_display_mode *mode)
 {
+	int max_dotclk = to_i915(connector->dev)->max_dotclk_freq;
+
 	/* TODO - validate mode against available PBN for link */
 	if (mode->clock < 10000)
 		return MODE_CLOCK_LOW;
 
 	if (mode->flags & DRM_MODE_FLAG_DBLCLK)
 		return MODE_H_ILLEGAL;
+
+	if (mode->clock > max_dotclk)
+		return MODE_CLOCK_HIGH;
 
 	return MODE_OK;
 }
