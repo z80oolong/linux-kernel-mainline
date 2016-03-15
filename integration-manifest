@@ -1,0 +1,22 @@
+origin/drm-intel-fixes b562e44f507e863c6792946e4e1b1449fbbac85d
+	Linux 4.5
+drm-upstream/drm-fixes 125234dc8b1cc862f52d8bd5b37c36cc59b2cb86
+	Merge tag 'drm-intel-fixes-2016-03-11' of git://anongit.freedesktop.org/drm-intel into drm-next
+origin/drm-intel-next-fixes 94669e6ba1ada133394ec8295d773df8b9238d08
+	drm/i915: Handle -EDEADLK in drm_atomic_commit from load-detect.
+origin/drm-intel-next-queued 359d2243117a79599435141fda0047d01ef324e8
+	drm/i915: Update DRIVER_DATE to 20160314
+drm-upstream/drm-next 211afd577a186e18d3eece543c6767420d6f6737
+	Merge tag 'drm-vc4-next-2016-03-14' of github.com:anholt/linux into drm-next
+sound-upstream/for-next ca80e26a5995f078aa442f151b94cf4305e07ac4
+	Merge tag 'asoc-v4.6' of git://git.kernel.org/pub/scm/linux/kernel/git/broonie/sound into for-linus
+sound-upstream/for-linus 294783e092217bb973b38dbefa11ec4c86878a0e
+	ALSA: mixart: silence unitialized variable warnings
+origin/topic/drm-fixes 3725af8869d64d1a912e21aebe76d42b32862463
+	drm/qxl: fix cursor position with non-zero hotspot
+origin/topic/drm-misc b47ff7e6a534bc285eb98f90eadd2a56e2e54056
+	drm/atmel-hlcdc: use helper to get crtc state
+origin/topic/kerneldoc 418645fdcc72b92df6817ec249e216700baa757a
+	drm: Enable markdown^Wasciidoc for gpu.tmpl
+origin/topic/core-for-CI 1d05ec51bfcbb93e60795a68b5b473abe0d55fac
+	intel_pstate: Update frequencies of policy->cpus only from ->set_policy()
