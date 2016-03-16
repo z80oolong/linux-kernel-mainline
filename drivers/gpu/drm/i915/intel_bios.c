@@ -706,7 +706,7 @@ parse_mipi_config(struct drm_i915_private *dev_priv,
 	const struct mipi_pps_data *pps;
 
 	/* parse MIPI blocks only if LFP type is MIPI */
-	if (!dev_priv->vbt.has_mipi)
+	if (!intel_bios_is_dsi_present(dev_priv, NULL))
 		return;
 
 	/* Initialize this to undefined indicating no generic MIPI support */
@@ -1232,14 +1232,6 @@ parse_device_mapping(struct drm_i915_private *dev_priv,
 			continue;
 		}
 
-		if (p_child->common.dvo_port >= DVO_PORT_MIPIA
-		    && p_child->common.dvo_port <= DVO_PORT_MIPID
-		    &&p_child->common.device_type & DEVICE_TYPE_MIPI_OUTPUT) {
-			DRM_DEBUG_KMS("Found MIPI as LFP\n");
-			dev_priv->vbt.has_mipi = 1;
-			dev_priv->vbt.dsi.port = p_child->common.dvo_port;
-		}
-
 		child_dev_ptr = dev_priv->vbt.child_dev + count;
 		count++;
 
@@ -1430,4 +1422,167 @@ intel_bios_init(struct drm_i915_private *dev_priv)
 		pci_unmap_rom(pdev, bios);
 
 	return 0;
+}
+
+/**
+ * intel_bios_is_tv_present - is integrated TV present in VBT
+ * @dev_priv:	i915 device instance
+ *
+ * Return true if TV is present. If no child devices were parsed from VBT,
+ * assume TV is present.
+ */
+bool intel_bios_is_tv_present(struct drm_i915_private *dev_priv)
+{
+	union child_device_config *p_child;
+	int i;
+
+	if (!dev_priv->vbt.int_tv_support)
+		return false;
+
+	if (!dev_priv->vbt.child_dev_num)
+		return true;
+
+	for (i = 0; i < dev_priv->vbt.child_dev_num; i++) {
+		p_child = dev_priv->vbt.child_dev + i;
+		/*
+		 * If the device type is not TV, continue.
+		 */
+		switch (p_child->old.device_type) {
+		case DEVICE_TYPE_INT_TV:
+		case DEVICE_TYPE_TV:
+		case DEVICE_TYPE_TV_SVIDEO_COMPOSITE:
+			break;
+		default:
+			continue;
+		}
+		/* Only when the addin_offset is non-zero, it is regarded
+		 * as present.
+		 */
+		if (p_child->old.addin_offset)
+			return true;
+	}
+
+	return false;
+}
+
+/**
+ * intel_bios_is_lvds_present - is LVDS present in VBT
+ * @dev_priv:	i915 device instance
+ * @i2c_pin:	i2c pin for LVDS if present
+ *
+ * Return true if LVDS is present. If no child devices were parsed from VBT,
+ * assume LVDS is present.
+ */
+bool intel_bios_is_lvds_present(struct drm_i915_private *dev_priv, u8 *i2c_pin)
+{
+	int i;
+
+	if (!dev_priv->vbt.child_dev_num)
+		return true;
+
+	for (i = 0; i < dev_priv->vbt.child_dev_num; i++) {
+		union child_device_config *uchild = dev_priv->vbt.child_dev + i;
+		struct old_child_dev_config *child = &uchild->old;
+
+		/* If the device type is not LFP, continue.
+		 * We have to check both the new identifiers as well as the
+		 * old for compatibility with some BIOSes.
+		 */
+		if (child->device_type != DEVICE_TYPE_INT_LFP &&
+		    child->device_type != DEVICE_TYPE_LFP)
+			continue;
+
+		if (intel_gmbus_is_valid_pin(dev_priv, child->i2c_pin))
+			*i2c_pin = child->i2c_pin;
+
+		/* However, we cannot trust the BIOS writers to populate
+		 * the VBT correctly.  Since LVDS requires additional
+		 * information from AIM blocks, a non-zero addin offset is
+		 * a good indicator that the LVDS is actually present.
+		 */
+		if (child->addin_offset)
+			return true;
+
+		/* But even then some BIOS writers perform some black magic
+		 * and instantiate the device without reference to any
+		 * additional data.  Trust that if the VBT was written into
+		 * the OpRegion then they have validated the LVDS's existence.
+		 */
+		if (dev_priv->opregion.vbt)
+			return true;
+	}
+
+	return false;
+}
+
+/**
+ * intel_bios_is_port_edp - is the device in given port eDP
+ * @dev_priv:	i915 device instance
+ * @port:	port to check
+ *
+ * Return true if the device in %port is eDP.
+ */
+bool intel_bios_is_port_edp(struct drm_i915_private *dev_priv, enum port port)
+{
+	union child_device_config *p_child;
+	static const short port_mapping[] = {
+		[PORT_B] = DVO_PORT_DPB,
+		[PORT_C] = DVO_PORT_DPC,
+		[PORT_D] = DVO_PORT_DPD,
+		[PORT_E] = DVO_PORT_DPE,
+	};
+	int i;
+
+	if (!dev_priv->vbt.child_dev_num)
+		return false;
+
+	for (i = 0; i < dev_priv->vbt.child_dev_num; i++) {
+		p_child = dev_priv->vbt.child_dev + i;
+
+		if (p_child->common.dvo_port == port_mapping[port] &&
+		    (p_child->common.device_type & DEVICE_TYPE_eDP_BITS) ==
+		    (DEVICE_TYPE_eDP & DEVICE_TYPE_eDP_BITS))
+			return true;
+	}
+
+	return false;
+}
+
+/**
+ * intel_bios_is_dsi_present - is DSI present in VBT
+ * @dev_priv:	i915 device instance
+ * @port:	port for DSI if present
+ *
+ * Return true if DSI is present, and return the port in %port.
+ */
+bool intel_bios_is_dsi_present(struct drm_i915_private *dev_priv,
+			       enum port *port)
+{
+	union child_device_config *p_child;
+	u8 dvo_port;
+	int i;
+
+	for (i = 0; i < dev_priv->vbt.child_dev_num; i++) {
+		p_child = dev_priv->vbt.child_dev + i;
+
+		if (!(p_child->common.device_type & DEVICE_TYPE_MIPI_OUTPUT))
+			continue;
+
+		dvo_port = p_child->common.dvo_port;
+
+		switch (dvo_port) {
+		case DVO_PORT_MIPIA:
+		case DVO_PORT_MIPIC:
+			if (port)
+				*port = dvo_port - DVO_PORT_MIPIA;
+			return true;
+		case DVO_PORT_MIPIB:
+		case DVO_PORT_MIPID:
+			DRM_DEBUG_KMS("VBT has unsupported DSI port %c\n",
+				      port_name(dvo_port - DVO_PORT_MIPIA));
+			break;
+		}
+	}
+
+	return false;
 }

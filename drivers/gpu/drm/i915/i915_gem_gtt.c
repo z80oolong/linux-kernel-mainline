@@ -658,7 +658,7 @@ static int gen8_write_pdp(struct drm_i915_gem_request *req,
 			  unsigned entry,
 			  dma_addr_t addr)
 {
-	struct intel_engine_cs *ring = req->ring;
+	struct intel_engine_cs *engine = req->engine;
 	int ret;
 
 	BUG_ON(entry >= 4);
@@ -667,13 +667,13 @@ static int gen8_write_pdp(struct drm_i915_gem_request *req,
 	if (ret)
 		return ret;
 
-	intel_ring_emit(ring, MI_LOAD_REGISTER_IMM(1));
-	intel_ring_emit_reg(ring, GEN8_RING_PDP_UDW(ring, entry));
-	intel_ring_emit(ring, upper_32_bits(addr));
-	intel_ring_emit(ring, MI_LOAD_REGISTER_IMM(1));
-	intel_ring_emit_reg(ring, GEN8_RING_PDP_LDW(ring, entry));
-	intel_ring_emit(ring, lower_32_bits(addr));
-	intel_ring_advance(ring);
+	intel_ring_emit(engine, MI_LOAD_REGISTER_IMM(1));
+	intel_ring_emit_reg(engine, GEN8_RING_PDP_UDW(engine, entry));
+	intel_ring_emit(engine, upper_32_bits(addr));
+	intel_ring_emit(engine, MI_LOAD_REGISTER_IMM(1));
+	intel_ring_emit_reg(engine, GEN8_RING_PDP_LDW(engine, entry));
+	intel_ring_emit(engine, lower_32_bits(addr));
+	intel_ring_advance(engine);
 
 	return 0;
 }
@@ -1650,11 +1650,11 @@ static uint32_t get_pd_offset(struct i915_hw_ppgtt *ppgtt)
 static int hsw_mm_switch(struct i915_hw_ppgtt *ppgtt,
 			 struct drm_i915_gem_request *req)
 {
-	struct intel_engine_cs *ring = req->ring;
+	struct intel_engine_cs *engine = req->engine;
 	int ret;
 
 	/* NB: TLBs must be flushed and invalidated before a switch */
-	ret = ring->flush(req, I915_GEM_GPU_DOMAINS, I915_GEM_GPU_DOMAINS);
+	ret = engine->flush(req, I915_GEM_GPU_DOMAINS, I915_GEM_GPU_DOMAINS);
 	if (ret)
 		return ret;
 
@@ -1662,13 +1662,13 @@ static int hsw_mm_switch(struct i915_hw_ppgtt *ppgtt,
 	if (ret)
 		return ret;
 
-	intel_ring_emit(ring, MI_LOAD_REGISTER_IMM(2));
-	intel_ring_emit_reg(ring, RING_PP_DIR_DCLV(ring));
-	intel_ring_emit(ring, PP_DIR_DCLV_2G);
-	intel_ring_emit_reg(ring, RING_PP_DIR_BASE(ring));
-	intel_ring_emit(ring, get_pd_offset(ppgtt));
-	intel_ring_emit(ring, MI_NOOP);
-	intel_ring_advance(ring);
+	intel_ring_emit(engine, MI_LOAD_REGISTER_IMM(2));
+	intel_ring_emit_reg(engine, RING_PP_DIR_DCLV(engine));
+	intel_ring_emit(engine, PP_DIR_DCLV_2G);
+	intel_ring_emit_reg(engine, RING_PP_DIR_BASE(engine));
+	intel_ring_emit(engine, get_pd_offset(ppgtt));
+	intel_ring_emit(engine, MI_NOOP);
+	intel_ring_advance(engine);
 
 	return 0;
 }
@@ -1676,22 +1676,22 @@ static int hsw_mm_switch(struct i915_hw_ppgtt *ppgtt,
 static int vgpu_mm_switch(struct i915_hw_ppgtt *ppgtt,
 			  struct drm_i915_gem_request *req)
 {
-	struct intel_engine_cs *ring = req->ring;
+	struct intel_engine_cs *engine = req->engine;
 	struct drm_i915_private *dev_priv = to_i915(ppgtt->base.dev);
 
-	I915_WRITE(RING_PP_DIR_DCLV(ring), PP_DIR_DCLV_2G);
-	I915_WRITE(RING_PP_DIR_BASE(ring), get_pd_offset(ppgtt));
+	I915_WRITE(RING_PP_DIR_DCLV(engine), PP_DIR_DCLV_2G);
+	I915_WRITE(RING_PP_DIR_BASE(engine), get_pd_offset(ppgtt));
 	return 0;
 }
 
 static int gen7_mm_switch(struct i915_hw_ppgtt *ppgtt,
 			  struct drm_i915_gem_request *req)
 {
-	struct intel_engine_cs *ring = req->ring;
+	struct intel_engine_cs *engine = req->engine;
 	int ret;
 
 	/* NB: TLBs must be flushed and invalidated before a switch */
-	ret = ring->flush(req, I915_GEM_GPU_DOMAINS, I915_GEM_GPU_DOMAINS);
+	ret = engine->flush(req, I915_GEM_GPU_DOMAINS, I915_GEM_GPU_DOMAINS);
 	if (ret)
 		return ret;
 
@@ -1699,17 +1699,17 @@ static int gen7_mm_switch(struct i915_hw_ppgtt *ppgtt,
 	if (ret)
 		return ret;
 
-	intel_ring_emit(ring, MI_LOAD_REGISTER_IMM(2));
-	intel_ring_emit_reg(ring, RING_PP_DIR_DCLV(ring));
-	intel_ring_emit(ring, PP_DIR_DCLV_2G);
-	intel_ring_emit_reg(ring, RING_PP_DIR_BASE(ring));
-	intel_ring_emit(ring, get_pd_offset(ppgtt));
-	intel_ring_emit(ring, MI_NOOP);
-	intel_ring_advance(ring);
+	intel_ring_emit(engine, MI_LOAD_REGISTER_IMM(2));
+	intel_ring_emit_reg(engine, RING_PP_DIR_DCLV(engine));
+	intel_ring_emit(engine, PP_DIR_DCLV_2G);
+	intel_ring_emit_reg(engine, RING_PP_DIR_BASE(engine));
+	intel_ring_emit(engine, get_pd_offset(ppgtt));
+	intel_ring_emit(engine, MI_NOOP);
+	intel_ring_advance(engine);
 
 	/* XXX: RCS is the only one to auto invalidate the TLBs? */
-	if (ring->id != RCS) {
-		ret = ring->flush(req, I915_GEM_GPU_DOMAINS, I915_GEM_GPU_DOMAINS);
+	if (engine->id != RCS) {
+		ret = engine->flush(req, I915_GEM_GPU_DOMAINS, I915_GEM_GPU_DOMAINS);
 		if (ret)
 			return ret;
 	}
@@ -1720,15 +1720,15 @@ static int gen7_mm_switch(struct i915_hw_ppgtt *ppgtt,
 static int gen6_mm_switch(struct i915_hw_ppgtt *ppgtt,
 			  struct drm_i915_gem_request *req)
 {
-	struct intel_engine_cs *ring = req->ring;
+	struct intel_engine_cs *engine = req->engine;
 	struct drm_device *dev = ppgtt->base.dev;
 	struct drm_i915_private *dev_priv = dev->dev_private;
 
 
-	I915_WRITE(RING_PP_DIR_DCLV(ring), PP_DIR_DCLV_2G);
-	I915_WRITE(RING_PP_DIR_BASE(ring), get_pd_offset(ppgtt));
+	I915_WRITE(RING_PP_DIR_DCLV(engine), PP_DIR_DCLV_2G);
+	I915_WRITE(RING_PP_DIR_BASE(engine), get_pd_offset(ppgtt));
 
-	POSTING_READ(RING_PP_DIR_DCLV(ring));
+	POSTING_READ(RING_PP_DIR_DCLV(engine));
 
 	return 0;
 }
@@ -1736,12 +1736,12 @@ static int gen6_mm_switch(struct i915_hw_ppgtt *ppgtt,
 static void gen8_ppgtt_enable(struct drm_device *dev)
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
-	struct intel_engine_cs *ring;
+	struct intel_engine_cs *engine;
 	int j;
 
-	for_each_ring(ring, dev_priv, j) {
+	for_each_engine(engine, dev_priv, j) {
 		u32 four_level = USES_FULL_48BIT_PPGTT(dev) ? GEN8_GFX_PPGTT_48B : 0;
-		I915_WRITE(RING_MODE_GEN7(ring),
+		I915_WRITE(RING_MODE_GEN7(engine),
 			   _MASKED_BIT_ENABLE(GFX_PPGTT_ENABLE | four_level));
 	}
 }
@@ -1749,7 +1749,7 @@ static void gen8_ppgtt_enable(struct drm_device *dev)
 static void gen7_ppgtt_enable(struct drm_device *dev)
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
-	struct intel_engine_cs *ring;
+	struct intel_engine_cs *engine;
 	uint32_t ecochk, ecobits;
 	int i;
 
@@ -1765,9 +1765,9 @@ static void gen7_ppgtt_enable(struct drm_device *dev)
 	}
 	I915_WRITE(GAM_ECOCHK, ecochk);
 
-	for_each_ring(ring, dev_priv, i) {
+	for_each_engine(engine, dev_priv, i) {
 		/* GFX_MODE is per-ring on gen7+ */
-		I915_WRITE(RING_MODE_GEN7(ring),
+		I915_WRITE(RING_MODE_GEN7(engine),
 			   _MASKED_BIT_ENABLE(GFX_PPGTT_ENABLE));
 	}
 }
@@ -2192,7 +2192,7 @@ int i915_ppgtt_init_hw(struct drm_device *dev)
 
 int i915_ppgtt_init_ring(struct drm_i915_gem_request *req)
 {
-	struct drm_i915_private *dev_priv = req->ring->dev->dev_private;
+	struct drm_i915_private *dev_priv = req->engine->dev->dev_private;
 	struct i915_hw_ppgtt *ppgtt = dev_priv->mm.aliasing_ppgtt;
 
 	if (i915.enable_execlists)
@@ -2286,15 +2286,15 @@ static void undo_idling(struct drm_i915_private *dev_priv, bool interruptible)
 void i915_check_and_clear_faults(struct drm_device *dev)
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
-	struct intel_engine_cs *ring;
+	struct intel_engine_cs *engine;
 	int i;
 
 	if (INTEL_INFO(dev)->gen < 6)
 		return;
 
-	for_each_ring(ring, dev_priv, i) {
+	for_each_engine(engine, dev_priv, i) {
 		u32 fault_reg;
-		fault_reg = I915_READ(RING_FAULT_REG(ring));
+		fault_reg = I915_READ(RING_FAULT_REG(engine));
 		if (fault_reg & RING_FAULT_VALID) {
 			DRM_DEBUG_DRIVER("Unexpected fault\n"
 					 "\tAddr: 0x%08lx\n"
@@ -2305,11 +2305,11 @@ void i915_check_and_clear_faults(struct drm_device *dev)
 					 fault_reg & RING_FAULT_GTTSEL_MASK ? "GGTT" : "PPGTT",
 					 RING_FAULT_SRCID(fault_reg),
 					 RING_FAULT_FAULT_TYPE(fault_reg));
-			I915_WRITE(RING_FAULT_REG(ring),
+			I915_WRITE(RING_FAULT_REG(engine),
 				   fault_reg & ~RING_FAULT_VALID);
 		}
 	}
-	POSTING_READ(RING_FAULT_REG(&dev_priv->ring[RCS]));
+	POSTING_READ(RING_FAULT_REG(&dev_priv->engine[RCS]));
 }
 
 static void i915_ggtt_flush(struct drm_i915_private *dev_priv)
@@ -3377,11 +3377,6 @@ rotate_pages(const dma_addr_t *in, unsigned int offset,
 	unsigned int column, row;
 	unsigned int src_idx;
 
-	if (!sg) {
-		st->nents = 0;
-		sg = st->sgl;
-	}
-
 	for (column = 0; column < width; column++) {
 		src_idx = stride * (height - 1) + column;
 		for (row = 0; row < height; row++) {
@@ -3405,7 +3400,7 @@ static struct sg_table *
 intel_rotate_fb_obj_pages(struct intel_rotation_info *rot_info,
 			  struct drm_i915_gem_object *obj)
 {
-	unsigned int size_pages = rot_info->size >> PAGE_SHIFT;
+	unsigned int size_pages = rot_info->plane[0].width * rot_info->plane[0].height;
 	unsigned int size_pages_uv;
 	struct sg_page_iter sg_iter;
 	unsigned long i;
@@ -3423,7 +3418,7 @@ intel_rotate_fb_obj_pages(struct intel_rotation_info *rot_info,
 
 	/* Account for UV plane with NV12. */
 	if (rot_info->pixel_format == DRM_FORMAT_NV12)
-		size_pages_uv = rot_info->size_uv >> PAGE_SHIFT;
+		size_pages_uv = rot_info->plane[1].width * rot_info->plane[1].height;
 	else
 		size_pages_uv = 0;
 
@@ -3443,11 +3438,14 @@ intel_rotate_fb_obj_pages(struct intel_rotation_info *rot_info,
 		i++;
 	}
 
+	st->nents = 0;
+	sg = st->sgl;
+
 	/* Rotate the pages. */
 	sg = rotate_pages(page_addr_list, 0,
-		     rot_info->width_pages, rot_info->height_pages,
-		     rot_info->width_pages,
-		     st, NULL);
+			  rot_info->plane[0].width, rot_info->plane[0].height,
+			  rot_info->plane[0].width,
+			  st, sg);
 
 	/* Append the UV plane if NV12. */
 	if (rot_info->pixel_format == DRM_FORMAT_NV12) {
@@ -3459,18 +3457,15 @@ intel_rotate_fb_obj_pages(struct intel_rotation_info *rot_info,
 
 		rot_info->uv_start_page = uv_start_page;
 
-		rotate_pages(page_addr_list, uv_start_page,
-			     rot_info->width_pages_uv,
-			     rot_info->height_pages_uv,
-			     rot_info->width_pages_uv,
-			     st, sg);
+		sg = rotate_pages(page_addr_list, rot_info->uv_start_page,
+				  rot_info->plane[1].width, rot_info->plane[1].height,
+				  rot_info->plane[1].width,
+				  st, sg);
 	}
 
-	DRM_DEBUG_KMS(
-		      "Created rotated page mapping for object size %zu (pitch=%u, height=%u, pixel_format=0x%x, %ux%u tiles, %u pages (%u plane 0)).\n",
-		      obj->base.size, rot_info->pitch, rot_info->height,
-		      rot_info->pixel_format, rot_info->width_pages,
-		      rot_info->height_pages, size_pages + size_pages_uv,
+	DRM_DEBUG_KMS("Created rotated page mapping for object size %zu (%ux%u tiles, %u pages (%u plane 0)).\n",
+		      obj->base.size, rot_info->plane[0].width,
+		      rot_info->plane[0].height, size_pages + size_pages_uv,
 		      size_pages);
 
 	drm_free_large(page_addr_list);
@@ -3482,11 +3477,9 @@ err_sg_alloc:
 err_st_alloc:
 	drm_free_large(page_addr_list);
 
-	DRM_DEBUG_KMS(
-		      "Failed to create rotated mapping for object size %zu! (%d) (pitch=%u, height=%u, pixel_format=0x%x, %ux%u tiles, %u pages (%u plane 0))\n",
-		      obj->base.size, ret, rot_info->pitch, rot_info->height,
-		      rot_info->pixel_format, rot_info->width_pages,
-		      rot_info->height_pages, size_pages + size_pages_uv,
+	DRM_DEBUG_KMS("Failed to create rotated mapping for object size %zu! (%d) (%ux%u tiles, %u pages (%u plane 0))\n",
+		      obj->base.size, ret, rot_info->plane[0].width,
+		      rot_info->plane[0].height, size_pages + size_pages_uv,
 		      size_pages);
 	return ERR_PTR(ret);
 }
@@ -3634,7 +3627,7 @@ i915_ggtt_view_size(struct drm_i915_gem_object *obj,
 	if (view->type == I915_GGTT_VIEW_NORMAL) {
 		return obj->base.size;
 	} else if (view->type == I915_GGTT_VIEW_ROTATED) {
-		return view->params.rotated.size;
+		return intel_rotation_info_size(&view->params.rotated) << PAGE_SHIFT;
 	} else if (view->type == I915_GGTT_VIEW_PARTIAL) {
 		return view->params.partial.size << PAGE_SHIFT;
 	} else {
