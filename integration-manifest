@@ -1,0 +1,22 @@
+origin/drm-intel-fixes b562e44f507e863c6792946e4e1b1449fbbac85d
+	Linux 4.5
+drm-upstream/drm-fixes 125234dc8b1cc862f52d8bd5b37c36cc59b2cb86
+	Merge tag 'drm-intel-fixes-2016-03-11' of git://anongit.freedesktop.org/drm-intel into drm-next
+origin/drm-intel-next-fixes 94669e6ba1ada133394ec8295d773df8b9238d08
+	drm/i915: Handle -EDEADLK in drm_atomic_commit from load-detect.
+origin/drm-intel-next-queued d15d7538c6d210b2a10df94d131b70b025ee9cd2
+	drm/i915: Tune down init error message due to failure injection
+drm-upstream/drm-next 902d02db1ff1b0d0075276917a36ba70847798a7
+	Merge branch 'drm-next-4.6' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream/for-next 93a9ff151754fbdf951b1b993bcf96453f6e36b3
+	ALSA: hda - Fix spurious kernel WARNING on Baytrail HDMI
+sound-upstream/for-linus 93a9ff151754fbdf951b1b993bcf96453f6e36b3
+	ALSA: hda - Fix spurious kernel WARNING on Baytrail HDMI
+origin/topic/drm-fixes 3725af8869d64d1a912e21aebe76d42b32862463
+	drm/qxl: fix cursor position with non-zero hotspot
+origin/topic/drm-misc 18b862dcd57a3e23e34c8cd1e939f68548c1209a
+	dma-buf, drm, ion: Propagate error code from dma_buf_start_cpu_access()
+origin/topic/kerneldoc 418645fdcc72b92df6817ec249e216700baa757a
+	drm: Enable markdown^Wasciidoc for gpu.tmpl
+origin/topic/core-for-CI 1d05ec51bfcbb93e60795a68b5b473abe0d55fac
+	intel_pstate: Update frequencies of policy->cpus only from ->set_policy()
