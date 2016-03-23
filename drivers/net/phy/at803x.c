@@ -197,12 +197,16 @@ static int at803x_probe(struct phy_device *phydev)
 	if (!priv)
 		return -ENOMEM;
 
+	if (phydev->drv->phy_id != ATH8030_PHY_ID)
+		goto does_not_require_reset_workaround;
+
 	priv->gpiod_reset = devm_gpiod_get(dev, "reset");
 	if (IS_ERR(priv->gpiod_reset))
 		priv->gpiod_reset = NULL;
 	else
 		gpiod_direction_output(priv->gpiod_reset, 1);
 
+does_not_require_reset_workaround:
 	phydev->priv = priv;
 
 	return 0;
