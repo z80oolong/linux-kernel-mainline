@@ -1,0 +1,22 @@
+origin/drm-intel-fixes f55532a0c0b8bb6148f4e07853b876ef73bc69ca
+	Linux 4.6-rc1
+drm-upstream/drm-fixes 125234dc8b1cc862f52d8bd5b37c36cc59b2cb86
+	Merge tag 'drm-intel-fixes-2016-03-11' of git://anongit.freedesktop.org/drm-intel into drm-next
+origin/drm-intel-next-fixes 94669e6ba1ada133394ec8295d773df8b9238d08
+	drm/i915: Handle -EDEADLK in drm_atomic_commit from load-detect.
+origin/drm-intel-next-queued 72e96d6450c067f58b65224bb5e73914e2cc43ab
+	drm/i915: Refer to GGTT {,VM} consistently
+drm-upstream/drm-next 4604202ca8d2a5e33b4bca0812b5d92975ed1bd8
+	Merge branch 'drm-next-4.6' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream/for-next c7d1565ed254cfde0920e131af1e7d3ce4759f96
+	ALSA: firewire-tascam: deleyed registration of sound card
+sound-upstream/for-linus 836b34a935abc91e13e63053d0a83b24dfb5ea78
+	ALSA: usb-audio: Fix double-free in error paths after snd_usb_add_audio_stream() call
+origin/topic/drm-fixes d59a1f71ff1aeda4b4630df92d3ad4e3b1dfc885
+	drm/qxl: fix cursor position with non-zero hotspot
+origin/topic/drm-misc 249c4f538b1aae55d41699f8bafc6cb762a7f48f
+	drm: Add new DCS commands in the enum list
+origin/topic/kerneldoc 418645fdcc72b92df6817ec249e216700baa757a
+	drm: Enable markdown^Wasciidoc for gpu.tmpl
+origin/topic/core-for-CI 6954af8b55f3b00b08f7759f479c41388fbe364f
+	kernfs: Move faulting copy_user operations outside of the mutex
