@@ -1,0 +1,22 @@
+origin/drm-intel-fixes f55532a0c0b8bb6148f4e07853b876ef73bc69ca
+	Linux 4.6-rc1
+drm-upstream/drm-fixes 72b9ff0612ad8fc969b910cd00ac16b57a1a9ba4
+	drm/udl: Use unlocked gem unreferencing
+origin/drm-intel-next-fixes 94669e6ba1ada133394ec8295d773df8b9238d08
+	drm/i915: Handle -EDEADLK in drm_atomic_commit from load-detect.
+origin/drm-intel-next-queued fca0ce2a5caf6ae7d9d8510fb87ae6195b40057a
+	drm/i915: Fix plane init failure paths
+drm-upstream/drm-next 4604202ca8d2a5e33b4bca0812b5d92975ed1bd8
+	Merge branch 'drm-next-4.6' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream/for-next c7d1565ed254cfde0920e131af1e7d3ce4759f96
+	ALSA: firewire-tascam: deleyed registration of sound card
+sound-upstream/for-linus 4a07083ed613644c96c34a7dd2853dc5d7c70902
+	ALSA: timer: Use mod_timer() for rearming the system timer
+origin/topic/drm-fixes d59a1f71ff1aeda4b4630df92d3ad4e3b1dfc885
+	drm/qxl: fix cursor position with non-zero hotspot
+origin/topic/drm-misc 249c4f538b1aae55d41699f8bafc6cb762a7f48f
+	drm: Add new DCS commands in the enum list
+origin/topic/kerneldoc 418645fdcc72b92df6817ec249e216700baa757a
+	drm: Enable markdown^Wasciidoc for gpu.tmpl
+origin/topic/core-for-CI 6954af8b55f3b00b08f7759f479c41388fbe364f
+	kernfs: Move faulting copy_user operations outside of the mutex
