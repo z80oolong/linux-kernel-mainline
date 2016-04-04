@@ -1,0 +1,22 @@
+origin/drm-intel-fixes 9735a22799b9214d17d3c231fe377fc852f042e9
+	Linux 4.6-rc2
+drm-upstream/drm-fixes 72b9ff0612ad8fc969b910cd00ac16b57a1a9ba4
+	drm/udl: Use unlocked gem unreferencing
+origin/drm-intel-next-fixes 94669e6ba1ada133394ec8295d773df8b9238d08
+	drm/i915: Handle -EDEADLK in drm_atomic_commit from load-detect.
+origin/drm-intel-next-queued 27af5eea54d161e1636001a7f2b5efd3b7a3d1f9
+	drm/i915: Move execlists irq handler to a bottom half
+drm-upstream/drm-next 4604202ca8d2a5e33b4bca0812b5d92975ed1bd8
+	Merge branch 'drm-next-4.6' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream/for-next a99e31512aa435e8391ba5f5e64abeac9c5f2f32
+	Merge branch 'for-linus' into for-next
+sound-upstream/for-linus f03b24a851d32ca85dacab01785b24a7ee717d37
+	ALSA: usb-audio: Add a sample rate quirk for Phoenix Audio TMX320
+origin/topic/drm-fixes d59a1f71ff1aeda4b4630df92d3ad4e3b1dfc885
+	drm/qxl: fix cursor position with non-zero hotspot
+origin/topic/drm-misc 249c4f538b1aae55d41699f8bafc6cb762a7f48f
+	drm: Add new DCS commands in the enum list
+origin/topic/kerneldoc 418645fdcc72b92df6817ec249e216700baa757a
+	drm: Enable markdown^Wasciidoc for gpu.tmpl
+origin/topic/core-for-CI 6954af8b55f3b00b08f7759f479c41388fbe364f
+	kernfs: Move faulting copy_user operations outside of the mutex
