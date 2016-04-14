@@ -1,0 +1,22 @@
+origin/drm-intel-fixes 42bf7b46a5de03c8e2dd28a1f105bc28b6485243
+	drm/i915: fix deadlock on lid open
+drm-upstream/drm-fixes ff3e84e8e479c3ba7148f8dc35a56cf091ab56d9
+	Merge branch 'exynos-drm-fixes' of git://git.kernel.org/pub/scm/linux/kernel/git/daeinki/drm-exynos into drm-fixes
+origin/drm-intel-next-fixes 94669e6ba1ada133394ec8295d773df8b9238d08
+	drm/i915: Handle -EDEADLK in drm_atomic_commit from load-detect.
+origin/drm-intel-next-queued 3d7d0c85e41afb5a05e98b3a8a72c38357f02594
+	drm/i915: Use fw_domains_put_with_fifo() on HSW
+drm-upstream/drm-next f9fd2adaacd8dc0ecbb38d96f3c62f20f0697176
+	Merge branch 'gma500-next' of git://github.com/patjak/drm-gma500 into drm-next
+sound-upstream/for-next fa44b7ec9bc4115513e59f31da1167166bd6346a
+	ALSA: hda - Update documentation
+sound-upstream/for-linus c44da62b55bb453052869ab095bcda7aa0bd6bba
+	ALSA: hda - Fix inconsistent monitor_present state until repoll
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc 346fea63a8d25644a5ad06ecd98d6a4747c63885
+	include/drm: Reword debug categories comment.
+origin/topic/kerneldoc 418645fdcc72b92df6817ec249e216700baa757a
+	drm: Enable markdown^Wasciidoc for gpu.tmpl
+origin/topic/core-for-CI 6954af8b55f3b00b08f7759f479c41388fbe364f
+	kernfs: Move faulting copy_user operations outside of the mutex
