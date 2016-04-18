@@ -1,0 +1,24 @@
+origin/drm-intel-fixes 31318a922395ec9e78d6e2ddf70779355afc7594
+	drm/i915: Use fw_domains_put_with_fifo() on HSW
+drm-upstream/drm-fixes ff3e84e8e479c3ba7148f8dc35a56cf091ab56d9
+	Merge branch 'exynos-drm-fixes' of git://git.kernel.org/pub/scm/linux/kernel/git/daeinki/drm-exynos into drm-fixes
+origin/drm-intel-next-fixes 94669e6ba1ada133394ec8295d773df8b9238d08
+	drm/i915: Handle -EDEADLK in drm_atomic_commit from load-detect.
+origin/drm-intel-next-queued 5f304c87363401eb85cae304d025e93267353d3a
+	drm/i915/kbl: Reset secondary power well requests left on by DMC/KVMR
+drm-upstream/drm-next f9fd2adaacd8dc0ecbb38d96f3c62f20f0697176
+	Merge branch 'gma500-next' of git://github.com/patjak/drm-gma500 into drm-next
+sound-upstream/for-next a19c921fca0a865b657d59b2c9a05aa0a2905126
+	ALSA: lx646es: Fix possible uninitialized variable reference
+sound-upstream/for-linus ed0739b577f2ddd53835f1e20d014fccab195c42
+	ALSA - hda: hdmi check NULL pointer in hdmi_set_chmap
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc 8d4d0d700dda04c5095a08e91f59f537995aa024
+	drm/atomic-helper: Print an error if vblank wait times out
+origin/topic/kerneldoc 418645fdcc72b92df6817ec249e216700baa757a
+	drm: Enable markdown^Wasciidoc for gpu.tmpl
+origin/topic/core-for-CI 6954af8b55f3b00b08f7759f479c41388fbe364f
+	kernfs: Move faulting copy_user operations outside of the mutex
+origin/topic/struct_mutex d00b39c17573ece6f5fb1385314877d29f540db8
+	Merge branch 'drm-next-analogix-dp-v2' of github.com:yakir-Yang/linux into drm-next
