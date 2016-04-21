@@ -1,0 +1,24 @@
+origin/drm-intel-fixes 31318a922395ec9e78d6e2ddf70779355afc7594
+	drm/i915: Use fw_domains_put_with_fifo() on HSW
+drm-upstream/drm-fixes ff3e84e8e479c3ba7148f8dc35a56cf091ab56d9
+	Merge branch 'exynos-drm-fixes' of git://git.kernel.org/pub/scm/linux/kernel/git/daeinki/drm-exynos into drm-fixes
+origin/drm-intel-next-fixes 94669e6ba1ada133394ec8295d773df8b9238d08
+	drm/i915: Handle -EDEADLK in drm_atomic_commit from load-detect.
+origin/drm-intel-next-queued 80dbe9973afc6be722bb6dbc1a303f3a7aaa3e1f
+	drm/i915/kbl: Don't WARN for expected secondary MISC IO power well request
+drm-upstream/drm-next f9fd2adaacd8dc0ecbb38d96f3c62f20f0697176
+	Merge branch 'gma500-next' of git://github.com/patjak/drm-gma500 into drm-next
+sound-upstream/for-next 0c7dcdad0c4ebeef8c1cddd827d46cdf29e78546
+	ALSA: hrtimer: Use manual start/stop in callback
+sound-upstream/for-linus 9859a971ca228725425238756ee89c6133306ec8
+	ALSA: hda - add PCI ID for Intel Broxton-T
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc 6dc3e22ee197095eb6a6b3119f04f9dc6c2bbf91
+	drm: Make drm.debug parameter description more helpful
+origin/topic/kerneldoc 418645fdcc72b92df6817ec249e216700baa757a
+	drm: Enable markdown^Wasciidoc for gpu.tmpl
+origin/topic/core-for-CI 3ea48cc412c5ecba970b228f3e23d147d7d5527b
+	kernfs: Move faulting copy_user operations outside of the mutex
+origin/topic/struct_mutex f74418a400c62f382228842fd0ce8a05f9069d8c
+	drm/vma_manage: Drop has_offset
