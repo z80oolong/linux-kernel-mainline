@@ -1,0 +1,22 @@
+origin/drm-intel-fixes 02da2d72174c61988eb4456b53f405e3ebdebce4
+	Linux 4.6-rc5
+drm-upstream/drm-fixes 18cdfe751f26ffa610f2a7b59775c5cc4c1c9619
+	Merge branch 'drm-fixes-4.6' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+origin/drm-intel-next-fixes 94669e6ba1ada133394ec8295d773df8b9238d08
+	drm/i915: Handle -EDEADLK in drm_atomic_commit from load-detect.
+origin/drm-intel-next-queued ff5ec22dad154e67f57c0c5e66afdd3668b698c8
+	drm/i915: Simplify i915_gem_obj_ggtt_bound_view
+drm-upstream/drm-next 027b3f8ba9277410c3191d72d1ed2c6146d8a668
+	drm/modes: stop handling framebuffer special
+sound-upstream/for-next 8d84c1973b69621bcb89d5d8a69699e8347a3d90
+	ALSA: doc: fix spelling mistakes
+sound-upstream/for-linus 3194ed497939c6448005542e3ca4fa2386968fa0
+	ALSA: hda - Fix possible race on regmap bypass flip
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc 5ff18e42ddfd9ab67088b2d7081380943b9f0cab
+	MAINTAINERS: Update the files list for the GMA500 DRM driver
+origin/topic/kerneldoc 418645fdcc72b92df6817ec249e216700baa757a
+	drm: Enable markdown^Wasciidoc for gpu.tmpl
+origin/topic/core-for-CI 3ea48cc412c5ecba970b228f3e23d147d7d5527b
+	kernfs: Move faulting copy_user operations outside of the mutex
