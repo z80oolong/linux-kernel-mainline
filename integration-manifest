@@ -1,0 +1,22 @@
+origin/drm-intel-fixes 02da2d72174c61988eb4456b53f405e3ebdebce4
+	Linux 4.6-rc5
+drm-upstream/drm-fixes 18cdfe751f26ffa610f2a7b59775c5cc4c1c9619
+	Merge branch 'drm-fixes-4.6' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+origin/drm-intel-next-fixes 94669e6ba1ada133394ec8295d773df8b9238d08
+	drm/i915: Handle -EDEADLK in drm_atomic_commit from load-detect.
+origin/drm-intel-next-queued 9f7c5b17302489f4b880b9adcd7bd78e3e9fcac9
+	drm/i915: Parsing the PWM cntrl and CABC ON/OFF fields in VBT
+drm-upstream/drm-next 027b3f8ba9277410c3191d72d1ed2c6146d8a668
+	drm/modes: stop handling framebuffer special
+sound-upstream/for-next a33d59599653edc6469c582f0ffd99c5fc58af04
+	Merge branch 'for-linus' into for-next
+sound-upstream/for-linus bb03ed216370cb021f377f923471e56d1de3ff5d
+	ALSA: hda - Update BCLK also at hotplug for i915 HSW/BDW
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc 4eb9b945c69fe1ccd6235e21c52627e1b741474a
+	drm/sysfs: Annote lockless show functions with READ_ONCE
+origin/topic/kerneldoc 418645fdcc72b92df6817ec249e216700baa757a
+	drm: Enable markdown^Wasciidoc for gpu.tmpl
+origin/topic/core-for-CI 3ea48cc412c5ecba970b228f3e23d147d7d5527b
+	kernfs: Move faulting copy_user operations outside of the mutex
