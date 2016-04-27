@@ -2449,6 +2449,8 @@ enum skl_disp_power_wells {
 #define   DPLL_MD_VGA_UDI_MULTIPLIER_MASK	0x0000003f
 #define   DPLL_MD_VGA_UDI_MULTIPLIER_SHIFT	0
 
+#define RAWCLK_FREQ_VLV		_MMIO(VLV_DISPLAY_BASE + 0x6024)
+
 #define _FPA0	0x6040
 #define _FPA1	0x6044
 #define _FPB0	0x6048
@@ -6090,6 +6092,7 @@ enum skl_disp_power_wells {
 
 #define GEN8_L3SQCREG1				_MMIO(0xB100)
 #define  BDW_WA_L3SQCREG1_DEFAULT		0x784000
+#define  BXT_WA_L3SQCREG1_DEFAULT		0xF84000
 
 #define GEN7_L3CNTLREG1				_MMIO(0xB01C)
 #define  GEN7_WA_FOR_GEN7_L3_CONTROL			0x3C47FF8C

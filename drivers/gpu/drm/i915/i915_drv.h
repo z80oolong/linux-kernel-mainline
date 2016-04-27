@@ -2923,7 +2923,7 @@ void *i915_gem_object_alloc(struct drm_device *dev);
 void i915_gem_object_free(struct drm_i915_gem_object *obj);
 void i915_gem_object_init(struct drm_i915_gem_object *obj,
 			 const struct drm_i915_gem_object_ops *ops);
-struct drm_i915_gem_object *i915_gem_alloc_object(struct drm_device *dev,
+struct drm_i915_gem_object *i915_gem_object_create(struct drm_device *dev,
 						  size_t size);
 struct drm_i915_gem_object *i915_gem_object_create_from_data(
 		struct drm_device *dev, const void *data, size_t size);
@@ -3215,8 +3215,6 @@ bool i915_gem_obj_ggtt_bound_view(struct drm_i915_gem_object *o,
 bool i915_gem_obj_bound(struct drm_i915_gem_object *o,
 			struct i915_address_space *vm);
 
-unsigned long i915_gem_obj_size(struct drm_i915_gem_object *o,
-				struct i915_address_space *vm);
 struct i915_vma *
 i915_gem_obj_to_vma(struct drm_i915_gem_object *obj,
 		    struct i915_address_space *vm);
@@ -3251,14 +3249,8 @@ static inline bool i915_gem_obj_ggtt_bound(struct drm_i915_gem_object *obj)
 	return i915_gem_obj_ggtt_bound_view(obj, &i915_ggtt_view_normal);
 }
 
-static inline unsigned long
-i915_gem_obj_ggtt_size(struct drm_i915_gem_object *obj)
-{
-	struct drm_i915_private *dev_priv = to_i915(obj->base.dev);
-	struct i915_ggtt *ggtt = &dev_priv->ggtt;
-
-	return i915_gem_obj_size(obj, &ggtt->base);
-}
+unsigned long
+i915_gem_obj_ggtt_size(struct drm_i915_gem_object *obj);
 
 static inline int __must_check
 i915_gem_obj_ggtt_pin(struct drm_i915_gem_object *obj,

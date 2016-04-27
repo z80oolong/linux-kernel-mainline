@@ -185,6 +185,7 @@ intel_pch_rawclk(struct drm_i915_private *dev_priv)
 static int
 intel_vlv_hrawclk(struct drm_i915_private *dev_priv)
 {
+	/* RAWCLK_FREQ_VLV register updated from power well code */
 	return vlv_get_cck_clock_hpll(dev_priv, "hrawclk",
 				      CCK_DISPLAY_REF_CLOCK_CONTROL);
 }
@@ -218,7 +219,7 @@ intel_g4x_hrawclk(struct drm_i915_private *dev_priv)
 	}
 }
 
-static void intel_update_rawclk(struct drm_i915_private *dev_priv)
+void intel_update_rawclk(struct drm_i915_private *dev_priv)
 {
 	if (HAS_PCH_SPLIT(dev_priv))
 		dev_priv->rawclk_freq = intel_pch_rawclk(dev_priv);
@@ -10318,7 +10319,7 @@ intel_framebuffer_create_for_mode(struct drm_device *dev,
 	struct drm_i915_gem_object *obj;
 	struct drm_mode_fb_cmd2 mode_cmd = { 0 };
 
-	obj = i915_gem_alloc_object(dev,
+	obj = i915_gem_object_create(dev,
 				    intel_framebuffer_size_for_mode(mode, bpp));
 	if (obj == NULL)
 		return ERR_PTR(-ENOMEM);
@@ -15455,7 +15456,6 @@ void intel_modeset_init(struct drm_device *dev)
 	}
 
 	intel_update_czclk(dev_priv);
-	intel_update_rawclk(dev_priv);
 	intel_update_cdclk(dev);
 
 	intel_shared_dpll_init(dev);

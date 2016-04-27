@@ -381,7 +381,7 @@ i915_gem_create(struct drm_file *file,
 		return -EINVAL;
 
 	/* Allocate the new object */
-	obj = i915_gem_alloc_object(dev, size);
+	obj = i915_gem_object_create(dev, size);
 	if (obj == NULL)
 		return -ENOMEM;
 
@@ -4495,7 +4495,7 @@ static const struct drm_i915_gem_object_ops i915_gem_object_ops = {
 	.put_pages = i915_gem_object_put_pages_gtt,
 };
 
-struct drm_i915_gem_object *i915_gem_alloc_object(struct drm_device *dev,
+struct drm_i915_gem_object *i915_gem_object_create(struct drm_device *dev,
 						  size_t size)
 {
 	struct drm_i915_gem_object *obj;
@@ -4651,16 +4651,12 @@ struct i915_vma *i915_gem_obj_to_vma(struct drm_i915_gem_object *obj,
 struct i915_vma *i915_gem_obj_to_ggtt_view(struct drm_i915_gem_object *obj,
 					   const struct i915_ggtt_view *view)
 {
-	struct drm_device *dev = obj->base.dev;
-	struct drm_i915_private *dev_priv = to_i915(dev);
-	struct i915_ggtt *ggtt = &dev_priv->ggtt;
 	struct i915_vma *vma;
 
-	BUG_ON(!view);
+	GEM_BUG_ON(!view);
 
 	list_for_each_entry(vma, &obj->vma_list, obj_link)
-		if (vma->vm == &ggtt->base &&
-		    i915_ggtt_view_equal(&vma->ggtt_view, view))
+		if (vma->is_ggtt && i915_ggtt_view_equal(&vma->ggtt_view, view))
 			return vma;
 	return NULL;
 }
@@ -5253,13 +5249,10 @@ u64 i915_gem_obj_offset(struct drm_i915_gem_object *o,
 u64 i915_gem_obj_ggtt_offset_view(struct drm_i915_gem_object *o,
 				  const struct i915_ggtt_view *view)
 {
-	struct drm_i915_private *dev_priv = to_i915(o->base.dev);
-	struct i915_ggtt *ggtt = &dev_priv->ggtt;
 	struct i915_vma *vma;
 
 	list_for_each_entry(vma, &o->vma_list, obj_link)
-		if (vma->vm == &ggtt->base &&
-		    i915_ggtt_view_equal(&vma->ggtt_view, view))
+		if (vma->is_ggtt && i915_ggtt_view_equal(&vma->ggtt_view, view))
 			return vma->node.start;
 
 	WARN(1, "global vma for this object not found. (view=%u)\n", view->type);
@@ -5285,12 +5278,10 @@ bool i915_gem_obj_bound(struct drm_i915_gem_object *o,
 bool i915_gem_obj_ggtt_bound_view(struct drm_i915_gem_object *o,
 				  const struct i915_ggtt_view *view)
 {
-	struct drm_i915_private *dev_priv = to_i915(o->base.dev);
-	struct i915_ggtt *ggtt = &dev_priv->ggtt;
 	struct i915_vma *vma;
 
 	list_for_each_entry(vma, &o->vma_list, obj_link)
-		if (vma->vm == &ggtt->base &&
+		if (vma->is_ggtt &&
 		    i915_ggtt_view_equal(&vma->ggtt_view, view) &&
 		    drm_mm_node_allocated(&vma->node))
 			return true;
@@ -5309,23 +5300,18 @@ bool i915_gem_obj_bound_any(struct drm_i915_gem_object *o)
 	return false;
 }
 
-unsigned long i915_gem_obj_size(struct drm_i915_gem_object *o,
-				struct i915_address_space *vm)
+unsigned long i915_gem_obj_ggtt_size(struct drm_i915_gem_object *o)
 {
-	struct drm_i915_private *dev_priv = o->base.dev->dev_private;
 	struct i915_vma *vma;
 
-	WARN_ON(vm == &dev_priv->mm.aliasing_ppgtt->base);
-
-	BUG_ON(list_empty(&o->vma_list));
+	GEM_BUG_ON(list_empty(&o->vma_list));
 
 	list_for_each_entry(vma, &o->vma_list, obj_link) {
 		if (vma->is_ggtt &&
-		    vma->ggtt_view.type != I915_GGTT_VIEW_NORMAL)
-			continue;
-		if (vma->vm == vm)
+		    vma->ggtt_view.type == I915_GGTT_VIEW_NORMAL)
 			return vma->node.size;
 	}
+
 	return 0;
 }
 
@@ -5364,7 +5350,7 @@ i915_gem_object_create_from_data(struct drm_device *dev,
 	size_t bytes;
 	int ret;
 
-	obj = i915_gem_alloc_object(dev, round_up(size, PAGE_SIZE));
+	obj = i915_gem_object_create(dev, round_up(size, PAGE_SIZE));
 	if (IS_ERR_OR_NULL(obj))
 		return obj;
 
