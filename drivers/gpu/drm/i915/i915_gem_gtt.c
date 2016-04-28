@@ -93,6 +93,13 @@
  *
  */
 
+static inline struct i915_ggtt *
+i915_vm_to_ggtt(struct i915_address_space *vm)
+{
+	GEM_BUG_ON(!i915_is_ggtt(vm));
+	return container_of(vm, struct i915_ggtt, base);
+}
+
 static int
 i915_get_ggtt_vma_pages(struct i915_vma *vma);
 
@@ -866,6 +873,7 @@ static void gen8_free_page_tables(struct drm_device *dev,
 static int gen8_init_scratch(struct i915_address_space *vm)
 {
 	struct drm_device *dev = vm->dev;
+	int ret;
 
 	vm->scratch_page = alloc_scratch_page(dev);
 	if (IS_ERR(vm->scratch_page))
@@ -873,24 +881,21 @@ static int gen8_init_scratch(struct i915_address_space *vm)
 
 	vm->scratch_pt = alloc_pt(dev);
 	if (IS_ERR(vm->scratch_pt)) {
-		free_scratch_page(dev, vm->scratch_page);
-		return PTR_ERR(vm->scratch_pt);
+		ret = PTR_ERR(vm->scratch_pt);
+		goto free_scratch_page;
 	}
 
 	vm->scratch_pd = alloc_pd(dev);
 	if (IS_ERR(vm->scratch_pd)) {
-		free_pt(dev, vm->scratch_pt);
-		free_scratch_page(dev, vm->scratch_page);
-		return PTR_ERR(vm->scratch_pd);
+		ret = PTR_ERR(vm->scratch_pd);
+		goto free_pt;
 	}
 
 	if (USES_FULL_48BIT_PPGTT(dev)) {
 		vm->scratch_pdp = alloc_pdp(dev);
 		if (IS_ERR(vm->scratch_pdp)) {
-			free_pd(dev, vm->scratch_pd);
-			free_pt(dev, vm->scratch_pt);
-			free_scratch_page(dev, vm->scratch_page);
-			return PTR_ERR(vm->scratch_pdp);
+			ret = PTR_ERR(vm->scratch_pdp);
+			goto free_pd;
 		}
 	}
 
@@ -900,6 +905,15 @@ static int gen8_init_scratch(struct i915_address_space *vm)
 		gen8_initialize_pdp(vm, vm->scratch_pdp);
 
 	return 0;
+
+free_pd:
+	free_pd(dev, vm->scratch_pd);
+free_pt:
+	free_pt(dev, vm->scratch_pt);
+free_scratch_page:
+	free_scratch_page(dev, vm->scratch_page);
+
+	return ret;
 }
 
 static int gen8_ppgtt_notify_vgt(struct i915_hw_ppgtt *ppgtt, bool create)
@@ -2179,20 +2193,6 @@ int i915_ppgtt_init_hw(struct drm_device *dev)
 	return 0;
 }
 
-int i915_ppgtt_init_ring(struct drm_i915_gem_request *req)
-{
-	struct drm_i915_private *dev_priv = req->i915;
-	struct i915_hw_ppgtt *ppgtt = dev_priv->mm.aliasing_ppgtt;
-
-	if (i915.enable_execlists)
-		return 0;
-
-	if (!ppgtt)
-		return 0;
-
-	return ppgtt->switch_mm(ppgtt, req);
-}
-
 struct i915_hw_ppgtt *
 i915_ppgtt_create(struct drm_device *dev, struct drm_i915_file_private *fpriv)
 {
@@ -2358,7 +2358,7 @@ static void gen8_ggtt_insert_entries(struct i915_address_space *vm,
 				     enum i915_cache_level level, u32 unused)
 {
 	struct drm_i915_private *dev_priv = to_i915(vm->dev);
-	struct i915_ggtt *ggtt = &dev_priv->ggtt;
+	struct i915_ggtt *ggtt = i915_vm_to_ggtt(vm);
 	unsigned first_entry = start >> PAGE_SHIFT;
 	gen8_pte_t __iomem *gtt_entries =
 		(gen8_pte_t __iomem *)ggtt->gsm + first_entry;
@@ -2436,7 +2436,7 @@ static void gen6_ggtt_insert_entries(struct i915_address_space *vm,
 				     enum i915_cache_level level, u32 flags)
 {
 	struct drm_i915_private *dev_priv = to_i915(vm->dev);
-	struct i915_ggtt *ggtt = &dev_priv->ggtt;
+	struct i915_ggtt *ggtt = i915_vm_to_ggtt(vm);
 	unsigned first_entry = start >> PAGE_SHIFT;
 	gen6_pte_t __iomem *gtt_entries =
 		(gen6_pte_t __iomem *)ggtt->gsm + first_entry;
@@ -2480,7 +2480,7 @@ static void gen8_ggtt_clear_range(struct i915_address_space *vm,
 				  bool use_scratch)
 {
 	struct drm_i915_private *dev_priv = to_i915(vm->dev);
-	struct i915_ggtt *ggtt = &dev_priv->ggtt;
+	struct i915_ggtt *ggtt = i915_vm_to_ggtt(vm);
 	unsigned first_entry = start >> PAGE_SHIFT;
 	unsigned num_entries = length >> PAGE_SHIFT;
 	gen8_pte_t scratch_pte, __iomem *gtt_base =
@@ -2512,7 +2512,7 @@ static void gen6_ggtt_clear_range(struct i915_address_space *vm,
 				  bool use_scratch)
 {
 	struct drm_i915_private *dev_priv = to_i915(vm->dev);
-	struct i915_ggtt *ggtt = &dev_priv->ggtt;
+	struct i915_ggtt *ggtt = i915_vm_to_ggtt(vm);
 	unsigned first_entry = start >> PAGE_SHIFT;
 	unsigned num_entries = length >> PAGE_SHIFT;
 	gen6_pte_t scratch_pte, __iomem *gtt_base =
@@ -3625,4 +3625,30 @@ i915_ggtt_view_size(struct drm_i915_gem_object *obj,
 		WARN_ONCE(1, "GGTT view %u not implemented!\n", view->type);
 		return obj->base.size;
 	}
+}
+
+void __iomem *i915_vma_pin_iomap(struct i915_vma *vma)
+{
+	void __iomem *ptr;
+
+	lockdep_assert_held(&vma->vm->dev->struct_mutex);
+	if (WARN_ON(!vma->obj->map_and_fenceable))
+		return ERR_PTR(-ENODEV);
+
+	GEM_BUG_ON(!vma->is_ggtt);
+	GEM_BUG_ON((vma->bound & GLOBAL_BIND) == 0);
+
+	ptr = vma->iomap;
+	if (ptr == NULL) {
+		ptr = io_mapping_map_wc(i915_vm_to_ggtt(vma->vm)->mappable,
+					vma->node.start,
+					vma->node.size);
+		if (ptr == NULL)
+			return ERR_PTR(-ENOMEM);
+
+		vma->iomap = ptr;
+	}
+
+	vma->pin_count++;
+	return ptr;
 }
