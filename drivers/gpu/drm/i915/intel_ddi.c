@@ -2131,23 +2131,6 @@ void intel_ddi_fdi_disable(struct drm_crtc *crtc)
 	I915_WRITE(FDI_RX_CTL(PIPE_A), val);
 }
 
-bool intel_ddi_is_audio_enabled(struct drm_i915_private *dev_priv,
-				 struct intel_crtc *intel_crtc)
-{
-	u32 temp;
-
-	if (intel_display_power_get_if_enabled(dev_priv, POWER_DOMAIN_AUDIO)) {
-		temp = I915_READ(HSW_AUD_PIN_ELD_CP_VLD);
-
-		intel_display_power_put(dev_priv, POWER_DOMAIN_AUDIO);
-
-		if (temp & AUDIO_OUTPUT_ENABLE(intel_crtc->pipe))
-			return true;
-	}
-
-	return false;
-}
-
 void intel_ddi_get_config(struct intel_encoder *encoder,
 			  struct intel_crtc_state *pipe_config)
 {
@@ -2197,8 +2180,10 @@ void intel_ddi_get_config(struct intel_encoder *encoder,
 
 		if (intel_hdmi->infoframe_enabled(&encoder->base, pipe_config))
 			pipe_config->has_infoframe = true;
-		break;
+		/* fall through */
 	case TRANS_DDI_MODE_SELECT_DVI:
+		pipe_config->lane_count = 4;
+		break;
 	case TRANS_DDI_MODE_SELECT_FDI:
 		break;
 	case TRANS_DDI_MODE_SELECT_DP_SST:
@@ -2212,8 +2197,11 @@ void intel_ddi_get_config(struct intel_encoder *encoder,
 		break;
 	}
 
-	pipe_config->has_audio =
-		intel_ddi_is_audio_enabled(dev_priv, intel_crtc);
+	if (intel_display_power_is_enabled(dev_priv, POWER_DOMAIN_AUDIO)) {
+		temp = I915_READ(HSW_AUD_PIN_ELD_CP_VLD);
+		if (temp & AUDIO_OUTPUT_ENABLE(intel_crtc->pipe))
+			pipe_config->has_audio = true;
+	}
 
 	if (encoder->type == INTEL_OUTPUT_EDP && dev_priv->vbt.edp.bpp &&
 	    pipe_config->pipe_bpp > dev_priv->vbt.edp.bpp) {
