@@ -1,0 +1,22 @@
+origin/drm-intel-fixes 26792526cc3e29e3ccbc15c996beb61fa64be5af
+	Revert "drm/i915: start adding dp mst audio"
+drm-upstream/drm-fixes ea99697814d6e64927e228675a6eb7fa76014648
+	Merge branch 'drm-fixes-4.6' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+origin/drm-intel-next-fixes 5b4fd5b1111b1230cd037df3b314e7b36d45d483
+	drm/i915: Update DRIVER_DATE to 20160425
+origin/drm-intel-next-queued f58a1acc7e4a1f37d26124ce4c875c647fbcc61f
+	drm/i915: Bail out of pipe config compute loop on LPT
+drm-upstream/drm-next 090e1a7f5ce139ab4246fcaafaac0415008b7dfa
+	Merge tag 'drm-amdkfd-next-2016-05-04' of git://people.freedesktop.org/~gabbayo/linux into drm-next
+sound-upstream/for-next 57dd5414a087991d427067b32dc3324af61b1c8b
+	ALSA: usb-audio: Limit retrying sample rate reads
+sound-upstream/for-linus 2d2c038a9999f423e820d89db2b5d7774b67ba49
+	ALSA: usb-audio: Quirk for yet another Phoenix Audio devices (v2)
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc 6d3e7fddb39a4f0a47c8042df11554bb61d7a4aa
+	drm: Fixup locking WARN_ON mistake around gem_object_free_unlocked
+origin/topic/kerneldoc 9dcb2eb293d5c7a568472c11ca95e3638d1fce00
+	drm: Enable markdown^Wasciidoc for gpu.tmpl
+origin/topic/core-for-CI 3ea48cc412c5ecba970b228f3e23d147d7d5527b
+	kernfs: Move faulting copy_user operations outside of the mutex
