@@ -1,0 +1,22 @@
+origin/drm-intel-fixes 26792526cc3e29e3ccbc15c996beb61fa64be5af
+	Revert "drm/i915: start adding dp mst audio"
+drm-upstream/drm-fixes fca097169faf8b9cfe92d8926da7a1fa2d3cd452
+	Merge tag 'drm-intel-fixes-2016-05-02' of git://anongit.freedesktop.org/drm-intel into drm-fixes
+origin/drm-intel-next-fixes 5b4fd5b1111b1230cd037df3b314e7b36d45d483
+	drm/i915: Update DRIVER_DATE to 20160425
+origin/drm-intel-next-queued f818ffea87bb7ee4eb8813eb6258778c5460db2e
+	drm/i915: Add a FIXME about crtc !active vs. watermarks
+drm-upstream/drm-next bafb86f5bc3173479002555dea7f31d943b12332
+	Merge tag 'v4.6-rc7' into drm-next
+sound-upstream/for-next 875f6fffa2e09b48fa07ecbf2e28dd2425b5ce01
+	ALSA: compress: Replace complex if statement with switch
+sound-upstream/for-linus 2da2dc9ead232f25601404335cca13c0f722d41b
+	ALSA: hda - Fix white noise on Asus UX501VW headset
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc 8863dc7f5642737e49ff681cbb842d2c614bdcf4
+	drm/i915: Correctly refcount connectors in hw state readou
+origin/topic/kerneldoc 9dcb2eb293d5c7a568472c11ca95e3638d1fce00
+	drm: Enable markdown^Wasciidoc for gpu.tmpl
+origin/topic/core-for-CI 3ea48cc412c5ecba970b228f3e23d147d7d5527b
+	kernfs: Move faulting copy_user operations outside of the mutex
