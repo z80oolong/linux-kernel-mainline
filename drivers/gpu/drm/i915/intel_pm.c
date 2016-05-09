@@ -2012,10 +2012,10 @@ static void ilk_compute_wm_level(const struct drm_i915_private *dev_priv,
 }
 
 static uint32_t
-hsw_compute_linetime_wm(struct drm_device *dev,
-			struct intel_crtc_state *cstate)
+hsw_compute_linetime_wm(const struct intel_crtc_state *cstate)
 {
-	struct drm_i915_private *dev_priv = dev->dev_private;
+	const struct intel_atomic_state *intel_state =
+		to_intel_atomic_state(cstate->base.state);
 	const struct drm_display_mode *adjusted_mode =
 		&cstate->base.adjusted_mode;
 	u32 linetime, ips_linetime;
@@ -2024,7 +2024,7 @@ hsw_compute_linetime_wm(struct drm_device *dev,
 		return 0;
 	if (WARN_ON(adjusted_mode->crtc_clock == 0))
 		return 0;
-	if (WARN_ON(dev_priv->cdclk_freq == 0))
+	if (WARN_ON(intel_state->cdclk == 0))
 		return 0;
 
 	/* The WM are computed with base on how long it takes to fill a single
@@ -2033,7 +2033,7 @@ hsw_compute_linetime_wm(struct drm_device *dev,
 	linetime = DIV_ROUND_CLOSEST(adjusted_mode->crtc_htotal * 1000 * 8,
 				     adjusted_mode->crtc_clock);
 	ips_linetime = DIV_ROUND_CLOSEST(adjusted_mode->crtc_htotal * 1000 * 8,
-					 dev_priv->cdclk_freq);
+					 intel_state->cdclk);
 
 	return PIPE_WM_LINETIME_IPS_LINETIME(ips_linetime) |
 	       PIPE_WM_LINETIME_TIME(linetime);
@@ -2352,7 +2352,7 @@ static int ilk_compute_pipe_wm(struct intel_crtc_state *cstate)
 	pipe_wm->wm[0] = pipe_wm->raw_wm[0];
 
 	if (IS_HASWELL(dev) || IS_BROADWELL(dev))
-		pipe_wm->linetime = hsw_compute_linetime_wm(dev, cstate);
+		pipe_wm->linetime = hsw_compute_linetime_wm(cstate);
 
 	if (!ilk_validate_pipe_wm(dev, pipe_wm))
 		return -EINVAL;
@@ -4167,9 +4167,8 @@ DEFINE_SPINLOCK(mchdev_lock);
  * mchdev_lock. */
 static struct drm_i915_private *i915_mch_dev;
 
-bool ironlake_set_drps(struct drm_device *dev, u8 val)
+bool ironlake_set_drps(struct drm_i915_private *dev_priv, u8 val)
 {
-	struct drm_i915_private *dev_priv = dev->dev_private;
 	u16 rgvswctl;
 
 	assert_spin_locked(&mchdev_lock);
@@ -4191,9 +4190,8 @@ bool ironlake_set_drps(struct drm_device *dev, u8 val)
 	return true;
 }
 
-static void ironlake_enable_drps(struct drm_device *dev)
+static void ironlake_enable_drps(struct drm_i915_private *dev_priv)
 {
-	struct drm_i915_private *dev_priv = dev->dev_private;
 	u32 rgvmodectl;
 	u8 fmax, fmin, fstart, vstart;
 
@@ -4250,7 +4248,7 @@ static void ironlake_enable_drps(struct drm_device *dev)
 		DRM_ERROR("stuck trying to change perf mode\n");
 	mdelay(1);
 
-	ironlake_set_drps(dev, fstart);
+	ironlake_set_drps(dev_priv, fstart);
 
 	dev_priv->ips.last_count1 = I915_READ(DMIEC) +
 		I915_READ(DDREC) + I915_READ(CSIEC);
@@ -4261,9 +4259,8 @@ static void ironlake_enable_drps(struct drm_device *dev)
 	spin_unlock_irq(&mchdev_lock);
 }
 
-static void ironlake_disable_drps(struct drm_device *dev)
+static void ironlake_disable_drps(struct drm_i915_private *dev_priv)
 {
-	struct drm_i915_private *dev_priv = dev->dev_private;
 	u16 rgvswctl;
 
 	spin_lock_irq(&mchdev_lock);
@@ -4278,7 +4275,7 @@ static void ironlake_disable_drps(struct drm_device *dev)
 	I915_WRITE(DEIMR, I915_READ(DEIMR) | DE_PCU_EVENT);
 
 	/* Go back to the starting frequency */
-	ironlake_set_drps(dev, dev_priv->ips.fstart);
+	ironlake_set_drps(dev_priv, dev_priv->ips.fstart);
 	mdelay(1);
 	rgvswctl |= MEMCTL_CMD_STS;
 	I915_WRITE(MEMSWCTL, rgvswctl);
@@ -6095,7 +6092,7 @@ bool i915_gpu_turbo_disable(void)
 
 	dev_priv->ips.max_delay = dev_priv->ips.fstart;
 
-	if (!ironlake_set_drps(dev_priv->dev, dev_priv->ips.fstart))
+	if (!ironlake_set_drps(dev_priv, dev_priv->ips.fstart))
 		ret = false;
 
 out_unlock:
@@ -6246,13 +6243,11 @@ void intel_cleanup_gt_powersave(struct drm_device *dev)
 		intel_runtime_pm_put(dev_priv);
 }
 
-static void gen6_suspend_rps(struct drm_device *dev)
+static void gen6_suspend_rps(struct drm_i915_private *dev_priv)
 {
-	struct drm_i915_private *dev_priv = dev->dev_private;
-
 	flush_delayed_work(&dev_priv->rps.delayed_resume_work);
 
-	gen6_disable_rps_interrupts(dev);
+	gen6_disable_rps_interrupts(dev_priv);
 }
 
 /**
@@ -6267,10 +6262,10 @@ void intel_suspend_gt_powersave(struct drm_device *dev)
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
 
-	if (INTEL_INFO(dev)->gen < 6)
+	if (INTEL_GEN(dev_priv) < 6)
 		return;
 
-	gen6_suspend_rps(dev);
+	gen6_suspend_rps(dev_priv);
 
 	/* Force GPU to min freq during suspend */
 	gen6_rps_idle(dev_priv);
@@ -6281,7 +6276,7 @@ void intel_disable_gt_powersave(struct drm_device *dev)
 	struct drm_i915_private *dev_priv = dev->dev_private;
 
 	if (IS_IRONLAKE_M(dev)) {
-		ironlake_disable_drps(dev);
+		ironlake_disable_drps(dev_priv);
 	} else if (INTEL_INFO(dev)->gen >= 6) {
 		intel_suspend_gt_powersave(dev);
 
@@ -6337,7 +6332,7 @@ static void intel_gen6_powersave_work(struct work_struct *work)
 
 	dev_priv->rps.enabled = true;
 
-	gen6_enable_rps_interrupts(dev);
+	gen6_enable_rps_interrupts(dev_priv);
 
 	mutex_unlock(&dev_priv->rps.hw_lock);
 
@@ -6349,11 +6344,11 @@ void intel_enable_gt_powersave(struct drm_device *dev)
 	struct drm_i915_private *dev_priv = dev->dev_private;
 
 	/* Powersaving is controlled by the host when inside a VM */
-	if (intel_vgpu_active(dev))
+	if (intel_vgpu_active(dev_priv))
 		return;
 
 	if (IS_IRONLAKE_M(dev)) {
-		ironlake_enable_drps(dev);
+		ironlake_enable_drps(dev_priv);
 		mutex_lock(&dev->struct_mutex);
 		intel_init_emon(dev);
 		mutex_unlock(&dev->struct_mutex);
@@ -6383,7 +6378,7 @@ void intel_reset_gt_powersave(struct drm_device *dev)
 	if (INTEL_INFO(dev)->gen < 6)
 		return;
 
-	gen6_suspend_rps(dev);
+	gen6_suspend_rps(dev_priv);
 	dev_priv->rps.enabled = false;
 }
 
@@ -6696,11 +6691,33 @@ static void lpt_suspend_hw(struct drm_device *dev)
 	}
 }
 
+static void gen8_set_l3sqc_credits(struct drm_i915_private *dev_priv,
+				   int general_prio_credits,
+				   int high_prio_credits)
+{
+	u32 misccpctl;
+
+	/* WaTempDisableDOPClkGating:bdw */
+	misccpctl = I915_READ(GEN7_MISCCPCTL);
+	I915_WRITE(GEN7_MISCCPCTL, misccpctl & ~GEN7_DOP_CLOCK_GATE_ENABLE);
+
+	I915_WRITE(GEN8_L3SQCREG1,
+		   L3_GENERAL_PRIO_CREDITS(general_prio_credits) |
+		   L3_HIGH_PRIO_CREDITS(high_prio_credits));
+
+	/*
+	 * Wait at least 100 clocks before re-enabling clock gating.
+	 * See the definition of L3SQCREG1 in BSpec.
+	 */
+	POSTING_READ(GEN8_L3SQCREG1);
+	udelay(1);
+	I915_WRITE(GEN7_MISCCPCTL, misccpctl);
+}
+
 static void broadwell_init_clock_gating(struct drm_device *dev)
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
 	enum pipe pipe;
-	uint32_t misccpctl;
 
 	ilk_init_lp_watermarks(dev);
 
@@ -6731,20 +6748,8 @@ static void broadwell_init_clock_gating(struct drm_device *dev)
 	I915_WRITE(GEN8_UCGCTL6, I915_READ(GEN8_UCGCTL6) |
 		   GEN8_SDEUNIT_CLOCK_GATE_DISABLE);
 
-	/*
-	 * WaProgramL3SqcReg1Default:bdw
-	 * WaTempDisableDOPClkGating:bdw
-	 */
-	misccpctl = I915_READ(GEN7_MISCCPCTL);
-	I915_WRITE(GEN7_MISCCPCTL, misccpctl & ~GEN7_DOP_CLOCK_GATE_ENABLE);
-	I915_WRITE(GEN8_L3SQCREG1, BDW_WA_L3SQCREG1_DEFAULT);
-	/*
-	 * Wait at least 100 clocks before re-enabling clock gating. See
-	 * the definition of L3SQCREG1 in BSpec.
-	 */
-	POSTING_READ(GEN8_L3SQCREG1);
-	udelay(1);
-	I915_WRITE(GEN7_MISCCPCTL, misccpctl);
+	/* WaProgramL3SqcReg1Default:bdw */
+	gen8_set_l3sqc_credits(dev_priv, 30, 2);
 
 	/*
 	 * WaGttCachingOffByDefault:bdw
@@ -7013,6 +7018,13 @@ static void cherryview_init_clock_gating(struct drm_device *dev)
 	/* WaDisableSDEUnitClockGating:chv */
 	I915_WRITE(GEN8_UCGCTL6, I915_READ(GEN8_UCGCTL6) |
 		   GEN8_SDEUNIT_CLOCK_GATE_DISABLE);
+
+	/*
+	 * WaProgramL3SqcReg1Default:chv
+	 * See gfxspecs/Related Documents/Performance Guide/
+	 * LSQC Setting Recommendations.
+	 */
+	gen8_set_l3sqc_credits(dev_priv, 38, 2);
 
 	/*
 	 * GTT cache may not work with big pages, so if those
@@ -7388,19 +7400,17 @@ static void __intel_rps_boost_work(struct work_struct *work)
 	struct drm_i915_gem_request *req = boost->req;
 
 	if (!i915_gem_request_completed(req, true))
-		gen6_rps_boost(to_i915(req->engine->dev), NULL,
-			       req->emitted_jiffies);
+		gen6_rps_boost(req->i915, NULL, req->emitted_jiffies);
 
-	i915_gem_request_unreference__unlocked(req);
+	i915_gem_request_unreference(req);
 	kfree(boost);
 }
 
-void intel_queue_rps_boost_for_request(struct drm_device *dev,
-				       struct drm_i915_gem_request *req)
+void intel_queue_rps_boost_for_request(struct drm_i915_gem_request *req)
 {
 	struct request_boost *boost;
 
-	if (req == NULL || INTEL_INFO(dev)->gen < 6)
+	if (req == NULL || INTEL_GEN(req->i915) < 6)
 		return;
 
 	if (i915_gem_request_completed(req, true))
@@ -7414,7 +7424,7 @@ void intel_queue_rps_boost_for_request(struct drm_device *dev,
 	boost->req = req;
 
 	INIT_WORK(&boost->work, __intel_rps_boost_work);
-	queue_work(to_i915(dev)->wq, &boost->work);
+	queue_work(req->i915->wq, &boost->work);
 }
 
 void intel_pm_setup(struct drm_device *dev)
