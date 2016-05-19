@@ -1,0 +1,22 @@
+origin/drm-intel-fixes 2dcd0af568b0cf583645c8a317dd12e344b1c72a
+	Linux 4.6
+drm-upstream/drm-fixes e02aacb6dec0c656379f0c1ff06c5bbb2bcb1e53
+	Merge branch 'drm-fixes-4.6' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+origin/drm-intel-next-fixes 5b4fd5b1111b1230cd037df3b314e7b36d45d483
+	drm/i915: Update DRIVER_DATE to 20160425
+origin/drm-intel-next-queued 72778cb266195c74846ae7f338871b2b7dc663b8
+	drm/i915/userptr: Convert to drm_i915_private
+drm-upstream/drm-next 7c10ddf87472c07eabc206e273dc59f77c700858
+	Merge branch 'drm-uapi-extern-c-fixes' of https://github.com/evelikov/linux into drm-next
+sound-upstream/for-next 17e1717c11a34f9b0956e33e0c4a4e4ae8c51a57
+	ALSA: firewire-lib: change a member of event structure to suppress sparse wanings to bool type
+sound-upstream/for-linus 17e1717c11a34f9b0956e33e0c4a4e4ae8c51a57
+	ALSA: firewire-lib: change a member of event structure to suppress sparse wanings to bool type
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc c6740c9c9e914742fd2ec159142c40701f7df966
+	drm: remove unused dev variables
+origin/topic/kerneldoc 9dcb2eb293d5c7a568472c11ca95e3638d1fce00
+	drm: Enable markdown^Wasciidoc for gpu.tmpl
+origin/topic/core-for-CI 3ea48cc412c5ecba970b228f3e23d147d7d5527b
+	kernfs: Move faulting copy_user operations outside of the mutex
