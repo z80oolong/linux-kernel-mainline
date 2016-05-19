@@ -46,7 +46,6 @@ struct i915_params {
 	int invert_brightness;
 	int enable_cmd_parser;
 	int guc_log_level;
-	int use_mmio_flip;
 	int mmio_debug;
 	int edp_vswing;
 	unsigned int inject_load_failure;
@@ -61,6 +60,7 @@ struct i915_params {
 	bool verbose_state_checks;
 	bool nuclear_pageflip;
 	bool enable_dp_mst;
+	bool enable_dpcd_backlight;
 };
 
 extern struct i915_params i915 __read_mostly;
