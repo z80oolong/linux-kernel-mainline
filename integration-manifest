@@ -1,0 +1,22 @@
+origin/drm-intel-fixes 2dcd0af568b0cf583645c8a317dd12e344b1c72a
+	Linux 4.6
+drm-upstream/drm-fixes e02aacb6dec0c656379f0c1ff06c5bbb2bcb1e53
+	Merge branch 'drm-fixes-4.6' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+origin/drm-intel-next-fixes 49ca757e0127ec200a4197de02fdd4334f91dff4
+	drm/i915/bxt: Adjusting the error in horizontal timings retrieval
+origin/drm-intel-next-queued 9cce44316a4cc253aec317f12db619d72556e366
+	drm/i915: Update DRIVER_DATE to 20160522
+drm-upstream/drm-next fcee59065e58498682c60069cc6fb90694bab27e
+	drm: Nuke ->vblank_disable_allowed
+sound-upstream/for-next 17e1717c11a34f9b0956e33e0c4a4e4ae8c51a57
+	ALSA: firewire-lib: change a member of event structure to suppress sparse wanings to bool type
+sound-upstream/for-linus 423cd785619ac6778252fbdb916505aa1c153959
+	ALSA: hda - Fix headphone noise on Dell XPS 13 9360
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc c6740c9c9e914742fd2ec159142c40701f7df966
+	drm: remove unused dev variables
+origin/topic/kerneldoc 9dcb2eb293d5c7a568472c11ca95e3638d1fce00
+	drm: Enable markdown^Wasciidoc for gpu.tmpl
+origin/topic/core-for-CI 3ea48cc412c5ecba970b228f3e23d147d7d5527b
+	kernfs: Move faulting copy_user operations outside of the mutex
