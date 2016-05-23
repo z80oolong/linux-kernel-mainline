@@ -1,0 +1,22 @@
+origin/drm-intel-fixes 2dcd0af568b0cf583645c8a317dd12e344b1c72a
+	Linux 4.6
+drm-upstream/drm-fixes e02aacb6dec0c656379f0c1ff06c5bbb2bcb1e53
+	Merge branch 'drm-fixes-4.6' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+origin/drm-intel-next-fixes 157d2c7fad0863222f6f3b11c4690f2a6e74d809
+	drm/i915: Stop automatically retiring requests after a GPU hang
+origin/drm-intel-next-queued 18a8067c5748054d7731957ec3c46697a6a9ac1b
+	drm/i915: Assert the dbuf is enabled when disabling DC5/6
+drm-upstream/drm-next a39ed680bddb1ead592e22ed812c7e47286bfc03
+	drm/edid: add displayid detailed 1 timings to the modelist. (v1.1)
+sound-upstream/for-next 17e1717c11a34f9b0956e33e0c4a4e4ae8c51a57
+	ALSA: firewire-lib: change a member of event structure to suppress sparse wanings to bool type
+sound-upstream/for-linus 423cd785619ac6778252fbdb916505aa1c153959
+	ALSA: hda - Fix headphone noise on Dell XPS 13 9360
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc b80d3942329dcd43580adc3f7c0a098515b5feec
+	drm/mm: avoid possible null pointer dereference
+origin/topic/kerneldoc 9dcb2eb293d5c7a568472c11ca95e3638d1fce00
+	drm: Enable markdown^Wasciidoc for gpu.tmpl
+origin/topic/core-for-CI 3ea48cc412c5ecba970b228f3e23d147d7d5527b
+	kernfs: Move faulting copy_user operations outside of the mutex
