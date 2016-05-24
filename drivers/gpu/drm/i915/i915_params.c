@@ -49,15 +49,16 @@ struct i915_params i915 __read_mostly = {
 	.invert_brightness = 0,
 	.disable_display = 0,
 	.enable_cmd_parser = 1,
-	.use_mmio_flip = 0,
 	.mmio_debug = 0,
 	.verbose_state_checks = 1,
 	.nuclear_pageflip = 0,
 	.edp_vswing = 0,
-	.enable_guc_submission = false,
+	.enable_guc_loading = 0,
+	.enable_guc_submission = 0,
 	.guc_log_level = -1,
 	.enable_dp_mst = true,
 	.inject_load_failure = 0,
+	.enable_dpcd_backlight = false,
 };
 
 module_param_named(modeset, i915.modeset, int, 0400);
@@ -173,10 +174,6 @@ module_param_named_unsafe(enable_cmd_parser, i915.enable_cmd_parser, int, 0600);
 MODULE_PARM_DESC(enable_cmd_parser,
 		 "Enable command parsing (1=enabled [default], 0=disabled)");
 
-module_param_named_unsafe(use_mmio_flip, i915.use_mmio_flip, int, 0600);
-MODULE_PARM_DESC(use_mmio_flip,
-		 "use MMIO flips (-1=never, 0=driver discretion [default], 1=always)");
-
 module_param_named(mmio_debug, i915.mmio_debug, int, 0600);
 MODULE_PARM_DESC(mmio_debug,
 	"Enable the MMIO debug code for the first N failures (default: off). "
@@ -197,8 +194,15 @@ MODULE_PARM_DESC(edp_vswing,
 		 "(0=use value from vbt [default], 1=low power swing(200mV),"
 		 "2=default swing(400mV))");
 
-module_param_named_unsafe(enable_guc_submission, i915.enable_guc_submission, bool, 0400);
-MODULE_PARM_DESC(enable_guc_submission, "Enable GuC submission (default:false)");
+module_param_named_unsafe(enable_guc_loading, i915.enable_guc_loading, int, 0400);
+MODULE_PARM_DESC(enable_guc_loading,
+		"Enable GuC firmware loading "
+		"(-1=auto, 0=never [default], 1=if available, 2=required)");
+
+module_param_named_unsafe(enable_guc_submission, i915.enable_guc_submission, int, 0400);
+MODULE_PARM_DESC(enable_guc_submission,
+		"Enable GuC submission "
+		"(-1=auto, 0=never [default], 1=if available, 2=required)");
 
 module_param_named(guc_log_level, i915.guc_log_level, int, 0400);
 MODULE_PARM_DESC(guc_log_level,
@@ -210,3 +214,6 @@ MODULE_PARM_DESC(enable_dp_mst,
 module_param_named_unsafe(inject_load_failure, i915.inject_load_failure, uint, 0400);
 MODULE_PARM_DESC(inject_load_failure,
 	"Force an error after a number of failure check points (0:disabled (default), N:force failure at the Nth failure check point)");
+module_param_named(enable_dpcd_backlight, i915.enable_dpcd_backlight, bool, 0600);
+MODULE_PARM_DESC(enable_dpcd_backlight,
+	"Enable support for DPCD backlight control (default:false)");
