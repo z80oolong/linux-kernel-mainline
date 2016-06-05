@@ -1,0 +1,24 @@
+origin/drm-intel-fixes 1a695a905c18548062509178b98bc91e67510864
+	Linux 4.7-rc1
+drm-upstream/drm-fixes ab3ab68493aaac6fea4ad1bb597def9f48f41c71
+	drm/omap: fix unused variable warning.
+origin/drm-intel-next-fixes 157d2c7fad0863222f6f3b11c4690f2a6e74d809
+	drm/i915: Stop automatically retiring requests after a GPU hang
+origin/drm-intel-next-queued 1750d59dfa3caf1fc5354a2217f0e83d717c9b22
+	drm/i915: Update DRIVER_DATE to 20160606
+drm-upstream/drm-next 66fd7a66e8b9e11e49f46ea77910f935c4dee5c3
+	Merge branch 'drm-intel-next' of git://anongit.freedesktop.org/drm-intel into drm-next
+sound-upstream/for-next 1524c7191be24288ac097c7c3c1bc411f36c1fa4
+	ALSA: adlib: Utilize the module_isa_driver macro
+sound-upstream/for-linus 0358ccc8ffd8d9b76992b8deab58fb9a721fb18a
+	ALSA: uapi: Add three missing header files to Kbuild file
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc da5335b8bd4aabc2362e2b3d5af7df49d7ec89e6
+	drm/doc: Switch to sphinx/rst fixed-width quoting
+origin/topic/core-for-CI 46ad020cf7e398c3001bcfe45930003aa6fe62f0
+	iommu: Disable preemption around use of this_cpu_ptr()
+origin/topic/sphinx abdccea1af37bfd43842ddc2d7b6853cb30df4c5
+	kernel-doc-rst-lint: add tool to check kernel-doc and rst correctness
+origin/topic/lockless-gem-bo-freeing e1512ee08f00c17918093e75be4a3fa297bcaf9b
+	drm/arcpgu: Use lockless gem BO free callback
