@@ -1,0 +1,24 @@
+origin/drm-intel-fixes 476490a945e1f0f6bd58e303058d2d8ca93a974c
+	drm/i915/ilk: Don't disable SSC source if it's in use
+drm-upstream/drm-fixes 0ab15bdeb2943bd6491a35ec4eeb53a9a4436525
+	Merge branch 'drm-fixes-4.7' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+origin/drm-intel-next-fixes 157d2c7fad0863222f6f3b11c4690f2a6e74d809
+	drm/i915: Stop automatically retiring requests after a GPU hang
+origin/drm-intel-next-queued ee042aa40b66d18d465206845b0752c6a617ba3f
+	drm/i915: Use atomic commits for legacy page_flips
+drm-upstream/drm-next a0877f52035280370707bdefeddc6faa6478b892
+	Merge tag 'topic/drm-misc-2016-06-15' of git://anongit.freedesktop.org/drm-intel into drm-next
+sound-upstream/for-next 76f64b24e692978a90d3c2e8f57f3a1f0cd7172a
+	ALSA: seq_oss: Change structure initialisation to C99 style
+sound-upstream/for-linus 35639a0e98391036a4c7f23253c321d6621a8897
+	ALSA: hda - Add PCI ID for Kabylake
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc 2a6ae85a383090e2c230d878cc5f53d0917b44ee
+	drm: rockchip: select DRM_GEM_CMA_HELPER
+origin/topic/core-for-CI 8b86400f445ee400cbd1b81e6c0d6c66c9076e68
+	iommu/vt-d: fix overflow of iommu->domains array
+origin/topic/sphinx abdccea1af37bfd43842ddc2d7b6853cb30df4c5
+	kernel-doc-rst-lint: add tool to check kernel-doc and rst correctness
+origin/topic/lockless-gem-bo-freeing e1512ee08f00c17918093e75be4a3fa297bcaf9b
+	drm/arcpgu: Use lockless gem BO free callback
