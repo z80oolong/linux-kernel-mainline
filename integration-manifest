@@ -1,0 +1,24 @@
+origin/drm-intel-fixes 476490a945e1f0f6bd58e303058d2d8ca93a974c
+	drm/i915/ilk: Don't disable SSC source if it's in use
+drm-upstream/drm-fixes 0ab15bdeb2943bd6491a35ec4eeb53a9a4436525
+	Merge branch 'drm-fixes-4.7' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+origin/drm-intel-next-fixes 157d2c7fad0863222f6f3b11c4690f2a6e74d809
+	drm/i915: Stop automatically retiring requests after a GPU hang
+origin/drm-intel-next-queued a02b01096def82df28363b0b9e7afdea9b5587fd
+	drm/i915: Update DRIVER_DATE to 20160620
+drm-upstream/drm-next a0877f52035280370707bdefeddc6faa6478b892
+	Merge tag 'topic/drm-misc-2016-06-15' of git://anongit.freedesktop.org/drm-intel into drm-next
+sound-upstream/for-next 3915bf2946520ace5bcc8104717a3cb0452d7430
+	ALSA: seq_timer: use monotonic times internally
+sound-upstream/for-linus 8198868f0a283eb23e264951632ce61ec2f82228
+	ALSA: hdac_regmap - fix the register access for runtime PM
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc e63d87c0b02f2f0ee876ea79dcbe13a7235a2d55
+	drm/i915: Move backlight unregistration to connector unregistration
+origin/topic/core-for-CI 8b86400f445ee400cbd1b81e6c0d6c66c9076e68
+	iommu/vt-d: fix overflow of iommu->domains array
+origin/topic/sphinx abdccea1af37bfd43842ddc2d7b6853cb30df4c5
+	kernel-doc-rst-lint: add tool to check kernel-doc and rst correctness
+origin/topic/lockless-gem-bo-freeing e1512ee08f00c17918093e75be4a3fa297bcaf9b
+	drm/arcpgu: Use lockless gem BO free callback
