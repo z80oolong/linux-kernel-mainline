@@ -1,0 +1,20 @@
+origin/drm-intel-fixes 6b9dc6a474fd4e025c615ed4582735360005727c
+	drm/i915: Removing PCI IDs that are no longer listed as Kabylake.
+drm-upstream/drm-fixes 81e257e964268d050f8e9188becd44d50f241d72
+	drm/atomic: Make drm_atomic_legacy_backoff reset crtc->acquire_ctx
+origin/drm-intel-next-fixes 157d2c7fad0863222f6f3b11c4690f2a6e74d809
+	drm/i915: Stop automatically retiring requests after a GPU hang
+origin/drm-intel-next-queued 0c5eed651455d0c52b5f6a387fd11b0a690bf24c
+	drm/i915: Remove request->reset_counter
+drm-upstream/drm-next 2a3467063ae3b17264578626dec2377dd48cd1c3
+	Merge tag 'mediatek-drm-2016-06-20' of git://git.pengutronix.de/git/pza/linux into drm-next
+sound-upstream/for-next 3915bf2946520ace5bcc8104717a3cb0452d7430
+	ALSA: seq_timer: use monotonic times internally
+sound-upstream/for-linus 6858107e78b4ecb9f244db814ffbdba1b5ce759b
+	ALSA: hda - Add PCI ID for Kabylake-H
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc c78d1ca2d2e3e7239cc4466e3e6f9470e719b7f1
+	drm: fix some spelling mistakes
+origin/topic/core-for-CI 8b86400f445ee400cbd1b81e6c0d6c66c9076e68
+	iommu/vt-d: fix overflow of iommu->domains array
