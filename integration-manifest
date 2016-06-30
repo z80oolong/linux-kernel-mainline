@@ -1,0 +1,20 @@
+origin/drm-intel-fixes cab103274352721b77fc5923a631fc63350bef8e
+	drm/i915: Fix missing unlock on error in i915_ppgtt_info()
+drm-upstream/drm-fixes 81e257e964268d050f8e9188becd44d50f241d72
+	drm/atomic: Make drm_atomic_legacy_backoff reset crtc->acquire_ctx
+origin/drm-intel-next-fixes 157d2c7fad0863222f6f3b11c4690f2a6e74d809
+	drm/i915: Stop automatically retiring requests after a GPU hang
+origin/drm-intel-next-queued 8d228911ffc08bfaa8224d160df8ca64e9dc8274
+	drm/i915: Trim some if-else braces
+drm-upstream/drm-next 2a3467063ae3b17264578626dec2377dd48cd1c3
+	Merge tag 'mediatek-drm-2016-06-20' of git://git.pengutronix.de/git/pza/linux into drm-next
+sound-upstream/for-next cf7d7edc7a120fd5001f6dcc1e9f2c8e9c09e6c9
+	ALSA: riptide: Use DIV_ROUND_UP
+sound-upstream/for-linus 62db7152c924e4c060e42b34a69cd39658e8a0dc
+	ALSA: au88x0: Fix calculation in vortex_wtdma_bufshift()
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc 2ae995887830b335f9bdab3040018071da54bcdb
+	drm: Fix a typo in drm_ioctl.c
+origin/topic/core-for-CI 8b86400f445ee400cbd1b81e6c0d6c66c9076e68
+	iommu/vt-d: fix overflow of iommu->domains array
