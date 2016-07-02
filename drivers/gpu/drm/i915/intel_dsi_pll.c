@@ -55,12 +55,10 @@ static int dsi_calc_mnp(struct drm_i915_private *dev_priv,
 			struct intel_crtc_state *config,
 			int target_dsi_clk)
 {
-	unsigned int calc_m = 0, calc_p = 0;
 	unsigned int m_min, m_max, p_min = 2, p_max = 6;
 	unsigned int m, n, p;
-	int ref_clk;
-	int delta = target_dsi_clk;
-	u32 m_seed;
+	unsigned int calc_m, calc_p;
+	int delta, ref_clk;
 
 	/* target_dsi_clk is expected in kHz */
 	if (target_dsi_clk < 300000 || target_dsi_clk > 1150000) {
@@ -80,6 +78,10 @@ static int dsi_calc_mnp(struct drm_i915_private *dev_priv,
 		m_max = 92;
 	}
 
+	calc_p = p_min;
+	calc_m = m_min;
+	delta = abs(target_dsi_clk - (m_min * ref_clk) / (p_min * n));
+
 	for (m = m_min; m <= m_max && delta; m++) {
 		for (p = p_min; p <= p_max && delta; p++) {
 			/*
@@ -97,11 +99,10 @@ static int dsi_calc_mnp(struct drm_i915_private *dev_priv,
 	}
 
 	/* register has log2(N1), this works fine for powers of two */
-	n = ffs(n) - 1;
-	m_seed = lfsr_converts[calc_m - 62];
 	config->dsi_pll.ctrl = 1 << (DSI_PLL_P1_POST_DIV_SHIFT + calc_p - 2);
-	config->dsi_pll.div = n << DSI_PLL_N1_DIV_SHIFT |
-		m_seed << DSI_PLL_M1_DIV_SHIFT;
+	config->dsi_pll.div =
+		(ffs(n) - 1) << DSI_PLL_N1_DIV_SHIFT |
+		(u32)lfsr_converts[calc_m - 62] << DSI_PLL_M1_DIV_SHIFT;
 
 	return 0;
 }
@@ -234,8 +235,11 @@ static void bxt_disable_dsi_pll(struct intel_encoder *encoder)
 	 * PLL lock should deassert within 200us.
 	 * Wait up to 1ms before timing out.
 	 */
-	if (wait_for((I915_READ(BXT_DSI_PLL_ENABLE)
-					& BXT_DSI_PLL_LOCKED) == 0, 1))
+	if (intel_wait_for_register(dev_priv,
+				    BXT_DSI_PLL_ENABLE,
+				    BXT_DSI_PLL_LOCKED,
+				    0,
+				    1))
 		DRM_ERROR("Timeout waiting for PLL lock deassertion\n");
 }
 
@@ -486,7 +490,11 @@ static void bxt_enable_dsi_pll(struct intel_encoder *encoder,
 	I915_WRITE(BXT_DSI_PLL_ENABLE, val);
 
 	/* Timeout and fail if PLL not locked */
-	if (wait_for(I915_READ(BXT_DSI_PLL_ENABLE) & BXT_DSI_PLL_LOCKED, 1)) {
+	if (intel_wait_for_register(dev_priv,
+				    BXT_DSI_PLL_ENABLE,
+				    BXT_DSI_PLL_LOCKED,
+				    BXT_DSI_PLL_LOCKED,
+				    1)) {
 		DRM_ERROR("Timed out waiting for DSI PLL to lock\n");
 		return;
 	}
