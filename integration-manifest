@@ -1,0 +1,20 @@
+origin/drm-intel-fixes cab103274352721b77fc5923a631fc63350bef8e
+	drm/i915: Fix missing unlock on error in i915_ppgtt_info()
+drm-upstream/drm-fixes 88c087109b5fedaf9b61839d08543fdaf9d5ec39
+	Merge tag 'drm-intel-fixes-2016-06-30' of git://anongit.freedesktop.org/drm-intel into drm-fixes
+origin/drm-intel-next-fixes 157d2c7fad0863222f6f3b11c4690f2a6e74d809
+	drm/i915: Stop automatically retiring requests after a GPU hang
+origin/drm-intel-next-queued 841149909abb4cf9038ba0a12f3bec711f3ce09b
+	drm/i915: Remove check for !crtc_state in intel_plane_atomic_calc_changes()
+drm-upstream/drm-next dac2c48ca5ac9bb2d6339aaa733c60d5b801ee86
+	Merge branch 'for-next' of http://git.agner.ch/git/linux-drm-fsl-dcu into drm-next
+sound-upstream/for-next cf7d7edc7a120fd5001f6dcc1e9f2c8e9c09e6c9
+	ALSA: riptide: Use DIV_ROUND_UP
+sound-upstream/for-linus 046e9ceefab985a137fbd15b946497a88e5a6513
+	Merge tag 'asoc-fix-v4.7-rc5' of git://git.kernel.org/pub/scm/linux/kernel/git/broonie/sound into for-linus
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc 2ae995887830b335f9bdab3040018071da54bcdb
+	drm: Fix a typo in drm_ioctl.c
+origin/topic/core-for-CI 8b86400f445ee400cbd1b81e6c0d6c66c9076e68
+	iommu/vt-d: fix overflow of iommu->domains array
