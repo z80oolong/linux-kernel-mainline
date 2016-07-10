@@ -1,0 +1,20 @@
+origin/drm-intel-fixes cab103274352721b77fc5923a631fc63350bef8e
+	drm/i915: Fix missing unlock on error in i915_ppgtt_info()
+drm-upstream/drm-fixes 39c8859418d5d2d29482fcd7d58daba6e299fac5
+	Merge tag 'sunxi-drm-fixes-for-4.7-2' of https://git.kernel.org/pub/scm/linux/kernel/git/mripard/linux into drm-fixes
+origin/drm-intel-next-fixes 157d2c7fad0863222f6f3b11c4690f2a6e74d809
+	drm/i915: Stop automatically retiring requests after a GPU hang
+origin/drm-intel-next-queued c31966a1bd09d46b079f0656574e53782c237994
+	drm/i915: Select DRM_VGEM for igt
+drm-upstream/drm-next 5dd0775e502b26b44e5bcb5f504a977a565f2f3e
+	Merge tag 'asoc-hdmi-codec-pdata' of git://git.kernel.org/pub/scm/linux/kernel/git/broonie/sound into drm-next
+sound-upstream/for-next 860c1994a70a0d2ab6f87fb7e72e722a8fb2c64c
+	ALSA: control: add dimension validator for userspace elements
+sound-upstream/for-linus 8a132099f080d7384bb6ab4cc168f76cb4b47d08
+	ALSA: hda/realtek - add new pin definition in alc225 pin quirk table
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc 2ae995887830b335f9bdab3040018071da54bcdb
+	drm: Fix a typo in drm_ioctl.c
+origin/topic/core-for-CI 8b86400f445ee400cbd1b81e6c0d6c66c9076e68
+	iommu/vt-d: fix overflow of iommu->domains array
