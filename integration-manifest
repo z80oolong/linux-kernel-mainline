@@ -1,0 +1,22 @@
+origin/drm-intel-fixes aeddda06c1a704bb97c8a7bfe7a472120193bd56
+	drm/i915: Ignore panel type from OpRegion on SKL
+drm-upstream/drm-fixes 39c8859418d5d2d29482fcd7d58daba6e299fac5
+	Merge tag 'sunxi-drm-fixes-for-4.7-2' of https://git.kernel.org/pub/scm/linux/kernel/git/mripard/linux into drm-fixes
+origin/drm-intel-next-fixes b224c4dc70cdd5f42d24a7057148c6ace90e4f4e
+	drm/i915: Unbreak interrupts on pre-gen6
+origin/drm-intel-next-queued 6bc265424df02f8162f4a17a37e4982e1c64460e
+	drm/i915/fbdev: Check for the framebuffer before use
+drm-upstream/drm-next 5dd0775e502b26b44e5bcb5f504a977a565f2f3e
+	Merge tag 'asoc-hdmi-codec-pdata' of git://git.kernel.org/pub/scm/linux/kernel/git/broonie/sound into drm-next
+sound-upstream/for-next 41e8a5788b5a1e187a690877d83b0f485c8c4ccd
+	ALSA: mixart: don't print an unintialized variable on error
+sound-upstream/for-linus d716fb03f76411fc7e138692e33b749cada5c094
+	ALSA: hda: add AMD Stoney PCI ID with proper driver caps
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc 0dcac5008fcf57cce66ef091204efbde86956c7a
+	Revert "drm: Resurrect atomic rmfb code"
+origin/topic/core-for-CI 8b86400f445ee400cbd1b81e6c0d6c66c9076e68
+	iommu/vt-d: fix overflow of iommu->domains array
+origin/topic/kbl-4.7-fixes 92d21ac74a9e3c09b0b01c764e530657e4c85c49
+	Linux 4.7-rc7
