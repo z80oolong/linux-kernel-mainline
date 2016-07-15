@@ -1,0 +1,20 @@
+origin/drm-intel-fixes aeddda06c1a704bb97c8a7bfe7a472120193bd56
+	drm/i915: Ignore panel type from OpRegion on SKL
+drm-upstream/drm-fixes d2e1204f896b17bda1922f6320d3b442367302fc
+	Merge branch 'drm-vmwgfx-fixes' of git://people.freedesktop.org/~syeh/repos_linux into drm-fixes
+origin/drm-intel-next-fixes b224c4dc70cdd5f42d24a7057148c6ace90e4f4e
+	drm/i915: Unbreak interrupts on pre-gen6
+origin/drm-intel-next-queued 5ab57c7020697942ea15f45ad14c69cecb164329
+	drm/i915: Flush logical context image out to memory upon suspend
+drm-upstream/drm-next f82c13722275b6aca3a956a82846465ec789b367
+	Merge branch 'exynos-drm-next' of git://git.kernel.org/pub/scm/linux/kernel/git/daeinki/drm-exynos into drm-next
+sound-upstream/for-next 41e8a5788b5a1e187a690877d83b0f485c8c4ccd
+	ALSA: mixart: don't print an unintialized variable on error
+sound-upstream/for-linus d716fb03f76411fc7e138692e33b749cada5c094
+	ALSA: hda: add AMD Stoney PCI ID with proper driver caps
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc fc497ed8361f34e465f31e9babcb88efe38fe433
+	drm/nouveau: make fbdev support really optional
+origin/topic/core-for-CI 8b86400f445ee400cbd1b81e6c0d6c66c9076e68
+	iommu/vt-d: fix overflow of iommu->domains array
