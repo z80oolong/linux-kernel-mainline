@@ -34,10 +34,11 @@
 #include <linux/dma_remapping.h>
 #include <linux/uaccess.h>
 
-#define  __EXEC_OBJECT_HAS_PIN (1<<31)
-#define  __EXEC_OBJECT_HAS_FENCE (1<<30)
-#define  __EXEC_OBJECT_NEEDS_MAP (1<<29)
-#define  __EXEC_OBJECT_NEEDS_BIAS (1<<28)
+#define  __EXEC_OBJECT_HAS_PIN		(1<<31)
+#define  __EXEC_OBJECT_HAS_FENCE	(1<<30)
+#define  __EXEC_OBJECT_NEEDS_MAP	(1<<29)
+#define  __EXEC_OBJECT_NEEDS_BIAS	(1<<28)
+#define  __EXEC_OBJECT_INTERNAL_FLAGS (0xf<<28) /* all of the above */
 
 #define BATCH_OFFSET_BIAS (256*1024)
 
@@ -183,6 +184,35 @@ err:
 	 */
 
 	return ret;
+}
+
+static inline struct i915_vma *
+eb_get_batch_vma(struct eb_vmas *eb)
+{
+	/* The batch is always the LAST item in the VMA list */
+	struct i915_vma *vma = list_last_entry(&eb->vmas, typeof(*vma), exec_list);
+
+	return vma;
+}
+
+static struct drm_i915_gem_object *
+eb_get_batch(struct eb_vmas *eb)
+{
+	struct i915_vma *vma = eb_get_batch_vma(eb);
+
+	/*
+	 * SNA is doing fancy tricks with compressing batch buffers, which leads
+	 * to negative relocation deltas. Usually that works out ok since the
+	 * relocate address is still positive, except when the batch is placed
+	 * very low in the GTT. Ensure this doesn't happen.
+	 *
+	 * Note that actual hangs have only been observed on gen7, but for
+	 * paranoia do it everywhere.
+	 */
+	if ((vma->exec_entry->flags & EXEC_OBJECT_PINNED) == 0)
+		vma->exec_entry->flags |= __EXEC_OBJECT_NEEDS_BIAS;
+
+	return vma->obj;
 }
 
 static struct i915_vma *eb_get_vma(struct eb_vmas *eb, unsigned long handle)
@@ -1007,6 +1037,9 @@ validate_exec_list(struct drm_device *dev,
 	unsigned invalid_flags;
 	int i;
 
+	/* INTERNAL flags must not overlap with external ones */
+	BUILD_BUG_ON(__EXEC_OBJECT_INTERNAL_FLAGS & ~__EXEC_OBJECT_UNKNOWN_FLAGS);
+
 	invalid_flags = __EXEC_OBJECT_UNKNOWN_FLAGS;
 	if (USES_FULL_PPGTT(dev))
 		invalid_flags |= EXEC_OBJECT_NEEDS_GTT;
@@ -1335,26 +1368,6 @@ gen8_dispatch_bsd_ring(struct drm_i915_private *dev_priv, struct drm_file *file)
 	}
 
 	return file_priv->bsd_ring;
-}
-
-static struct drm_i915_gem_object *
-eb_get_batch(struct eb_vmas *eb)
-{
-	struct i915_vma *vma = list_entry(eb->vmas.prev, typeof(*vma), exec_list);
-
-	/*
-	 * SNA is doing fancy tricks with compressing batch buffers, which leads
-	 * to negative relocation deltas. Usually that works out ok since the
-	 * relocate address is still positive, except when the batch is placed
-	 * very low in the GTT. Ensure this doesn't happen.
-	 *
-	 * Note that actual hangs have only been observed on gen7, but for
-	 * paranoia do it everywhere.
-	 */
-	if ((vma->exec_entry->flags & EXEC_OBJECT_PINNED) == 0)
-		vma->exec_entry->flags |= __EXEC_OBJECT_NEEDS_BIAS;
-
-	return vma->obj;
 }
 
 #define I915_USER_RINGS (4)
