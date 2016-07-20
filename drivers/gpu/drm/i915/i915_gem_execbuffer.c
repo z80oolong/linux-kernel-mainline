@@ -34,10 +34,11 @@
 #include <linux/dma_remapping.h>
 #include <linux/uaccess.h>
 
-#define  __EXEC_OBJECT_HAS_PIN (1<<31)
-#define  __EXEC_OBJECT_HAS_FENCE (1<<30)
-#define  __EXEC_OBJECT_NEEDS_MAP (1<<29)
-#define  __EXEC_OBJECT_NEEDS_BIAS (1<<28)
+#define  __EXEC_OBJECT_HAS_PIN		(1<<31)
+#define  __EXEC_OBJECT_HAS_FENCE	(1<<30)
+#define  __EXEC_OBJECT_NEEDS_MAP	(1<<29)
+#define  __EXEC_OBJECT_NEEDS_BIAS	(1<<28)
+#define  __EXEC_OBJECT_INTERNAL_FLAGS (0xf<<28) /* all of the above */
 
 #define BATCH_OFFSET_BIAS (256*1024)
 
@@ -122,7 +123,7 @@ eb_lookup_vmas(struct eb_vmas *eb,
 			goto err;
 		}
 
-		drm_gem_object_reference(&obj->base);
+		i915_gem_object_get(obj);
 		list_add_tail(&obj->obj_exec_link, &objects);
 	}
 	spin_unlock(&file->table_lock);
@@ -175,7 +176,7 @@ err:
 				       struct drm_i915_gem_object,
 				       obj_exec_link);
 		list_del_init(&obj->obj_exec_link);
-		drm_gem_object_unreference(&obj->base);
+		i915_gem_object_put(obj);
 	}
 	/*
 	 * Objects already transfered to the vmas list will be unreferenced by
@@ -183,6 +184,35 @@ err:
 	 */
 
 	return ret;
+}
+
+static inline struct i915_vma *
+eb_get_batch_vma(struct eb_vmas *eb)
+{
+	/* The batch is always the LAST item in the VMA list */
+	struct i915_vma *vma = list_last_entry(&eb->vmas, typeof(*vma), exec_list);
+
+	return vma;
+}
+
+static struct drm_i915_gem_object *
+eb_get_batch(struct eb_vmas *eb)
+{
+	struct i915_vma *vma = eb_get_batch_vma(eb);
+
+	/*
+	 * SNA is doing fancy tricks with compressing batch buffers, which leads
+	 * to negative relocation deltas. Usually that works out ok since the
+	 * relocate address is still positive, except when the batch is placed
+	 * very low in the GTT. Ensure this doesn't happen.
+	 *
+	 * Note that actual hangs have only been observed on gen7, but for
+	 * paranoia do it everywhere.
+	 */
+	if ((vma->exec_entry->flags & EXEC_OBJECT_PINNED) == 0)
+		vma->exec_entry->flags |= __EXEC_OBJECT_NEEDS_BIAS;
+
+	return vma->obj;
 }
 
 static struct i915_vma *eb_get_vma(struct eb_vmas *eb, unsigned long handle)
@@ -234,7 +264,7 @@ static void eb_destroy(struct eb_vmas *eb)
 				       exec_list);
 		list_del_init(&vma->exec_list);
 		i915_gem_execbuffer_unreserve_vma(vma);
-		drm_gem_object_unreference(&vma->obj->base);
+		i915_gem_object_put(vma->obj);
 	}
 	kfree(eb);
 }
@@ -843,7 +873,7 @@ i915_gem_execbuffer_relocate_slow(struct drm_device *dev,
 		vma = list_first_entry(&eb->vmas, struct i915_vma, exec_list);
 		list_del_init(&vma->exec_list);
 		i915_gem_execbuffer_unreserve_vma(vma);
-		drm_gem_object_unreference(&vma->obj->base);
+		i915_gem_object_put(vma->obj);
 	}
 
 	mutex_unlock(&dev->struct_mutex);
@@ -1006,6 +1036,9 @@ validate_exec_list(struct drm_device *dev,
 	unsigned relocs_max = UINT_MAX / sizeof(struct drm_i915_gem_relocation_entry);
 	unsigned invalid_flags;
 	int i;
+
+	/* INTERNAL flags must not overlap with external ones */
+	BUILD_BUG_ON(__EXEC_OBJECT_INTERNAL_FLAGS & ~__EXEC_OBJECT_UNKNOWN_FLAGS);
 
 	invalid_flags = __EXEC_OBJECT_UNKNOWN_FLAGS;
 	if (USES_FULL_PPGTT(dev))
@@ -1203,7 +1236,7 @@ i915_gem_execbuffer_parse(struct intel_engine_cs *engine,
 	vma = i915_gem_obj_to_ggtt(shadow_batch_obj);
 	vma->exec_entry = shadow_exec_entry;
 	vma->exec_entry->flags = __EXEC_OBJECT_HAS_PIN;
-	drm_gem_object_reference(&shadow_batch_obj->base);
+	i915_gem_object_get(shadow_batch_obj);
 	list_add_tail(&vma->exec_list, &eb->vmas);
 
 	shadow_batch_obj->base.pending_read_domains = I915_GEM_DOMAIN_COMMAND;
@@ -1335,26 +1368,6 @@ gen8_dispatch_bsd_ring(struct drm_i915_private *dev_priv, struct drm_file *file)
 	}
 
 	return file_priv->bsd_ring;
-}
-
-static struct drm_i915_gem_object *
-eb_get_batch(struct eb_vmas *eb)
-{
-	struct i915_vma *vma = list_entry(eb->vmas.prev, typeof(*vma), exec_list);
-
-	/*
-	 * SNA is doing fancy tricks with compressing batch buffers, which leads
-	 * to negative relocation deltas. Usually that works out ok since the
-	 * relocate address is still positive, except when the batch is placed
-	 * very low in the GTT. Ensure this doesn't happen.
-	 *
-	 * Note that actual hangs have only been observed on gen7, but for
-	 * paranoia do it everywhere.
-	 */
-	if ((vma->exec_entry->flags & EXEC_OBJECT_PINNED) == 0)
-		vma->exec_entry->flags |= __EXEC_OBJECT_NEEDS_BIAS;
-
-	return vma->obj;
 }
 
 #define I915_USER_RINGS (4)
@@ -1496,7 +1509,7 @@ i915_gem_do_execbuffer(struct drm_device *dev, void *data,
 		goto pre_mutex_err;
 	}
 
-	i915_gem_context_reference(ctx);
+	i915_gem_context_get(ctx);
 
 	if (ctx->ppgtt)
 		vm = &ctx->ppgtt->base;
@@ -1507,7 +1520,7 @@ i915_gem_do_execbuffer(struct drm_device *dev, void *data,
 
 	eb = eb_create(args);
 	if (eb == NULL) {
-		i915_gem_context_unreference(ctx);
+		i915_gem_context_put(ctx);
 		mutex_unlock(&dev->struct_mutex);
 		ret = -ENOMEM;
 		goto pre_mutex_err;
@@ -1651,7 +1664,7 @@ err_batch_unpin:
 
 err:
 	/* the request owns the ref now */
-	i915_gem_context_unreference(ctx);
+	i915_gem_context_put(ctx);
 	eb_destroy(eb);
 
 	mutex_unlock(&dev->struct_mutex);
