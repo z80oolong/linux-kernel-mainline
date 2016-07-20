@@ -28,7 +28,7 @@ sys.path.insert(0, os.path.abspath('sphinx'))
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['kernel-doc']
+extensions = ['kernel-doc', 'rstFlatTable']
 
 # Gracefully handle missing rst2pdf.
 try:
@@ -125,7 +125,7 @@ pygments_style = 'sphinx'
 #modindex_common_prefix = []
 
 # If true, keep warnings as "system message" paragraphs in the built documents.
-#keep_warnings = False
+keep_warnings = True
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
