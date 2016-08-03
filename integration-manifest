@@ -1,0 +1,22 @@
+origin/drm-intel-fixes ed2eebbd61af8d378ca39ad7aef7017f29eed6f3
+	drm/i915: add missing condition for committing planes on crtc
+drm-upstream/drm-fixes 84ade45e056f2e292f07c54446c176d0112d9574
+	Merge tag 'drm-intel-fixes-2016-07-18' of git://anongit.freedesktop.org/drm-intel into drm-fixes
+origin/drm-intel-next-fixes a7b4667a00025ac28300737c868bd4818b6d8c4d
+	drm/i915: Never fully mask the the EI up rps interrupt on SNB/IVB
+origin/drm-intel-next-queued 8dac1e1f2068321fb4b7062d3c5408971f7a7e35
+	drm/i915: Clean up the extra RPM ref on CHV with i915.enable_rc6=0
+drm-upstream/drm-next dfd2e9ab6a7db56a5f5bb55f71485a92613c8e11
+	drm/i915: Check PSR setup time vs. vblank length
+sound-upstream/for-next fd48331f9b71d2add941adaee3619f5b8527182d
+	ALSA: hda: add AMD Bonaire AZ PCI ID with proper driver caps
+sound-upstream/for-linus fd48331f9b71d2add941adaee3619f5b8527182d
+	ALSA: hda: add AMD Bonaire AZ PCI ID with proper driver caps
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc 12ae57aab43880eac500c43590e26d9d4411961b
+	drm/arm: mali-dp: Fix error return code in malidp_bind()
+origin/topic/core-for-CI 8b86400f445ee400cbd1b81e6c0d6c66c9076e68
+	iommu/vt-d: fix overflow of iommu->domains array
+origin/topic/sphinx-wip 29310a50752de76314f51555b72044d11f6cba49
+	Revert "doc/sphinx: Enable keep_warnings"
