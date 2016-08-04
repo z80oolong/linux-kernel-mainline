@@ -117,15 +117,16 @@ i915_tiling_ok(struct drm_device *dev, int stride, int size, int tiling_mode)
 static bool
 i915_gem_object_fence_ok(struct drm_i915_gem_object *obj, int tiling_mode)
 {
+	struct drm_i915_private *dev_priv = to_i915(obj->base.dev);
 	u32 size;
 
 	if (tiling_mode == I915_TILING_NONE)
 		return true;
 
-	if (INTEL_INFO(obj->base.dev)->gen >= 4)
+	if (INTEL_GEN(dev_priv) >= 4)
 		return true;
 
-	if (IS_GEN3(obj->base.dev)) {
+	if (IS_GEN3(dev_priv)) {
 		if (i915_gem_obj_ggtt_offset(obj) & ~I915_FENCE_START_MASK)
 			return false;
 	} else {
@@ -133,7 +134,7 @@ i915_gem_object_fence_ok(struct drm_i915_gem_object *obj, int tiling_mode)
 			return false;
 	}
 
-	size = i915_gem_get_gtt_size(obj->base.dev, obj->base.size, tiling_mode);
+	size = i915_gem_get_ggtt_size(dev_priv, obj->base.size, tiling_mode);
 	if (i915_gem_obj_ggtt_size(obj) != size)
 		return false;
 
@@ -166,13 +167,13 @@ i915_gem_set_tiling(struct drm_device *dev, void *data,
 	struct drm_i915_gem_object *obj;
 	int ret = 0;
 
-	obj = to_intel_bo(drm_gem_object_lookup(file, args->handle));
-	if (&obj->base == NULL)
+	obj = i915_gem_object_lookup(file, args->handle);
+	if (!obj)
 		return -ENOENT;
 
 	if (!i915_tiling_ok(dev,
 			    args->stride, obj->base.size, args->tiling_mode)) {
-		drm_gem_object_unreference_unlocked(&obj->base);
+		i915_gem_object_put_unlocked(obj);
 		return -EINVAL;
 	}
 
@@ -242,7 +243,8 @@ i915_gem_set_tiling(struct drm_device *dev, void *data,
 			}
 
 			obj->fence_dirty =
-				obj->last_fenced_req ||
+				!i915_gem_active_is_idle(&obj->last_fence,
+							 &dev->struct_mutex) ||
 				obj->fence_reg != I915_FENCE_REG_NONE;
 
 			obj->tiling_mode = args->tiling_mode;
@@ -268,7 +270,7 @@ i915_gem_set_tiling(struct drm_device *dev, void *data,
 	}
 
 err:
-	drm_gem_object_unreference(&obj->base);
+	i915_gem_object_put(obj);
 	mutex_unlock(&dev->struct_mutex);
 
 	intel_runtime_pm_put(dev_priv);
@@ -297,8 +299,8 @@ i915_gem_get_tiling(struct drm_device *dev, void *data,
 	struct drm_i915_private *dev_priv = to_i915(dev);
 	struct drm_i915_gem_object *obj;
 
-	obj = to_intel_bo(drm_gem_object_lookup(file, args->handle));
-	if (&obj->base == NULL)
+	obj = i915_gem_object_lookup(file, args->handle);
+	if (!obj)
 		return -ENOENT;
 
 	mutex_lock(&dev->struct_mutex);
@@ -328,7 +330,7 @@ i915_gem_get_tiling(struct drm_device *dev, void *data,
 	if (args->swizzle_mode == I915_BIT_6_SWIZZLE_9_10_17)
 		args->swizzle_mode = I915_BIT_6_SWIZZLE_9_10;
 
-	drm_gem_object_unreference(&obj->base);
+	i915_gem_object_put(obj);
 	mutex_unlock(&dev->struct_mutex);
 
 	return 0;

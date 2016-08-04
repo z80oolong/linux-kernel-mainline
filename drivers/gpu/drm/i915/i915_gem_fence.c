@@ -261,15 +261,8 @@ static inline void i915_gem_object_fence_lost(struct drm_i915_gem_object *obj)
 static int
 i915_gem_object_wait_fence(struct drm_i915_gem_object *obj)
 {
-	if (obj->last_fenced_req) {
-		int ret = i915_wait_request(obj->last_fenced_req);
-		if (ret)
-			return ret;
-
-		i915_gem_request_assign(&obj->last_fenced_req, NULL);
-	}
-
-	return 0;
+	return i915_gem_active_retire(&obj->last_fence,
+				      &obj->base.dev->struct_mutex);
 }
 
 /**
@@ -438,7 +431,7 @@ i915_gem_object_pin_fence(struct drm_i915_gem_object *obj)
 
 		WARN_ON(!ggtt_vma ||
 			dev_priv->fence_regs[obj->fence_reg].pin_count >
-			ggtt_vma->pin_count);
+			i915_vma_pin_count(ggtt_vma));
 		dev_priv->fence_regs[obj->fence_reg].pin_count++;
 		return true;
 	} else
