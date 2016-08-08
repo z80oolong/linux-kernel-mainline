@@ -1,0 +1,20 @@
+origin/drm-intel-fixes 29b4817d4018df78086157ea3a55c1d9424a7cfc
+	Linux 4.8-rc1
+drm-upstream/drm-fixes 4872850a19bffe486d79cccde6b0a433a2f03d1f
+	Merge branch 'drm-next-4.8' of git://people.freedesktop.org/~agd5f/linux into drm-next
+origin/drm-intel-next-fixes c45eb4fed12d278d3619f1904885bd0d7bcbf036
+	drm/i915/fbdev: Check for the framebuffer before use
+origin/drm-intel-next-queued c5b7e97b27db4f8a8ffe1072506620679043f006
+	drm/i915: Update DRIVER_DATE to 20160808
+drm-upstream/drm-next 5c6c201ccbaf9d3901f829441d457293f7ca8ef4
+	drm: Paper over locking inversion after registration rework
+sound-upstream/for-next 59ec4b57bcaede46546d54d037a21004b9aa5cef
+	ALSA: hda - Fix headset mic detection problem for two dell machines
+sound-upstream/for-linus 59ec4b57bcaede46546d54d037a21004b9aa5cef
+	ALSA: hda - Fix headset mic detection problem for two dell machines
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc cfc5adea1955ee8ddb62cc0d20ee454472033b6a
+	drm: Make sure drm_vblank_no_hw_counter isn't abused
+origin/topic/core-for-CI 8b86400f445ee400cbd1b81e6c0d6c66c9076e68
+	iommu/vt-d: fix overflow of iommu->domains array
