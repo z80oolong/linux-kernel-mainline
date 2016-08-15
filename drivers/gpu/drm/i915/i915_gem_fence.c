@@ -85,21 +85,20 @@ static void i965_write_fence_reg(struct drm_device *dev, int reg,
 	POSTING_READ(fence_reg_lo);
 
 	if (obj) {
-		u32 size = i915_gem_obj_ggtt_size(obj);
-		uint64_t val;
+		struct i915_vma *vma = i915_gem_object_to_ggtt(obj, NULL);
+		unsigned int tiling = i915_gem_object_get_tiling(obj);
+		unsigned int stride = i915_gem_object_get_stride(obj);
+		u32 size = vma->node.size;
+		u32 row_size = stride * (tiling == I915_TILING_Y ? 32 : 8);
+		u64 val;
 
 		/* Adjust fence size to match tiled area */
-		if (obj->tiling_mode != I915_TILING_NONE) {
-			uint32_t row_size = obj->stride *
-				(obj->tiling_mode == I915_TILING_Y ? 32 : 8);
-			size = (size / row_size) * row_size;
-		}
+		size = rounddown(size, row_size);
 
-		val = (uint64_t)((i915_gem_obj_ggtt_offset(obj) + size - 4096) &
-				 0xfffff000) << 32;
-		val |= i915_gem_obj_ggtt_offset(obj) & 0xfffff000;
-		val |= (uint64_t)((obj->stride / 128) - 1) << fence_pitch_shift;
-		if (obj->tiling_mode == I915_TILING_Y)
+		val = ((vma->node.start + size - 4096) & 0xfffff000) << 32;
+		val |= vma->node.start & 0xfffff000;
+		val |= (u64)((stride / 128) - 1) << fence_pitch_shift;
+		if (tiling == I915_TILING_Y)
 			val |= 1 << I965_FENCE_TILING_Y_SHIFT;
 		val |= I965_FENCE_REG_VALID;
 
@@ -121,29 +120,31 @@ static void i915_write_fence_reg(struct drm_device *dev, int reg,
 	u32 val;
 
 	if (obj) {
-		u32 size = i915_gem_obj_ggtt_size(obj);
+		struct i915_vma *vma = i915_gem_object_to_ggtt(obj, NULL);
+		unsigned int tiling = i915_gem_object_get_tiling(obj);
+		unsigned int stride = i915_gem_object_get_stride(obj);
 		int pitch_val;
 		int tile_width;
 
-		WARN((i915_gem_obj_ggtt_offset(obj) & ~I915_FENCE_START_MASK) ||
-		     (size & -size) != size ||
-		     (i915_gem_obj_ggtt_offset(obj) & (size - 1)),
-		     "object 0x%08llx [fenceable? %d] not 1M or pot-size (0x%08x) aligned\n",
-		     i915_gem_obj_ggtt_offset(obj), obj->map_and_fenceable, size);
+		WARN((vma->node.start & ~I915_FENCE_START_MASK) ||
+		     !is_power_of_2(vma->node.size) ||
+		     (vma->node.start & (vma->node.size - 1)),
+		     "object 0x%08llx [fenceable? %d] not 1M or pot-size (0x%08llx) aligned\n",
+		     vma->node.start, obj->map_and_fenceable, vma->node.size);
 
-		if (obj->tiling_mode == I915_TILING_Y && HAS_128_BYTE_Y_TILING(dev))
+		if (tiling == I915_TILING_Y && HAS_128_BYTE_Y_TILING(dev))
 			tile_width = 128;
 		else
 			tile_width = 512;
 
 		/* Note: pitch better be a power of two tile widths */
-		pitch_val = obj->stride / tile_width;
+		pitch_val = stride / tile_width;
 		pitch_val = ffs(pitch_val) - 1;
 
-		val = i915_gem_obj_ggtt_offset(obj);
-		if (obj->tiling_mode == I915_TILING_Y)
+		val = vma->node.start;
+		if (tiling == I915_TILING_Y)
 			val |= 1 << I830_FENCE_TILING_Y_SHIFT;
-		val |= I915_FENCE_SIZE_BITS(size);
+		val |= I915_FENCE_SIZE_BITS(vma->node.size);
 		val |= pitch_val << I830_FENCE_PITCH_SHIFT;
 		val |= I830_FENCE_REG_VALID;
 	} else
@@ -157,25 +158,27 @@ static void i830_write_fence_reg(struct drm_device *dev, int reg,
 				struct drm_i915_gem_object *obj)
 {
 	struct drm_i915_private *dev_priv = to_i915(dev);
-	uint32_t val;
+	u32 val;
 
 	if (obj) {
-		u32 size = i915_gem_obj_ggtt_size(obj);
-		uint32_t pitch_val;
+		struct i915_vma *vma = i915_gem_object_to_ggtt(obj, NULL);
+		unsigned int tiling = i915_gem_object_get_tiling(obj);
+		unsigned int stride = i915_gem_object_get_stride(obj);
+		u32 pitch_val;
 
-		WARN((i915_gem_obj_ggtt_offset(obj) & ~I830_FENCE_START_MASK) ||
-		     (size & -size) != size ||
-		     (i915_gem_obj_ggtt_offset(obj) & (size - 1)),
-		     "object 0x%08llx not 512K or pot-size 0x%08x aligned\n",
-		     i915_gem_obj_ggtt_offset(obj), size);
+		WARN((vma->node.start & ~I830_FENCE_START_MASK) ||
+		     !is_power_of_2(vma->node.size) ||
+		     (vma->node.start & (vma->node.size - 1)),
+		     "object 0x%08llx not 512K or pot-size 0x%08llx aligned\n",
+		     vma->node.start, vma->node.size);
 
-		pitch_val = obj->stride / 128;
+		pitch_val = stride / 128;
 		pitch_val = ffs(pitch_val) - 1;
 
-		val = i915_gem_obj_ggtt_offset(obj);
-		if (obj->tiling_mode == I915_TILING_Y)
+		val = vma->node.start;
+		if (tiling == I915_TILING_Y)
 			val |= 1 << I830_FENCE_TILING_Y_SHIFT;
-		val |= I830_FENCE_SIZE_BITS(size);
+		val |= I830_FENCE_SIZE_BITS(vma->node.size);
 		val |= pitch_val << I830_FENCE_PITCH_SHIFT;
 		val |= I830_FENCE_REG_VALID;
 	} else
@@ -201,9 +204,12 @@ static void i915_gem_write_fence(struct drm_device *dev, int reg,
 	if (i915_gem_object_needs_mb(dev_priv->fence_regs[reg].obj))
 		mb();
 
-	WARN(obj && (!obj->stride || !obj->tiling_mode),
+	WARN(obj &&
+	     (!i915_gem_object_get_stride(obj) ||
+	      !i915_gem_object_get_tiling(obj)),
 	     "bogus fence setup with stride: 0x%x, tiling mode: %i\n",
-	     obj->stride, obj->tiling_mode);
+	     i915_gem_object_get_stride(obj),
+	     i915_gem_object_get_tiling(obj));
 
 	if (IS_GEN2(dev))
 		i830_write_fence_reg(dev, reg, obj);
@@ -248,7 +254,7 @@ static void i915_gem_object_update_fence(struct drm_i915_gem_object *obj,
 
 static inline void i915_gem_object_fence_lost(struct drm_i915_gem_object *obj)
 {
-	if (obj->tiling_mode)
+	if (i915_gem_object_is_tiled(obj))
 		i915_gem_release_mmap(obj);
 
 	/* As we do not have an associated fence register, we will force
@@ -261,15 +267,8 @@ static inline void i915_gem_object_fence_lost(struct drm_i915_gem_object *obj)
 static int
 i915_gem_object_wait_fence(struct drm_i915_gem_object *obj)
 {
-	if (obj->last_fenced_req) {
-		int ret = i915_wait_request(obj->last_fenced_req);
-		if (ret)
-			return ret;
-
-		i915_gem_request_assign(&obj->last_fenced_req, NULL);
-	}
-
-	return 0;
+	return i915_gem_active_retire(&obj->last_fence,
+				      &obj->base.dev->struct_mutex);
 }
 
 /**
@@ -368,7 +367,7 @@ i915_gem_object_get_fence(struct drm_i915_gem_object *obj)
 {
 	struct drm_device *dev = obj->base.dev;
 	struct drm_i915_private *dev_priv = to_i915(dev);
-	bool enable = obj->tiling_mode != I915_TILING_NONE;
+	bool enable = i915_gem_object_is_tiled(obj);
 	struct drm_i915_fence_reg *reg;
 	int ret;
 
@@ -433,13 +432,7 @@ bool
 i915_gem_object_pin_fence(struct drm_i915_gem_object *obj)
 {
 	if (obj->fence_reg != I915_FENCE_REG_NONE) {
-		struct drm_i915_private *dev_priv = to_i915(obj->base.dev);
-		struct i915_vma *ggtt_vma = i915_gem_obj_to_ggtt(obj);
-
-		WARN_ON(!ggtt_vma ||
-			dev_priv->fence_regs[obj->fence_reg].pin_count >
-			ggtt_vma->pin_count);
-		dev_priv->fence_regs[obj->fence_reg].pin_count++;
+		to_i915(obj->base.dev)->fence_regs[obj->fence_reg].pin_count++;
 		return true;
 	} else
 		return false;
@@ -484,7 +477,7 @@ void i915_gem_restore_fences(struct drm_device *dev)
 		 */
 		if (reg->obj) {
 			i915_gem_object_update_fence(reg->obj, reg,
-						     reg->obj->tiling_mode);
+						     i915_gem_object_get_tiling(reg->obj));
 		} else {
 			i915_gem_write_fence(dev, i, NULL);
 		}
