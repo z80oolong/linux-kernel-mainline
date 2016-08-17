@@ -1,0 +1,20 @@
+origin/drm-intel-fixes dfa2997055659b4e706a85fba481050cc7e7ad82
+	drm/i915: Fix modeset handling during gpu reset, v5.
+drm-upstream/drm-fixes 93b1f14553a5f48104b639d28e41c2bb73c0dc37
+	Merge tag 'mediatek-drm-fixes-2016-08-12' of git://git.pengutronix.de/git/pza/linux into drm-fixes
+origin/drm-intel-next-fixes c45eb4fed12d278d3619f1904885bd0d7bcbf036
+	drm/i915/fbdev: Check for the framebuffer before use
+origin/drm-intel-next-queued ceae5317f608aaabf3e03377e061e44c7345cc6a
+	drm/i915: Add missing kerneldoc for guc_client_alloc:engines
+drm-upstream/drm-next fc93ff608b15ae32cde3006b7af860b59cac20ec
+	Merge tag 'drm-intel-next-2016-08-08' of git://anongit.freedesktop.org/drm-intel into drm-next
+sound-upstream/for-next 289ef679086cf0389173a3c08174df2cacc536f3
+	ALSA: usb: caiaq: audio: don't print error when allocating urb fails
+sound-upstream/for-linus a52ff34e5ec61749c62c6618b76a9d6dbecee450
+	ALSA: hda - Manage power well properly for resume
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc 9cd2e854d61ccfa51686f3ed7b0c917708fc641f
+	Revert "drm/hisilicon: Don't set drm_device->platformdev"
+origin/topic/core-for-CI d0245f6bbeb63fcc07974be1ffbb8ba7b2e6ae13
+	locking/mutex: Prevent lock starvation when spinning is disabled
