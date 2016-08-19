@@ -1,0 +1,20 @@
+origin/drm-intel-fixes dfa2997055659b4e706a85fba481050cc7e7ad82
+	drm/i915: Fix modeset handling during gpu reset, v5.
+drm-upstream/drm-fixes 2c24ba2116d653b4a1315210e38eefbc9eeb1058
+	Merge tag 'drm-intel-fixes-2016-08-15' of git://anongit.freedesktop.org/drm-intel into drm-fixes
+origin/drm-intel-next-fixes c45eb4fed12d278d3619f1904885bd0d7bcbf036
+	drm/i915/fbdev: Check for the framebuffer before use
+origin/drm-intel-next-queued c58305af1835095ddc25ee6f548ac05915e66ac5
+	drm/i915: Use remap_io_mapping() to prefault all PTE in a single pass
+drm-upstream/drm-next fc93ff608b15ae32cde3006b7af860b59cac20ec
+	Merge tag 'drm-intel-next-2016-08-08' of git://anongit.freedesktop.org/drm-intel into drm-next
+sound-upstream/for-next 289ef679086cf0389173a3c08174df2cacc536f3
+	ALSA: usb: caiaq: audio: don't print error when allocating urb fails
+sound-upstream/for-linus a52ff34e5ec61749c62c6618b76a9d6dbecee450
+	ALSA: hda - Manage power well properly for resume
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc 420382adf64c93d2fc83b764013103c6035d8617
+	drm: Don't implement empty prepare_fb()/cleanup_fb()
+origin/topic/core-for-CI d0245f6bbeb63fcc07974be1ffbb8ba7b2e6ae13
+	locking/mutex: Prevent lock starvation when spinning is disabled
