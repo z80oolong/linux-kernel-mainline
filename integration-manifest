@@ -1,0 +1,20 @@
+origin/drm-intel-fixes 177d91aaea4bcafb29232336bafaa521b85286aa
+	drm/i915: Fix botched merge that downgrades CSR versions.
+drm-upstream/drm-fixes 6f00975c619064a18c23fd3aced325ae165a73b9
+	drm: Reject page_flip for !DRIVER_MODESET
+origin/drm-intel-next-fixes c45eb4fed12d278d3619f1904885bd0d7bcbf036
+	drm/i915/fbdev: Check for the framebuffer before use
+origin/drm-intel-next-queued ac96b5566926af83463ddcf4655856033c092f26
+	io-mapping.h: s/PAGE_KERNEL_IO/PAGE_KERNEL/
+drm-upstream/drm-next fc93ff608b15ae32cde3006b7af860b59cac20ec
+	Merge tag 'drm-intel-next-2016-08-08' of git://anongit.freedesktop.org/drm-intel into drm-next
+sound-upstream/for-next 07cb3272af7935babe8b421f4070a6e3f26ef59b
+	ALSA: hdspm: fix spelling mistake "Externel" -> "External"
+sound-upstream/for-linus b027d11263836a0cd335520175257dcb99b43757
+	ALSA: line6: Fix POD sysfs attributes segfault
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc 28579f37467cd1a9130a6287cf8322986e0b56f9
+	drm/fb-helper: Make docs for fb_set_suspend wrappers consistent
+origin/topic/core-for-CI d0245f6bbeb63fcc07974be1ffbb8ba7b2e6ae13
+	locking/mutex: Prevent lock starvation when spinning is disabled
