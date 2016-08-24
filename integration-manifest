@@ -1,0 +1,20 @@
+origin/drm-intel-fixes c9d2d3ac4ed030551bbabd5b1904be4a16b25655
+	drm/i915/dvo: Remove dangling call to drm_encoder_cleanup()
+drm-upstream/drm-fixes 6f00975c619064a18c23fd3aced325ae165a73b9
+	drm: Reject page_flip for !DRIVER_MODESET
+origin/drm-intel-next-fixes c45eb4fed12d278d3619f1904885bd0d7bcbf036
+	drm/i915/fbdev: Check for the framebuffer before use
+origin/drm-intel-next-queued abc80abde5bd5962a4ec4e126ab7867c0b5fd195
+	drm/i915: Force RC6 restore after system resume and reset
+drm-upstream/drm-next 0d42204f374380b6334de7dd2fe7e7d795250290
+	drm/doc: Document uapi requirements in DRM
+sound-upstream/for-next e15c282eff54aaf4c5ed72d492da7060d14f7be8
+	ALSA: bebob: unify configurations for some models produced by Yamaha/Terratec
+sound-upstream/for-linus abaa2274811d607679e8687b4118c4922a3517ac
+	ALSA: hda/realtek - fix headset mic detection for MSI MS-B120
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc 20353335099b1b7cba63002fd53da5725a1fadba
+	drm/doc: Fix vga_switcheroo xref
+origin/topic/core-for-CI d0245f6bbeb63fcc07974be1ffbb8ba7b2e6ae13
+	locking/mutex: Prevent lock starvation when spinning is disabled
