@@ -1,0 +1,20 @@
+origin/drm-intel-fixes c9d2d3ac4ed030551bbabd5b1904be4a16b25655
+	drm/i915/dvo: Remove dangling call to drm_encoder_cleanup()
+drm-upstream/drm-fixes 179ca3bb2ce5cbae570ceec03993743cf438ab38
+	Merge branch 'drm-fixes-4.8' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+origin/drm-intel-next-fixes c45eb4fed12d278d3619f1904885bd0d7bcbf036
+	drm/i915/fbdev: Check for the framebuffer before use
+origin/drm-intel-next-queued 27082493e9c6371b05370a619ab9d2877c5f4726
+	drm/i915/skl: Update DDB values atomically with wms/plane attrs
+drm-upstream/drm-next 0d42204f374380b6334de7dd2fe7e7d795250290
+	drm/doc: Document uapi requirements in DRM
+sound-upstream/for-next e15c282eff54aaf4c5ed72d492da7060d14f7be8
+	ALSA: bebob: unify configurations for some models produced by Yamaha/Terratec
+sound-upstream/for-linus abaa2274811d607679e8687b4118c4922a3517ac
+	ALSA: hda/realtek - fix headset mic detection for MSI MS-B120
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc d10571fc4fba7d57fb8157f0be61dcbe4a7965ca
+	drm: make DRI1 drivers depend on BROKEN
+origin/topic/core-for-CI d0245f6bbeb63fcc07974be1ffbb8ba7b2e6ae13
+	locking/mutex: Prevent lock starvation when spinning is disabled
