@@ -1,0 +1,20 @@
+origin/drm-intel-fixes c9d2d3ac4ed030551bbabd5b1904be4a16b25655
+	drm/i915/dvo: Remove dangling call to drm_encoder_cleanup()
+drm-upstream/drm-fixes 969af80f770a86e65bf8be1f72b218b5f8556b56
+	Merge tag 'drm-intel-fixes-2016-08-25' of git://anongit.freedesktop.org/drm-intel into drm-fixes
+origin/drm-intel-next-fixes c45eb4fed12d278d3619f1904885bd0d7bcbf036
+	drm/i915/fbdev: Check for the framebuffer before use
+origin/drm-intel-next-queued f7978a0c581a8a840a28306f8da43e06e7fef3bf
+	drm/i915: Allow the user to pass a context to any ring
+drm-upstream/drm-next 0d42204f374380b6334de7dd2fe7e7d795250290
+	drm/doc: Document uapi requirements in DRM
+sound-upstream/for-next 34b64e5ebffc5e4a9dbf8735561c4159a936248f
+	ALSA: snd-aoa: enable sound on PowerBook G4 12"
+sound-upstream/for-linus a820cd3d25c2891028b5f296a8a871ce6dd92c0d
+	Merge tag 'asoc-fix-v4.8-rc4' of git://git.kernel.org/pub/scm/linux/kernel/git/broonie/sound into for-linus
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc 6dcf0de7ef10244b17442f47956a1d9fabe2abe1
+	drm/simple-helpers: Always add planes to the state update
+origin/topic/core-for-CI d0245f6bbeb63fcc07974be1ffbb8ba7b2e6ae13
+	locking/mutex: Prevent lock starvation when spinning is disabled
