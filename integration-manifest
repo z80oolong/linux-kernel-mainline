@@ -1,0 +1,20 @@
+origin/drm-intel-fixes 8a07fed44b126f48020f122b9e6bf05d8c48f281
+	drm/i915/dvo: Remove dangling call to drm_encoder_cleanup()
+drm-upstream/drm-fixes add1fa75101263ab4d74240f93000998d4325624
+	drm/atomic: Don't potentially reset color_mgmt_changed on successive property updates.
+origin/drm-intel-next-fixes c45eb4fed12d278d3619f1904885bd0d7bcbf036
+	drm/i915/fbdev: Check for the framebuffer before use
+origin/drm-intel-next-queued 46e69f3982f6ed0f2575ee11649bc77b7a89fd3e
+	drm/i915/backlight: handle enabled but zero duty cycle at module load
+drm-upstream/drm-next 0d42204f374380b6334de7dd2fe7e7d795250290
+	drm/doc: Document uapi requirements in DRM
+sound-upstream/for-next 34b64e5ebffc5e4a9dbf8735561c4159a936248f
+	ALSA: snd-aoa: enable sound on PowerBook G4 12"
+sound-upstream/for-linus 83d9956b7e6b310c1062df7894257251c625b22e
+	ALSA: usb-audio: Add sample rate inquiry quirk for B850V3 CP2114
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc c8458c7efd01f5748e9ca74720e366d3fcc5fa97
+	drm/doc: Polish docs for drm_property&drm_property_blob
+origin/topic/core-for-CI d0245f6bbeb63fcc07974be1ffbb8ba7b2e6ae13
+	locking/mutex: Prevent lock starvation when spinning is disabled
