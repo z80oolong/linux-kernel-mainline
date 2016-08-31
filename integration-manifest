@@ -1,0 +1,20 @@
+origin/drm-intel-fixes 8a07fed44b126f48020f122b9e6bf05d8c48f281
+	drm/i915/dvo: Remove dangling call to drm_encoder_cleanup()
+drm-upstream/drm-fixes 279cf3f23870f7eb8ca071115e06d3d5ca0a2b9e
+	drm/nouveau/acpi: use DSM if bridge does not support D3cold
+origin/drm-intel-next-fixes c45eb4fed12d278d3619f1904885bd0d7bcbf036
+	drm/i915/fbdev: Check for the framebuffer before use
+origin/drm-intel-next-queued 5423adf1d4c692ff300f9f4262e2d5241d4fe561
+	drm/i915: Fix other intel_dp warnings too.
+drm-upstream/drm-next 0d42204f374380b6334de7dd2fe7e7d795250290
+	drm/doc: Document uapi requirements in DRM
+sound-upstream/for-next 34b64e5ebffc5e4a9dbf8735561c4159a936248f
+	ALSA: snd-aoa: enable sound on PowerBook G4 12"
+sound-upstream/for-linus fd06c77eb9200b53d421da5fffe0dcd894b5d72a
+	ALSA: hda - Enable subwoofer on Dell Inspiron 7559
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc 339fd36238dd3494bc4617d181e7a37922c29ee9
+	drm: drm_probe_helper: Fix output_poll_work scheduling
+origin/topic/core-for-CI d0245f6bbeb63fcc07974be1ffbb8ba7b2e6ae13
+	locking/mutex: Prevent lock starvation when spinning is disabled
