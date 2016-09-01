@@ -1,0 +1,20 @@
+origin/drm-intel-fixes 8a07fed44b126f48020f122b9e6bf05d8c48f281
+	drm/i915/dvo: Remove dangling call to drm_encoder_cleanup()
+drm-upstream/drm-fixes 27dd73503f690ee3593a2e73a1b1864860e7f7b0
+	Merge branch 'msm-fixes-4.8' of git://people.freedesktop.org/~robclark/linux into drm-fixes
+origin/drm-intel-next-fixes c45eb4fed12d278d3619f1904885bd0d7bcbf036
+	drm/i915/fbdev: Check for the framebuffer before use
+origin/drm-intel-next-queued 6f633402847635817fd5eddb2d0e0a50cd521c1e
+	drm/i915: Use atomic for dev_priv->mm.bsd_engine_dispatch_index
+drm-upstream/drm-next 2b2fd56d7e92f134ecaae5c89e20f64dd0f95aa2
+	Revert "drm: make DRI1 drivers depend on BROKEN"
+sound-upstream/for-next 16f0f01d4f7fb9cbc7a383577ef9756d7eb9afd1
+	ALSA: cs46xx: fix typo "seconadry" -> "secondary"
+sound-upstream/for-linus 6b1ca4bcadf9ef077cc5f03c6822ba276ed14902
+	ALSA: fireworks: accessing to user space outside spinlock
+origin/topic/drm-fixes 735b100f6d84b60da68e81e0bcb953d2021e0aa8
+	drm/edid: Fix DMT 1024x768@43Hz (interlaced) timings
+origin/topic/drm-misc 75ac49532a3cd44f2b22d88bab888ae92c411650
+	drm/doc: Add a few words on validation with IGT
+origin/topic/core-for-CI d0245f6bbeb63fcc07974be1ffbb8ba7b2e6ae13
+	locking/mutex: Prevent lock starvation when spinning is disabled
