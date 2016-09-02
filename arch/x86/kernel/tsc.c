@@ -43,7 +43,7 @@ static int __read_mostly tsc_unstable;
 
 static DEFINE_STATIC_KEY_FALSE(__use_tsc);
 
-int tsc_clocksource_reliable;
+int tsc_clocksource_reliable = 1;
 
 static u32 art_to_tsc_numerator;
 static u32 art_to_tsc_denominator;
@@ -288,6 +288,8 @@ static int __init tsc_setup(char *str)
 {
 	if (!strcmp(str, "reliable"))
 		tsc_clocksource_reliable = 1;
+	if (!strcmp(str, "unreliable"))
+		tsc_clocksource_reliable = 0;
 	if (!strncmp(str, "noirqtime", 9))
 		no_sched_irq_time = 1;
 	if (!strcmp(str, "unstable"))
