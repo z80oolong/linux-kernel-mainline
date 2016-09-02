@@ -2914,7 +2914,8 @@
 			disable unhandled interrupt sources.
 
 	no_timer_check	[X86,APIC] Disables the code which tests for
-			broken timer IRQ sources.
+			broken timer IRQ sources. For AWS, this is defaulted
+			to disabled, can be re-enabled using no_timer_check=0.
 
 	noisapnp	[ISAPNP] Disables ISA PnP code.
 
