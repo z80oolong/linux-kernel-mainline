@@ -1691,7 +1691,7 @@ retry:
 				goto out;
 			}
 
-			prop = drm_property_find(dev, prop_id);
+			prop = drm_mode_obj_find_prop_id(obj, prop_id);
 			if (!prop) {
 				drm_mode_object_unreference(obj);
 				ret = -ENOENT;
