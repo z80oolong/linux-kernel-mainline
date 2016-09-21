@@ -276,17 +276,15 @@ static void hsw_audio_codec_disable(struct intel_encoder *encoder)
 }
 
 static void hsw_audio_codec_enable(struct drm_connector *connector,
-				   struct intel_encoder *encoder,
+				   struct intel_encoder *intel_encoder,
 				   const struct drm_display_mode *adjusted_mode)
 {
 	struct drm_i915_private *dev_priv = to_i915(connector->dev);
-	struct intel_crtc *intel_crtc = to_intel_crtc(encoder->base.crtc);
+	struct intel_crtc *intel_crtc = to_intel_crtc(intel_encoder->base.crtc);
 	enum pipe pipe = intel_crtc->pipe;
+	enum port port = intel_encoder->port;
 	struct i915_audio_component *acomp = dev_priv->audio_component;
 	const uint8_t *eld = connector->eld;
-	struct intel_digital_port *intel_dig_port =
-		enc_to_dig_port(&encoder->base);
-	enum port port = intel_dig_port->port;
 	uint32_t tmp;
 	int len, i;
 	int n, rate;
@@ -355,14 +353,12 @@ static void hsw_audio_codec_enable(struct drm_connector *connector,
 	mutex_unlock(&dev_priv->av_mutex);
 }
 
-static void ilk_audio_codec_disable(struct intel_encoder *encoder)
+static void ilk_audio_codec_disable(struct intel_encoder *intel_encoder)
 {
-	struct drm_i915_private *dev_priv = to_i915(encoder->base.dev);
-	struct intel_crtc *intel_crtc = to_intel_crtc(encoder->base.crtc);
-	struct intel_digital_port *intel_dig_port =
-		enc_to_dig_port(&encoder->base);
-	enum port port = intel_dig_port->port;
+	struct drm_i915_private *dev_priv = to_i915(intel_encoder->base.dev);
+	struct intel_crtc *intel_crtc = to_intel_crtc(intel_encoder->base.crtc);
 	enum pipe pipe = intel_crtc->pipe;
+	enum port port = intel_encoder->port;
 	uint32_t tmp, eldv;
 	i915_reg_t aud_config, aud_cntrl_st2;
 
@@ -402,18 +398,15 @@ static void ilk_audio_codec_disable(struct intel_encoder *encoder)
 }
 
 static void ilk_audio_codec_enable(struct drm_connector *connector,
-				   struct intel_encoder *encoder,
+				   struct intel_encoder *intel_encoder,
 				   const struct drm_display_mode *adjusted_mode)
 {
 	struct drm_i915_private *dev_priv = to_i915(connector->dev);
-	struct intel_crtc *intel_crtc = to_intel_crtc(encoder->base.crtc);
-	struct intel_digital_port *intel_dig_port =
-		enc_to_dig_port(&encoder->base);
-	enum port port = intel_dig_port->port;
+	struct intel_crtc *intel_crtc = to_intel_crtc(intel_encoder->base.crtc);
 	enum pipe pipe = intel_crtc->pipe;
+	enum port port = intel_encoder->port;
 	uint8_t *eld = connector->eld;
-	uint32_t eldv;
-	uint32_t tmp;
+	uint32_t tmp, eldv;
 	int len, i;
 	i915_reg_t hdmiw_hdmiedid, aud_config, aud_cntl_st, aud_cntrl_st2;
 
@@ -495,11 +488,9 @@ void intel_audio_codec_enable(struct intel_encoder *intel_encoder)
 	struct intel_crtc *crtc = to_intel_crtc(encoder->crtc);
 	const struct drm_display_mode *adjusted_mode = &crtc->config->base.adjusted_mode;
 	struct drm_connector *connector;
-	struct drm_device *dev = encoder->dev;
-	struct drm_i915_private *dev_priv = to_i915(dev);
+	struct drm_i915_private *dev_priv = to_i915(encoder->dev);
 	struct i915_audio_component *acomp = dev_priv->audio_component;
-	struct intel_digital_port *intel_dig_port = enc_to_dig_port(encoder);
-	enum port port = intel_dig_port->port;
+	enum port port = intel_encoder->port;
 
 	connector = drm_select_eld(encoder);
 	if (!connector)
@@ -523,7 +514,7 @@ void intel_audio_codec_enable(struct intel_encoder *intel_encoder)
 						     adjusted_mode);
 
 	mutex_lock(&dev_priv->av_mutex);
-	intel_dig_port->audio_connector = connector;
+	intel_encoder->audio_connector = connector;
 	/* referred in audio callbacks */
 	dev_priv->dig_port_map[port] = intel_encoder;
 	mutex_unlock(&dev_priv->av_mutex);
@@ -542,17 +533,15 @@ void intel_audio_codec_enable(struct intel_encoder *intel_encoder)
 void intel_audio_codec_disable(struct intel_encoder *intel_encoder)
 {
 	struct drm_encoder *encoder = &intel_encoder->base;
-	struct drm_device *dev = encoder->dev;
-	struct drm_i915_private *dev_priv = to_i915(dev);
+	struct drm_i915_private *dev_priv = to_i915(encoder->dev);
 	struct i915_audio_component *acomp = dev_priv->audio_component;
-	struct intel_digital_port *intel_dig_port = enc_to_dig_port(encoder);
-	enum port port = intel_dig_port->port;
+	enum port port = intel_encoder->port;
 
 	if (dev_priv->display.audio_codec_disable)
 		dev_priv->display.audio_codec_disable(intel_encoder);
 
 	mutex_lock(&dev_priv->av_mutex);
-	intel_dig_port->audio_connector = NULL;
+	intel_encoder->audio_connector = NULL;
 	dev_priv->dig_port_map[port] = NULL;
 	mutex_unlock(&dev_priv->av_mutex);
 
@@ -581,26 +570,26 @@ void intel_init_audio_hooks(struct drm_i915_private *dev_priv)
 	}
 }
 
-static void i915_audio_component_get_power(struct device *dev)
+static void i915_audio_component_get_power(struct device *kdev)
 {
-	intel_display_power_get(dev_to_i915(dev), POWER_DOMAIN_AUDIO);
+	intel_display_power_get(kdev_to_i915(kdev), POWER_DOMAIN_AUDIO);
 }
 
-static void i915_audio_component_put_power(struct device *dev)
+static void i915_audio_component_put_power(struct device *kdev)
 {
-	intel_display_power_put(dev_to_i915(dev), POWER_DOMAIN_AUDIO);
+	intel_display_power_put(kdev_to_i915(kdev), POWER_DOMAIN_AUDIO);
 }
 
-static void i915_audio_component_codec_wake_override(struct device *dev,
+static void i915_audio_component_codec_wake_override(struct device *kdev,
 						     bool enable)
 {
-	struct drm_i915_private *dev_priv = dev_to_i915(dev);
+	struct drm_i915_private *dev_priv = kdev_to_i915(kdev);
 	u32 tmp;
 
 	if (!IS_SKYLAKE(dev_priv) && !IS_KABYLAKE(dev_priv))
 		return;
 
-	i915_audio_component_get_power(dev);
+	i915_audio_component_get_power(kdev);
 
 	/*
 	 * Enable/disable generating the codec wake signal, overriding the
@@ -618,13 +607,13 @@ static void i915_audio_component_codec_wake_override(struct device *dev,
 		usleep_range(1000, 1500);
 	}
 
-	i915_audio_component_put_power(dev);
+	i915_audio_component_put_power(kdev);
 }
 
 /* Get CDCLK in kHz  */
-static int i915_audio_component_get_cdclk_freq(struct device *dev)
+static int i915_audio_component_get_cdclk_freq(struct device *kdev)
 {
-	struct drm_i915_private *dev_priv = dev_to_i915(dev);
+	struct drm_i915_private *dev_priv = kdev_to_i915(kdev);
 
 	if (WARN_ON_ONCE(!HAS_DDI(dev_priv)))
 		return -ENODEV;
@@ -632,10 +621,10 @@ static int i915_audio_component_get_cdclk_freq(struct device *dev)
 	return dev_priv->cdclk_freq;
 }
 
-static int i915_audio_component_sync_audio_rate(struct device *dev,
+static int i915_audio_component_sync_audio_rate(struct device *kdev,
 						int port, int rate)
 {
-	struct drm_i915_private *dev_priv = dev_to_i915(dev);
+	struct drm_i915_private *dev_priv = kdev_to_i915(kdev);
 	struct intel_encoder *intel_encoder;
 	struct intel_crtc *crtc;
 	struct drm_display_mode *mode;
@@ -652,7 +641,7 @@ static int i915_audio_component_sync_audio_rate(struct device *dev,
 	    !IS_HASWELL(dev_priv))
 		return 0;
 
-	i915_audio_component_get_power(dev);
+	i915_audio_component_get_power(kdev);
 	mutex_lock(&dev_priv->av_mutex);
 	/* 1. get the pipe */
 	intel_encoder = dev_priv->dig_port_map[port];
@@ -703,17 +692,16 @@ static int i915_audio_component_sync_audio_rate(struct device *dev,
 
  unlock:
 	mutex_unlock(&dev_priv->av_mutex);
-	i915_audio_component_put_power(dev);
+	i915_audio_component_put_power(kdev);
 	return err;
 }
 
-static int i915_audio_component_get_eld(struct device *dev, int port,
+static int i915_audio_component_get_eld(struct device *kdev, int port,
 					bool *enabled,
 					unsigned char *buf, int max_bytes)
 {
-	struct drm_i915_private *dev_priv = dev_to_i915(dev);
+	struct drm_i915_private *dev_priv = kdev_to_i915(kdev);
 	struct intel_encoder *intel_encoder;
-	struct intel_digital_port *intel_dig_port;
 	const u8 *eld;
 	int ret = -EINVAL;
 
@@ -722,10 +710,9 @@ static int i915_audio_component_get_eld(struct device *dev, int port,
 	/* intel_encoder might be NULL for DP MST */
 	if (intel_encoder) {
 		ret = 0;
-		intel_dig_port = enc_to_dig_port(&intel_encoder->base);
-		*enabled = intel_dig_port->audio_connector != NULL;
+		*enabled = intel_encoder->audio_connector != NULL;
 		if (*enabled) {
-			eld = intel_dig_port->audio_connector->eld;
+			eld = intel_encoder->audio_connector->eld;
 			ret = drm_eld_size(eld);
 			memcpy(buf, eld, min(max_bytes, ret));
 		}
@@ -745,11 +732,11 @@ static const struct i915_audio_component_ops i915_audio_component_ops = {
 	.get_eld	= i915_audio_component_get_eld,
 };
 
-static int i915_audio_component_bind(struct device *i915_dev,
-				     struct device *hda_dev, void *data)
+static int i915_audio_component_bind(struct device *i915_kdev,
+				     struct device *hda_kdev, void *data)
 {
 	struct i915_audio_component *acomp = data;
-	struct drm_i915_private *dev_priv = dev_to_i915(i915_dev);
+	struct drm_i915_private *dev_priv = kdev_to_i915(i915_kdev);
 	int i;
 
 	if (WARN_ON(acomp->ops || acomp->dev))
@@ -757,7 +744,7 @@ static int i915_audio_component_bind(struct device *i915_dev,
 
 	drm_modeset_lock_all(&dev_priv->drm);
 	acomp->ops = &i915_audio_component_ops;
-	acomp->dev = i915_dev;
+	acomp->dev = i915_kdev;
 	BUILD_BUG_ON(MAX_PORTS != I915_MAX_PORTS);
 	for (i = 0; i < ARRAY_SIZE(acomp->aud_sample_rate); i++)
 		acomp->aud_sample_rate[i] = 0;
@@ -767,11 +754,11 @@ static int i915_audio_component_bind(struct device *i915_dev,
 	return 0;
 }
 
-static void i915_audio_component_unbind(struct device *i915_dev,
-					struct device *hda_dev, void *data)
+static void i915_audio_component_unbind(struct device *i915_kdev,
+					struct device *hda_kdev, void *data)
 {
 	struct i915_audio_component *acomp = data;
-	struct drm_i915_private *dev_priv = dev_to_i915(i915_dev);
+	struct drm_i915_private *dev_priv = kdev_to_i915(i915_kdev);
 
 	drm_modeset_lock_all(&dev_priv->drm);
 	acomp->ops = NULL;
