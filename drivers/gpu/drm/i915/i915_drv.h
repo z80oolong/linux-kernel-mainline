@@ -70,7 +70,7 @@
 
 #define DRIVER_NAME		"i915"
 #define DRIVER_DESC		"Intel Graphics"
-#define DRIVER_DATE		"20160919"
+#define DRIVER_DATE		"20161010"
 
 #undef WARN_ON
 /* Many gcc seem to no see through this and fall over :( */
@@ -185,6 +185,7 @@ enum plane {
 #define sprite_name(p, s) ((p) * INTEL_INFO(dev)->num_sprites[(p)] + (s) + 'A')
 
 enum port {
+	PORT_NONE = -1,
 	PORT_A = 0,
 	PORT_B,
 	PORT_C,
@@ -581,13 +582,25 @@ struct intel_uncore_funcs {
 				uint32_t val, bool trace);
 };
 
+struct intel_forcewake_range {
+	u32 start;
+	u32 end;
+
+	enum forcewake_domains domains;
+};
+
 struct intel_uncore {
 	spinlock_t lock; /** lock is also taken in irq contexts. */
+
+	const struct intel_forcewake_range *fw_domains_table;
+	unsigned int fw_domains_table_entries;
 
 	struct intel_uncore_funcs funcs;
 
 	unsigned fifo_count;
+
 	enum forcewake_domains fw_domains;
+	enum forcewake_domains fw_domains_active;
 
 	struct intel_uncore_forcewake_domain {
 		struct drm_i915_private *i915;
@@ -633,54 +646,53 @@ struct intel_csr {
 	uint32_t allowed_dc_mask;
 };
 
-#define DEV_INFO_FOR_EACH_FLAG(func, sep) \
-	func(is_mobile) sep \
-	func(is_i85x) sep \
-	func(is_i915g) sep \
-	func(is_i945gm) sep \
-	func(is_g33) sep \
-	func(hws_needs_physical) sep \
-	func(is_g4x) sep \
-	func(is_pineview) sep \
-	func(is_broadwater) sep \
-	func(is_crestline) sep \
-	func(is_ivybridge) sep \
-	func(is_valleyview) sep \
-	func(is_cherryview) sep \
-	func(is_haswell) sep \
-	func(is_broadwell) sep \
-	func(is_skylake) sep \
-	func(is_broxton) sep \
-	func(is_kabylake) sep \
-	func(is_preliminary) sep \
-	func(has_fbc) sep \
-	func(has_psr) sep \
-	func(has_runtime_pm) sep \
-	func(has_csr) sep \
-	func(has_resource_streamer) sep \
-	func(has_rc6) sep \
-	func(has_rc6p) sep \
-	func(has_dp_mst) sep \
-	func(has_gmbus_irq) sep \
-	func(has_hw_contexts) sep \
-	func(has_logical_ring_contexts) sep \
-	func(has_l3_dpf) sep \
-	func(has_gmch_display) sep \
-	func(has_guc) sep \
-	func(has_pipe_cxsr) sep \
-	func(has_hotplug) sep \
-	func(cursor_needs_physical) sep \
-	func(has_overlay) sep \
-	func(overlay_needs_physical) sep \
-	func(supports_tv) sep \
-	func(has_llc) sep \
-	func(has_snoop) sep \
-	func(has_ddi) sep \
-	func(has_fpga_dbg) sep \
-	func(has_pooled_eu)
-
-#define DEFINE_FLAG(name) u8 name:1
-#define SEP_SEMICOLON ;
+#define DEV_INFO_FOR_EACH_FLAG(func) \
+	/* Keep is_* in chronological order */ \
+	func(is_mobile); \
+	func(is_i85x); \
+	func(is_i915g); \
+	func(is_i945gm); \
+	func(is_g33); \
+	func(is_g4x); \
+	func(is_pineview); \
+	func(is_broadwater); \
+	func(is_crestline); \
+	func(is_ivybridge); \
+	func(is_valleyview); \
+	func(is_cherryview); \
+	func(is_haswell); \
+	func(is_broadwell); \
+	func(is_skylake); \
+	func(is_broxton); \
+	func(is_kabylake); \
+	func(is_preliminary); \
+	/* Keep has_* in alphabetical order */ \
+	func(has_csr); \
+	func(has_ddi); \
+	func(has_dp_mst); \
+	func(has_fbc); \
+	func(has_fpga_dbg); \
+	func(has_gmbus_irq); \
+	func(has_gmch_display); \
+	func(has_guc); \
+	func(has_hotplug); \
+	func(has_hw_contexts); \
+	func(has_l3_dpf); \
+	func(has_llc); \
+	func(has_logical_ring_contexts); \
+	func(has_overlay); \
+	func(has_pipe_cxsr); \
+	func(has_pooled_eu); \
+	func(has_psr); \
+	func(has_rc6); \
+	func(has_rc6p); \
+	func(has_resource_streamer); \
+	func(has_runtime_pm); \
+	func(has_snoop); \
+	func(cursor_needs_physical); \
+	func(hws_needs_physical); \
+	func(overlay_needs_physical); \
+	func(supports_tv)
 
 struct sseu_dev_info {
 	u8 slice_mask;
@@ -709,7 +721,9 @@ struct intel_device_info {
 	u16 gen_mask;
 	u8 ring_mask; /* Rings supported by the HW */
 	u8 num_rings;
-	DEV_INFO_FOR_EACH_FLAG(DEFINE_FLAG, SEP_SEMICOLON);
+#define DEFINE_FLAG(name) u8 name:1
+	DEV_INFO_FOR_EACH_FLAG(DEFINE_FLAG);
+#undef DEFINE_FLAG
 	u16 ddb_size; /* in blocks */
 	/* Register offsets for the various display pipes and transcoders */
 	int pipe_offsets[I915_MAX_TRANSCODERS];
@@ -726,14 +740,13 @@ struct intel_device_info {
 	} color;
 };
 
-#undef DEFINE_FLAG
-#undef SEP_SEMICOLON
-
 struct intel_display_error_state;
 
 struct drm_i915_error_state {
 	struct kref ref;
 	struct timeval time;
+
+	struct drm_i915_private *i915;
 
 	char error_msg[128];
 	bool simulated;
@@ -759,7 +772,7 @@ struct drm_i915_error_state {
 	u32 gam_ecochk;
 	u32 gab_ctl;
 	u32 gfx_mode;
-	u32 extra_instdone[I915_NUM_INSTDONE_REG];
+
 	u64 fence[I915_MAX_NUM_FENCES];
 	struct intel_overlay_error_state *overlay;
 	struct intel_display_error_state *display;
@@ -774,6 +787,9 @@ struct drm_i915_error_state {
 		enum intel_engine_hangcheck_action hangcheck_action;
 		struct i915_address_space *vm;
 		int num_requests;
+
+		/* position of active request inside the ring */
+		u32 rq_head, rq_post, rq_tail;
 
 		/* our own tracking of ring head and tail */
 		u32 cpu_ring_head;
@@ -791,7 +807,6 @@ struct drm_i915_error_state {
 		u32 hws;
 		u32 ipeir;
 		u32 ipehr;
-		u32 instdone;
 		u32 bbstate;
 		u32 instpm;
 		u32 instps;
@@ -802,11 +817,13 @@ struct drm_i915_error_state {
 		u64 faddr;
 		u32 rc_psmi; /* sleep state */
 		u32 semaphore_mboxes[I915_NUM_ENGINES - 1];
+		struct intel_instdone instdone;
 
 		struct drm_i915_error_object {
-			int page_count;
 			u64 gtt_offset;
 			u64 gtt_size;
+			int page_count;
+			int unused;
 			u32 *pages[0];
 		} *ringbuffer, *batchbuffer, *wa_batchbuffer, *ctx, *hws_page;
 
@@ -971,6 +988,9 @@ struct intel_fbc {
 
 	bool enabled;
 	bool active;
+
+	bool underrun_detected;
+	struct work_struct underrun_work;
 
 	struct intel_fbc_state_cache {
 		struct {
@@ -2079,7 +2099,8 @@ struct drm_i915_private {
 	/* perform PHY state sanity checks? */
 	bool chv_phy_assert[2];
 
-	struct intel_encoder *dig_port_map[I915_MAX_PORTS];
+	/* Used to save the pipe-to-encoder mapping for audio */
+	struct intel_encoder *av_enc_map[I915_MAX_PIPES];
 
 	/*
 	 * NOTE: This is the dri1/ums dungeon, don't add stuff here. Your patch
@@ -2883,6 +2904,11 @@ __i915_printk(struct drm_i915_private *dev_priv, const char *level,
 extern long i915_compat_ioctl(struct file *filp, unsigned int cmd,
 			      unsigned long arg);
 #endif
+extern const struct dev_pm_ops i915_pm_ops;
+
+extern int i915_driver_load(struct pci_dev *pdev,
+			    const struct pci_device_id *ent);
+extern void i915_driver_unload(struct drm_device *dev);
 extern int intel_gpu_reset(struct drm_i915_private *dev_priv, u32 engine_mask);
 extern bool intel_has_gpu_reset(struct drm_i915_private *dev_priv);
 extern void i915_reset(struct drm_i915_private *dev_priv);
@@ -3521,6 +3547,8 @@ static inline void intel_display_crc_init(struct drm_i915_private *dev_priv) {}
 #endif
 
 /* i915_gpu_error.c */
+#if IS_ENABLED(CONFIG_DRM_I915_CAPTURE_ERROR)
+
 __printf(2, 3)
 void i915_error_printf(struct drm_i915_error_state_buf *e, const char *f, ...);
 int i915_error_state_to_str(struct drm_i915_error_state_buf *estr,
@@ -3541,7 +3569,20 @@ void i915_error_state_get(struct drm_device *dev,
 void i915_error_state_put(struct i915_error_state_file_priv *error_priv);
 void i915_destroy_error_state(struct drm_device *dev);
 
-void i915_get_extra_instdone(struct drm_i915_private *dev_priv, uint32_t *instdone);
+#else
+
+static inline void i915_capture_error_state(struct drm_i915_private *dev_priv,
+					    u32 engine_mask,
+					    const char *error_msg)
+{
+}
+
+static inline void i915_destroy_error_state(struct drm_device *dev)
+{
+}
+
+#endif
+
 const char *i915_cache_level_str(struct drm_i915_private *i915, int type);
 
 /* i915_cmd_parser.c */
