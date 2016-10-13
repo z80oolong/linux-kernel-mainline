@@ -1813,8 +1813,7 @@ int i915_gem_fault(struct vm_area_struct *area, struct vm_fault *vmf)
 		view.params.partial.offset = rounddown(page_offset, chunk_size);
 		view.params.partial.size =
 			min_t(unsigned int, chunk_size,
-			      (area->vm_end - area->vm_start) / PAGE_SIZE -
-			      view.params.partial.offset);
+			      vma_pages(area) - view.params.partial.offset);
 
 		/* If the partial covers the entire object, just create a
 		 * normal VMA.
@@ -2208,6 +2207,15 @@ i915_gem_object_put_pages(struct drm_i915_gem_object *obj)
 	return 0;
 }
 
+static unsigned long swiotlb_max_size(void)
+{
+#if IS_ENABLED(CONFIG_SWIOTLB)
+	return rounddown(swiotlb_nr_tbl() << IO_TLB_SHIFT, PAGE_SIZE);
+#else
+	return 0;
+#endif
+}
+
 static int
 i915_gem_object_get_pages_gtt(struct drm_i915_gem_object *obj)
 {
@@ -2219,6 +2227,7 @@ i915_gem_object_get_pages_gtt(struct drm_i915_gem_object *obj)
 	struct sgt_iter sgt_iter;
 	struct page *page;
 	unsigned long last_pfn = 0;	/* suppress gcc warning */
+	unsigned long max_segment;
 	int ret;
 	gfp_t gfp;
 
@@ -2228,6 +2237,10 @@ i915_gem_object_get_pages_gtt(struct drm_i915_gem_object *obj)
 	 */
 	BUG_ON(obj->base.read_domains & I915_GEM_GPU_DOMAINS);
 	BUG_ON(obj->base.write_domain & I915_GEM_GPU_DOMAINS);
+
+	max_segment = swiotlb_max_size();
+	if (!max_segment)
+		max_segment = obj->base.size;
 
 	st = kmalloc(sizeof(*st), GFP_KERNEL);
 	if (st == NULL)
@@ -2264,22 +2277,15 @@ i915_gem_object_get_pages_gtt(struct drm_i915_gem_object *obj)
 			 * our own buffer, now let the real VM do its job and
 			 * go down in flames if truly OOM.
 			 */
-			i915_gem_shrink_all(dev_priv);
 			page = shmem_read_mapping_page(mapping, i);
 			if (IS_ERR(page)) {
 				ret = PTR_ERR(page);
 				goto err_pages;
 			}
 		}
-#ifdef CONFIG_SWIOTLB
-		if (swiotlb_nr_tbl()) {
-			st->nents++;
-			sg_set_page(sg, page, PAGE_SIZE, 0);
-			sg = sg_next(sg);
-			continue;
-		}
-#endif
-		if (!i || page_to_pfn(page) != last_pfn + 1) {
+		if (!i ||
+		    sg->length >= max_segment ||
+		    page_to_pfn(page) != last_pfn + 1) {
 			if (i)
 				sg = sg_next(sg);
 			st->nents++;
@@ -2292,9 +2298,7 @@ i915_gem_object_get_pages_gtt(struct drm_i915_gem_object *obj)
 		/* Check that the i965g/gm workaround works. */
 		WARN_ON((gfp & __GFP_DMA32) && (last_pfn >= 0x00100000UL));
 	}
-#ifdef CONFIG_SWIOTLB
-	if (!swiotlb_nr_tbl())
-#endif
+	if (sg) /* loop terminated early; short sg table */
 		sg_mark_end(sg);
 	obj->pages = st;
 
@@ -2581,8 +2585,6 @@ static void i915_gem_reset_engine(struct intel_engine_cs *engine)
 	struct i915_gem_context *incomplete_ctx;
 	bool ring_hung;
 
-	/* Ensure irq handler finishes, and not run again. */
-	tasklet_kill(&engine->irq_tasklet);
 	if (engine->irq_seqno_barrier)
 		engine->irq_seqno_barrier(engine);
 
@@ -2591,6 +2593,9 @@ static void i915_gem_reset_engine(struct intel_engine_cs *engine)
 		return;
 
 	ring_hung = engine->hangcheck.score >= HANGCHECK_SCORE_RING_HUNG;
+	if (engine->hangcheck.seqno != intel_engine_get_seqno(engine))
+		ring_hung = false;
+
 	i915_set_reset_status(request->ctx, ring_hung);
 	if (!ring_hung)
 		return;
@@ -3095,6 +3100,9 @@ search_free:
 
 			goto err_unpin;
 		}
+
+		GEM_BUG_ON(vma->node.start < start);
+		GEM_BUG_ON(vma->node.start + vma->node.size > end);
 	}
 	GEM_BUG_ON(!i915_gem_valid_gtt_space(vma, obj->cache_level));
 
@@ -3793,7 +3801,8 @@ i915_gem_object_ggtt_pin(struct drm_i915_gem_object *obj,
 			 u64 alignment,
 			 u64 flags)
 {
-	struct i915_address_space *vm = &to_i915(obj->base.dev)->ggtt.base;
+	struct drm_i915_private *dev_priv = to_i915(obj->base.dev);
+	struct i915_address_space *vm = &dev_priv->ggtt.base;
 	struct i915_vma *vma;
 	int ret;
 
@@ -3805,6 +3814,41 @@ i915_gem_object_ggtt_pin(struct drm_i915_gem_object *obj,
 		if (flags & PIN_NONBLOCK &&
 		    (i915_vma_is_pinned(vma) || i915_vma_is_active(vma)))
 			return ERR_PTR(-ENOSPC);
+
+		if (flags & PIN_MAPPABLE) {
+			u32 fence_size;
+
+			fence_size = i915_gem_get_ggtt_size(dev_priv, vma->size,
+							    i915_gem_object_get_tiling(obj));
+			/* If the required space is larger than the available
+			 * aperture, we will not able to find a slot for the
+			 * object and unbinding the object now will be in
+			 * vain. Worse, doing so may cause us to ping-pong
+			 * the object in and out of the Global GTT and
+			 * waste a lot of cycles under the mutex.
+			 */
+			if (fence_size > dev_priv->ggtt.mappable_end)
+				return ERR_PTR(-E2BIG);
+
+			/* If NONBLOCK is set the caller is optimistically
+			 * trying to cache the full object within the mappable
+			 * aperture, and *must* have a fallback in place for
+			 * situations where we cannot bind the object. We
+			 * can be a little more lax here and use the fallback
+			 * more often to avoid costly migrations of ourselves
+			 * and other objects within the aperture.
+			 *
+			 * Half-the-aperture is used as a simple heuristic.
+			 * More interesting would to do search for a free
+			 * block prior to making the commitment to unbind.
+			 * That caters for the self-harm case, and with a
+			 * little more heuristics (e.g. NOFAULT, NOEVICT)
+			 * we could try to minimise harm to others.
+			 */
+			if (flags & PIN_NONBLOCK &&
+			    fence_size > dev_priv->ggtt.mappable_end / 2)
+				return ERR_PTR(-ENOSPC);
+		}
 
 		WARN(i915_vma_is_pinned(vma),
 		     "bo is already pinned in ggtt with incorrect alignment:"
@@ -4267,6 +4311,30 @@ int i915_gem_suspend(struct drm_device *dev)
 	 * reset the GPU back to its idle, low power state.
 	 */
 	WARN_ON(dev_priv->gt.awake);
+
+	/*
+	 * Neither the BIOS, ourselves or any other kernel
+	 * expects the system to be in execlists mode on startup,
+	 * so we need to reset the GPU back to legacy mode. And the only
+	 * known way to disable logical contexts is through a GPU reset.
+	 *
+	 * So in order to leave the system in a known default configuration,
+	 * always reset the GPU upon unload and suspend. Afterwards we then
+	 * clean up the GEM state tracking, flushing off the requests and
+	 * leaving the system in a known idle state.
+	 *
+	 * Note that is of the upmost importance that the GPU is idle and
+	 * all stray writes are flushed *before* we dismantle the backing
+	 * storage for the pinned objects.
+	 *
+	 * However, since we are uncertain that resetting the GPU on older
+	 * machines is a good idea, we don't - just in case it leaves the
+	 * machine in an unusable condition.
+	 */
+	if (HAS_HW_CONTEXTS(dev)) {
+		int reset = intel_gpu_reset(dev_priv, ALL_ENGINES);
+		WARN_ON(reset && reset != -ENODEV);
+	}
 
 	return 0;
 

@@ -532,32 +532,6 @@ static const struct vga_switcheroo_client_ops i915_switcheroo_ops = {
 
 static void i915_gem_fini(struct drm_device *dev)
 {
-	struct drm_i915_private *dev_priv = to_i915(dev);
-
-	/*
-	 * Neither the BIOS, ourselves or any other kernel
-	 * expects the system to be in execlists mode on startup,
-	 * so we need to reset the GPU back to legacy mode. And the only
-	 * known way to disable logical contexts is through a GPU reset.
-	 *
-	 * So in order to leave the system in a known default configuration,
-	 * always reset the GPU upon unload. Afterwards we then clean up the
-	 * GEM state tracking, flushing off the requests and leaving the
-	 * system in a known idle state.
-	 *
-	 * Note that is of the upmost importance that the GPU is idle and
-	 * all stray writes are flushed *before* we dismantle the backing
-	 * storage for the pinned objects.
-	 *
-	 * However, since we are uncertain that reseting the GPU on older
-	 * machines is a good idea, we don't - just in case it leaves the
-	 * machine in an unusable condition.
-	 */
-	if (HAS_HW_CONTEXTS(dev)) {
-		int reset = intel_gpu_reset(dev_priv, ALL_ENGINES);
-		WARN_ON(reset && reset != -ENODEV);
-	}
-
 	mutex_lock(&dev->struct_mutex);
 	i915_gem_cleanup_engines(dev);
 	i915_gem_context_fini(dev);
@@ -636,6 +610,8 @@ static int i915_load_modeset_init(struct drm_device *dev)
 	return 0;
 
 cleanup_gem:
+	if (i915_gem_suspend(dev))
+		DRM_ERROR("failed to idle hardware; continuing to unload!\n");
 	i915_gem_fini(dev);
 cleanup_irq:
 	intel_guc_fini(dev);
@@ -771,6 +747,19 @@ static void i915_workqueues_cleanup(struct drm_i915_private *dev_priv)
 	destroy_workqueue(dev_priv->wq);
 }
 
+/*
+ * We don't keep the workarounds for pre-production hardware, so we expect our
+ * driver to fail on these machines in one way or another. A little warning on
+ * dmesg may help both the user and the bug triagers.
+ */
+static void intel_detect_preproduction_hw(struct drm_i915_private *dev_priv)
+{
+	if (IS_HSW_EARLY_SDV(dev_priv) ||
+	    IS_SKL_REVID(dev_priv, 0, SKL_REVID_F0))
+		DRM_ERROR("This is a pre-production stepping. "
+			  "It may not be fully functional.\n");
+}
+
 /**
  * i915_driver_init_early - setup state not requiring device access
  * @dev_priv: device private
@@ -838,13 +827,7 @@ static int i915_driver_init_early(struct drm_i915_private *dev_priv,
 
 	intel_device_info_dump(dev_priv);
 
-	/* Not all pre-production machines fall into this category, only the
-	 * very first ones. Almost everything should work, except for maybe
-	 * suspend/resume. And we don't implement workarounds that affect only
-	 * pre-production machines. */
-	if (IS_HSW_EARLY_SDV(dev_priv))
-		DRM_INFO("This is an early pre-production Haswell machine. "
-			 "It may not be fully functional.\n");
+	intel_detect_preproduction_hw(dev_priv);
 
 	return 0;
 
@@ -1721,6 +1704,21 @@ int i915_resume_switcheroo(struct drm_device *dev)
 	return i915_drm_resume(dev);
 }
 
+static void disable_engines_irq(struct drm_i915_private *dev_priv)
+{
+	struct intel_engine_cs *engine;
+
+	/* Ensure irq handler finishes, and not run again. */
+	disable_irq(dev_priv->drm.irq);
+	for_each_engine(engine, dev_priv)
+		tasklet_kill(&engine->irq_tasklet);
+}
+
+static void enable_engines_irq(struct drm_i915_private *dev_priv)
+{
+	enable_irq(dev_priv->drm.irq);
+}
+
 /**
  * i915_reset - reset chip after a hang
  * @dev: drm device to reset
@@ -1754,7 +1752,11 @@ void i915_reset(struct drm_i915_private *dev_priv)
 	error->reset_count++;
 
 	pr_notice("drm/i915: Resetting chip after gpu hang\n");
+
+	disable_engines_irq(dev_priv);
 	ret = intel_gpu_reset(dev_priv, ALL_ENGINES);
+	enable_engines_irq(dev_priv);
+
 	if (ret) {
 		if (ret != -ENODEV)
 			DRM_ERROR("Failed to reset chip: %i\n", ret);

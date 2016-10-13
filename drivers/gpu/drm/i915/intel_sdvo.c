@@ -307,7 +307,7 @@ static bool intel_sdvo_read_byte(struct intel_sdvo *intel_sdvo, u8 addr, u8 *ch)
 static const struct _sdvo_cmd_name {
 	u8 cmd;
 	const char *name;
-} sdvo_cmd_names[] = {
+} __attribute__ ((packed)) sdvo_cmd_names[] = {
 	SDVO_CMD_NAME_ENTRY(SDVO_CMD_RESET),
 	SDVO_CMD_NAME_ENTRY(SDVO_CMD_GET_DEVICE_CAPS),
 	SDVO_CMD_NAME_ENTRY(SDVO_CMD_GET_FIRMWARE_REV),
@@ -2981,6 +2981,7 @@ bool intel_sdvo_init(struct drm_device *dev,
 	/* encoder type will be decided later */
 	intel_encoder = &intel_sdvo->base;
 	intel_encoder->type = INTEL_OUTPUT_SDVO;
+	intel_encoder->port = port;
 	drm_encoder_init(dev, &intel_encoder->base, &intel_sdvo_enc_funcs, 0,
 			 "SDVO %c", port_name(port));
 

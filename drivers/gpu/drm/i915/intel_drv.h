@@ -206,6 +206,7 @@ struct intel_encoder {
 	struct drm_encoder base;
 
 	enum intel_output_type type;
+	enum port port;
 	unsigned int cloneable;
 	void (*hot_plug)(struct intel_encoder *);
 	bool (*compute_config)(struct intel_encoder *,
@@ -247,6 +248,8 @@ struct intel_encoder {
 	void (*suspend)(struct intel_encoder *);
 	int crtc_mask;
 	enum hpd_pin hpd_pin;
+	/* for communication with audio component; protected by av_mutex */
+	const struct drm_connector *audio_connector;
 };
 
 struct intel_panel {
@@ -796,22 +799,22 @@ struct intel_plane {
 };
 
 struct intel_watermark_params {
-	unsigned long fifo_size;
-	unsigned long max_wm;
-	unsigned long default_wm;
-	unsigned long guard_size;
-	unsigned long cacheline_size;
+	u16 fifo_size;
+	u16 max_wm;
+	u8 default_wm;
+	u8 guard_size;
+	u8 cacheline_size;
 };
 
 struct cxsr_latency {
-	int is_desktop;
-	int is_ddr3;
-	unsigned long fsb_freq;
-	unsigned long mem_freq;
-	unsigned long display_sr;
-	unsigned long display_hpll_disable;
-	unsigned long cursor_sr;
-	unsigned long cursor_hpll_disable;
+	u16 fsb_freq;
+	u16 mem_freq;
+	u16 display_sr;
+	u16 display_hpll_disable;
+	u16 cursor_sr;
+	u16 cursor_hpll_disable;
+	bool is_desktop : 1;
+	bool is_ddr3 : 1;
 };
 
 #define to_intel_atomic_state(x) container_of(x, struct intel_atomic_state, base)
@@ -959,8 +962,6 @@ struct intel_digital_port {
 	enum irqreturn (*hpd_pulse)(struct intel_digital_port *, bool);
 	bool release_cl2_override;
 	uint8_t max_lanes;
-	/* for communication with audio component; protected by av_mutex */
-	const struct drm_connector *audio_connector;
 };
 
 struct intel_dp_mst_encoder {
@@ -1487,6 +1488,10 @@ static inline void intel_fbdev_set_suspend(struct drm_device *dev, int state, bo
 {
 }
 
+static inline void intel_fbdev_output_poll_changed(struct drm_device *dev)
+{
+}
+
 static inline void intel_fbdev_restore_mode(struct drm_device *dev)
 {
 }
@@ -1513,6 +1518,7 @@ void intel_fbc_invalidate(struct drm_i915_private *dev_priv,
 void intel_fbc_flush(struct drm_i915_private *dev_priv,
 		     unsigned int frontbuffer_bits, enum fb_op_origin origin);
 void intel_fbc_cleanup_cfb(struct drm_i915_private *dev_priv);
+void intel_fbc_handle_fifo_underrun_irq(struct drm_i915_private *dev_priv);
 
 /* intel_hdmi.c */
 void intel_hdmi_init(struct drm_device *dev, i915_reg_t hdmi_reg, enum port port);
