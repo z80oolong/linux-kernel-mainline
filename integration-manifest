@@ -1,0 +1,20 @@
+origin/drm-intel-fixes c8d2bc9bc39ebea8437fd974fdbc21847bb897a3
+	Linux 4.8
+drm-upstream/drm-fixes 90fd68dcf9a763f7e575c8467415bd8a66d073f4
+	drm/udl: fix line iterator in damage handling
+origin/drm-intel-next-fixes 105f1a65b04a8f4f7abec11b200b1fb54f3d4b46
+	drm/i915: Fix conflict resolution from backmerge of v4.8-rc8 to drm-next
+origin/drm-intel-next-queued c13fb7789096596f7cd5a64b24dbb66116bfc519
+	drm/i915: Fix cxsr_latency_table reorg
+drm-upstream/drm-next 69405d3da98b48633b78a49403e4f9cdb7c6a0f5
+	Merge tag 'topic/drm-misc-2016-10-11' of git://anongit.freedesktop.org/drm-intel into drm-next
+sound-upstream/for-next fdd8218d7d1bd0ccb9a3f4c58bf77773691a56cc
+	ALSA: line6: fix a crash in line6_hwdep_write()
+sound-upstream/for-linus fdd8218d7d1bd0ccb9a3f4c58bf77773691a56cc
+	ALSA: line6: fix a crash in line6_hwdep_write()
+origin/topic/drm-fixes c6935931c1894ff857616ff8549b61236a19148f
+	Linux 4.8-rc5
+origin/topic/drm-misc f7741aa75e76440f4e9ecfe512feebe9bce33ca8
+	drm/savage: dereferencing an error pointer
+origin/topic/core-for-CI d0245f6bbeb63fcc07974be1ffbb8ba7b2e6ae13
+	locking/mutex: Prevent lock starvation when spinning is disabled
