@@ -138,11 +138,10 @@ static void intel_i2c_quirk_set(struct drm_i915_private *dev_priv, bool enable)
 static u32 get_reserved(struct intel_gmbus *bus)
 {
 	struct drm_i915_private *dev_priv = bus->dev_priv;
-	struct drm_device *dev = &dev_priv->drm;
 	u32 reserved = 0;
 
 	/* On most chips, these bits must be preserved in software. */
-	if (!IS_I830(dev) && !IS_845G(dev))
+	if (!IS_I830(dev_priv) && !IS_845G(dev_priv))
 		reserved = I915_READ_NOTRACE(bus->gpio_reg) &
 					     (GPIO_DATA_PULLUP_DISABLE |
 					      GPIO_CLOCK_PULLUP_DISABLE);
@@ -633,10 +632,10 @@ int intel_setup_gmbus(struct drm_device *dev)
 	unsigned int pin;
 	int ret;
 
-	if (HAS_PCH_NOP(dev))
+	if (HAS_PCH_NOP(dev_priv))
 		return 0;
 
-	if (IS_VALLEYVIEW(dev) || IS_CHERRYVIEW(dev))
+	if (IS_VALLEYVIEW(dev_priv) || IS_CHERRYVIEW(dev_priv))
 		dev_priv->gpio_mmio_base = VLV_DISPLAY_BASE;
 	else if (!HAS_GMCH_DISPLAY(dev_priv))
 		dev_priv->gpio_mmio_base =
@@ -674,7 +673,7 @@ int intel_setup_gmbus(struct drm_device *dev)
 		bus->reg0 = pin | GMBUS_RATE_100KHZ;
 
 		/* gmbus seems to be broken on i830 */
-		if (IS_I830(dev))
+		if (IS_I830(dev_priv))
 			bus->force_bit = 1;
 
 		intel_gpio_setup(bus, pin);
