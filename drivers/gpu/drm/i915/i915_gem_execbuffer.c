@@ -370,8 +370,7 @@ static void reloc_cache_fini(struct reloc_cache *cache)
 
 			ggtt->base.clear_range(&ggtt->base,
 					       cache->node.start,
-					       cache->node.size,
-					       true);
+					       cache->node.size);
 			drm_mm_remove_node(&cache->node);
 		} else {
 			i915_vma_unpin((struct i915_vma *)cache->node.mm);
@@ -429,7 +428,7 @@ static void *reloc_iomap(struct drm_i915_gem_object *obj,
 	}
 
 	if (cache->vaddr) {
-		io_mapping_unmap_atomic(unmask_page(cache->vaddr));
+		io_mapping_unmap_atomic((void __force __iomem *) unmask_page(cache->vaddr));
 	} else {
 		struct i915_vma *vma;
 		int ret;
@@ -474,7 +473,7 @@ static void *reloc_iomap(struct drm_i915_gem_object *obj,
 		offset += page << PAGE_SHIFT;
 	}
 
-	vaddr = io_mapping_map_atomic_wc(&cache->i915->ggtt.mappable, offset);
+	vaddr = (void __force *) io_mapping_map_atomic_wc(&cache->i915->ggtt.mappable, offset);
 	cache->page = page;
 	cache->vaddr = (unsigned long)vaddr;
 
@@ -572,7 +571,7 @@ i915_gem_execbuffer_relocate_entry(struct drm_i915_gem_object *obj,
 				   struct drm_i915_gem_relocation_entry *reloc,
 				   struct reloc_cache *cache)
 {
-	struct drm_device *dev = obj->base.dev;
+	struct drm_i915_private *dev_priv = to_i915(obj->base.dev);
 	struct drm_gem_object *target_obj;
 	struct drm_i915_gem_object *target_i915_obj;
 	struct i915_vma *target_vma;
@@ -591,7 +590,7 @@ i915_gem_execbuffer_relocate_entry(struct drm_i915_gem_object *obj,
 	/* Sandybridge PPGTT errata: We need a global gtt mapping for MI and
 	 * pipe_control writes because the gpu doesn't properly redirect them
 	 * through the ppgtt for non_secure batchbuffers. */
-	if (unlikely(IS_GEN6(dev) &&
+	if (unlikely(IS_GEN6(dev_priv) &&
 	    reloc->write_domain == I915_GEM_DOMAIN_INSTRUCTION)) {
 		ret = i915_vma_bind(target_vma, target_i915_obj->cache_level,
 				    PIN_GLOBAL);
@@ -1599,12 +1598,12 @@ eb_select_engine(struct drm_i915_private *dev_priv,
 			return NULL;
 		}
 
-		engine = &dev_priv->engine[_VCS(bsd_idx)];
+		engine = dev_priv->engine[_VCS(bsd_idx)];
 	} else {
-		engine = &dev_priv->engine[user_ring_map[user_ring_id]];
+		engine = dev_priv->engine[user_ring_map[user_ring_id]];
 	}
 
-	if (!intel_engine_initialized(engine)) {
+	if (!engine) {
 		DRM_DEBUG("execbuf with invalid ring: %u\n", user_ring_id);
 		return NULL;
 	}
