@@ -1,0 +1,20 @@
+origin/drm-intel-fixes bc9db5ad3253c8e17969bd802c47b73e63f125ab
+	drm/i915: Assume non-DP++ port if dvo_port is HDMI and there's no AUX ch specified in the VBT
+drm-upstream/drm-fixes e2384535a623ed51151d1bbed5263b9f8a87a74d
+	Merge branch 'topic-arcpgu-fixes' of https://github.com/foss-for-synopsys-dwc-arc-processors/linux into drm-fixes
+origin/drm-intel-next-fixes 105f1a65b04a8f4f7abec11b200b1fb54f3d4b46
+	drm/i915: Fix conflict resolution from backmerge of v4.8-rc8 to drm-next
+origin/drm-intel-next-queued 27745e829a5cb896249f355f5bdab3249c5455e2
+	drm/i915/execlists: Use a local lock for dfs_link access
+drm-upstream/drm-next 4473904ccd7fc27b7e9e575c36dc709617a3eb85
+	Merge tag 'sunxi-drm-for-4.10' of https://git.kernel.org/pub/scm/linux/kernel/git/mripard/linux into drm-next
+sound-upstream/for-next 43e575fabbaa1cc9e25dd0bb31eb6657ac7092ec
+	ALSA: core: Fix kernel-doc warnings
+sound-upstream/for-linus 6ff1a25318ebf688ef9593fe09cd449f6fb4ad31
+	ALSA: usb-audio: Fix use-after-free of usb_device at disconnect
+origin/topic/drm-fixes c6935931c1894ff857616ff8549b61236a19148f
+	Linux 4.8-rc5
+origin/topic/drm-misc beaf5af48034c9e2ebb8b2b1fb12dc4d8aeba99e
+	drm/fence: add out-fences support
+origin/topic/core-for-CI 15bdcbcc55853f70237aca4baa4152f8396799d4
+	kbuild: Disable PIE by default
