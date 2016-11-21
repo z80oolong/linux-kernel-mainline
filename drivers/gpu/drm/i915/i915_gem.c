@@ -2622,33 +2622,46 @@ err_unlock:
 
 static bool i915_context_is_banned(const struct i915_gem_context *ctx)
 {
-	unsigned long elapsed;
-
-	if (ctx->hang_stats.banned)
+	if (ctx->banned)
 		return true;
 
-	elapsed = get_seconds() - ctx->hang_stats.guilty_ts;
-	if (ctx->hang_stats.ban_period_seconds &&
-	    elapsed <= ctx->hang_stats.ban_period_seconds) {
-		DRM_DEBUG("context hanging too fast, banning!\n");
+	if (!ctx->bannable)
+		return false;
+
+	if (ctx->ban_score >= CONTEXT_SCORE_BAN_THRESHOLD) {
+		DRM_DEBUG("context hanging too often, banning!\n");
 		return true;
 	}
 
 	return false;
 }
 
-static void i915_set_reset_status(struct i915_gem_context *ctx,
-				  const bool guilty)
+static void i915_gem_context_mark_guilty(struct i915_gem_context *ctx)
 {
-	struct i915_ctx_hang_stats *hs = &ctx->hang_stats;
+	ctx->ban_score += CONTEXT_SCORE_GUILTY;
 
-	if (guilty) {
-		hs->banned = i915_context_is_banned(ctx);
-		hs->batch_active++;
-		hs->guilty_ts = get_seconds();
-	} else {
-		hs->batch_pending++;
+	ctx->banned = i915_context_is_banned(ctx);
+	ctx->guilty_count++;
+
+	DRM_DEBUG_DRIVER("context %s marked guilty (score %d) banned? %s\n",
+			 ctx->name, ctx->ban_score,
+			 yesno(ctx->banned));
+
+	if (!ctx->file_priv)
+		return;
+
+	if (ctx->banned) {
+		ctx->file_priv->context_bans++;
+
+		DRM_DEBUG_DRIVER("client %s has has %d context banned\n",
+				 ctx->name,
+				 ctx->file_priv->context_bans);
 	}
+}
+
+static void i915_gem_context_mark_innocent(struct i915_gem_context *ctx)
+{
+	ctx->active_count++;
 }
 
 struct drm_i915_gem_request *
@@ -2705,11 +2718,19 @@ static void i915_gem_reset_engine(struct intel_engine_cs *engine)
 	if (!request)
 		return;
 
-	ring_hung = engine->hangcheck.score >= HANGCHECK_SCORE_RING_HUNG;
-	if (engine->hangcheck.seqno != intel_engine_get_seqno(engine))
+	ring_hung = engine->hangcheck.stalled;
+	if (engine->hangcheck.seqno != intel_engine_get_seqno(engine)) {
+		DRM_DEBUG_DRIVER("%s pardoned, was guilty? %s\n",
+				 engine->name,
+				 yesno(ring_hung));
 		ring_hung = false;
+	}
 
-	i915_set_reset_status(request->ctx, ring_hung);
+	if (ring_hung)
+		i915_gem_context_mark_guilty(request->ctx);
+	else
+		i915_gem_context_mark_innocent(request->ctx);
+
 	if (!ring_hung)
 		return;
 

@@ -416,6 +416,15 @@ struct drm_i915_file_private {
 	} rps;
 
 	unsigned int bsd_engine;
+
+/* Client can have a maximum of 3 contexts banned before
+ * it is denied of creating new contexts. As one context
+ * ban needs 4 consecutive hangs, and more if there is
+ * progress in between, this is a last resort stop gap measure
+ * to limit the badly behaving clients access to gpu.
+ */
+#define I915_MAX_CLIENT_CONTEXT_BANS 3
+	int context_bans;
 };
 
 /* Used by dp and fdi links */
@@ -800,7 +809,8 @@ struct drm_i915_error_state {
 		/* Software tracked state */
 		bool waiting;
 		int num_waiters;
-		int hangcheck_score;
+		unsigned long hangcheck_timestamp;
+		bool hangcheck_stalled;
 		enum intel_engine_hangcheck_action hangcheck_action;
 		struct i915_address_space *vm;
 		int num_requests;
@@ -849,6 +859,7 @@ struct drm_i915_error_state {
 			long jiffies;
 			pid_t pid;
 			u32 context;
+			int ban_score;
 			u32 seqno;
 			u32 head;
 			u32 tail;
@@ -870,6 +881,7 @@ struct drm_i915_error_state {
 
 		pid_t pid;
 		char comm[TASK_COMM_LEN];
+		int context_bans;
 	} engine[I915_NUM_ENGINES];
 
 	struct drm_i915_error_buffer {
@@ -901,26 +913,6 @@ enum i915_cache_level {
 	I915_CACHE_WT, /* hsw:gt3e WriteThrough for scanouts */
 };
 
-struct i915_ctx_hang_stats {
-	/* This context had batch pending when hang was declared */
-	unsigned batch_pending;
-
-	/* This context had batch active when hang was declared */
-	unsigned batch_active;
-
-	/* Time when this context was last blamed for a GPU reset */
-	unsigned long guilty_ts;
-
-	/* If the contexts causes a second GPU hang within this time,
-	 * it is permanently banned from submitting any more work.
-	 */
-	unsigned long ban_period_seconds;
-
-	/* This context is banned to submit more work */
-	bool banned;
-};
-
-/* This must match up with the value previously used for execbuf2.rsvd1. */
 #define DEFAULT_CONTEXT_HANDLE 0
 
 /**
@@ -950,8 +942,6 @@ struct i915_gem_context {
 	struct pid *pid;
 	const char *name;
 
-	struct i915_ctx_hang_stats hang_stats;
-
 	unsigned long flags;
 #define CONTEXT_NO_ZEROMAP		BIT(0)
 #define CONTEXT_NO_ERROR_CAPTURE	BIT(1)
@@ -980,6 +970,16 @@ struct i915_gem_context {
 
 	u8 remap_slice;
 	bool closed:1;
+	bool bannable:1;
+	bool banned:1;
+
+	unsigned int guilty_count; /* guilty of a hang */
+	unsigned int active_count; /* active during hang */
+
+#define CONTEXT_SCORE_GUILTY		10
+#define CONTEXT_SCORE_BAN_THRESHOLD	40
+	/* Accumulated score of hangs caused by this context */
+	int ban_score;
 };
 
 enum fb_op_origin {
@@ -1446,12 +1446,13 @@ struct i915_error_state_file_priv {
 #define I915_RESET_TIMEOUT (10 * HZ) /* 10s */
 #define I915_FENCE_TIMEOUT (10 * HZ) /* 10s */
 
+#define I915_ENGINE_DEAD_TIMEOUT  (4 * HZ)  /* Seqno, head and subunits dead */
+#define I915_SEQNO_DEAD_TIMEOUT   (12 * HZ) /* Seqno dead with active head */
+
 struct i915_gpu_error {
 	/* For hangcheck timer */
 #define DRM_I915_HANGCHECK_PERIOD 1500 /* in ms */
 #define DRM_I915_HANGCHECK_JIFFIES msecs_to_jiffies(DRM_I915_HANGCHECK_PERIOD)
-	/* Hang gpu twice in this window and your context gets banned */
-#define DRM_I915_CTX_BAN_PERIOD DIV_ROUND_UP(8*DRM_I915_HANGCHECK_PERIOD, 1000)
 
 	struct delayed_work hangcheck_work;
 
