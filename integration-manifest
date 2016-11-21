@@ -1,0 +1,20 @@
+origin/drm-intel-fixes 9c763584b7c8911106bb77af7e648bef09af9d80
+	Linux 4.9-rc6
+drm-upstream/drm-fixes c2ee69d83b2b14d68ad7ee1773fc1d40e97f201d
+	Merge tag 'drm-intel-fixes-2016-11-17' of ssh://git.freedesktop.org/git/drm-intel into drm-fixes
+origin/drm-intel-next-fixes e9cbc4bd0140e1d4e0172e2fe8fe07ba278e5980
+	drm/i915: Update DRIVER_DATE to 20161121
+origin/drm-intel-next-queued bc1d53c64773e89175766e8c77cc96aa0763de4a
+	drm/i915: Wipe hang stats as an embedded struct
+drm-upstream/drm-next b7c0e47d98249c2ddf21ea197b651093c6aaee00
+	Merge tag 'drm-vc4-next-2016-11-16' of https://github.com/anholt/linux into drm-next
+sound-upstream/for-next 2e57069c869f3009ae70a429d6719a545de43522
+	ALSA: bebob: compare whole string for model name so that readers are not confused
+sound-upstream/for-linus 6ff1a25318ebf688ef9593fe09cd449f6fb4ad31
+	ALSA: usb-audio: Fix use-after-free of usb_device at disconnect
+origin/topic/drm-fixes c6935931c1894ff857616ff8549b61236a19148f
+	Linux 4.8-rc5
+origin/topic/drm-misc 8c0b55e22aff84cb6938a993d86c3ce02006236e
+	drm/atomic: cleanup debugfs entries on un-registering the driver.
+origin/topic/core-for-CI 15bdcbcc55853f70237aca4baa4152f8396799d4
+	kbuild: Disable PIE by default
