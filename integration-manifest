@@ -1,0 +1,22 @@
+drm-intel drm-intel-fixes 3e5de27e940d00d8d504dfb96625fb654f641509
+	Linux 4.9-rc8
+drm-upstream drm-fixes ab7cd8d83e5dba13027de66f1b008b08b30b71a4
+	Merge tag 'drm-intel-fixes-2016-12-01' of git://anongit.freedesktop.org/git/drm-intel into drm-fixes
+drm-intel drm-intel-next-fixes 7a9e10253e9e52451bbe80ddb2874368dbd240a3
+	drm/i915: Move priority bumping for flips earlier
+drm-intel drm-intel-next-queued 4cfa20c8345f04f0aa3ab5e33aa4487bbbcd8d9e
+	drm/i915: allow GEM_BUG_ON expr checking with !DEBUG_GEM
+drm-upstream drm-next f03ee46be9401e3434f52bb15e92d1e640f76438
+	Backmerge tag 'v4.9-rc8' into drm-next
+sound-upstream for-next 4763601a56f155ddf94ef35fc2c41504a2de15f5
+	ALSA: usb-audio: Fix bogus error return in snd_usb_create_stream()
+sound-upstream for-linus 16200948d8353fe29a473a394d7d26790deae0e7
+	ALSA: usb-audio: Fix race at stopping the stream
+drm-intel topic/core-for-CI 166d729b45d95570a75bc01a22c6b4c478ad79aa
+	mm/vmalloc: Replace opencoded 4-level page walkers
+drm-misc drm-misc-next 16571a8a435abf73cde769918850ca76a471f14c
+	drm/qxl: fix use of uninitialized variable
+drm-misc drm-misc-next-fixes 1001354ca34179f3db924eb66672442a173147dc
+	Linux 4.9-rc1
+drm-misc drm-misc-fixes e94bd1736f1f60e916a85a80c0b0ebeaae36cce5
+	drm: Don't call drm_for_each_crtc with a non-KMS driver
