@@ -477,9 +477,8 @@ retry:
 	crtc_offset_cntl = 0;
 
 	pitch_pixels = target_fb->pitches[0] / (target_fb->bits_per_pixel / 8);
-	crtc_pitch  = (((pitch_pixels * target_fb->bits_per_pixel) +
-			((target_fb->bits_per_pixel * 8) - 1)) /
-		       (target_fb->bits_per_pixel * 8));
+	crtc_pitch = DIV_ROUND_UP(pitch_pixels * target_fb->bits_per_pixel,
+				  target_fb->bits_per_pixel * 8);
 	crtc_pitch |= crtc_pitch << 16;
 
 	crtc_offset_cntl |= RADEON_CRTC_GUI_TRIG_OFFSET_LEFT_EN;
@@ -579,6 +578,7 @@ static bool radeon_set_crtc_timing(struct drm_crtc *crtc, struct drm_display_mod
 	struct drm_device *dev = crtc->dev;
 	struct radeon_device *rdev = dev->dev_private;
 	struct radeon_crtc *radeon_crtc = to_radeon_crtc(crtc);
+	const struct drm_framebuffer *fb = crtc->primary->fb;
 	struct drm_encoder *encoder;
 	int format;
 	int hsync_start;
@@ -602,7 +602,7 @@ static bool radeon_set_crtc_timing(struct drm_crtc *crtc, struct drm_display_mod
 		}
 	}
 
-	switch (crtc->primary->fb->bits_per_pixel) {
+	switch (fb->bits_per_pixel) {
 	case 8:
 		format = 2;
 		break;
