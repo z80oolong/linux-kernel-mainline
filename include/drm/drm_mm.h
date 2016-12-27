@@ -1,6 +1,7 @@
 /**************************************************************************
  *
  * Copyright 2006-2008 Tungsten Graphics, Inc., Cedar Park, TX. USA.
+ * Copyright 2016 Intel Corporation
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -48,6 +49,12 @@
 #include <linux/stackdepot.h>
 #endif
 
+#ifdef CONFIG_DRM_DEBUG_MM
+#define DRM_MM_BUG_ON(expr) BUG_ON(expr)
+#else
+#define DRM_MM_BUG_ON(expr) BUILD_BUG_ON_INVALID(expr)
+#endif
+
 enum drm_mm_search_flags {
 	DRM_MM_SEARCH_DEFAULT =		0,
 	DRM_MM_SEARCH_BEST =		1 << 0,
@@ -91,32 +98,45 @@ struct drm_mm {
 	/* Keep an interval_tree for fast lookup of drm_mm_nodes by address. */
 	struct rb_root interval_tree;
 
-	unsigned int scan_check_range : 1;
-	unsigned scan_alignment;
-	unsigned long scan_color;
-	u64 scan_size;
-	u64 scan_hit_start;
-	u64 scan_hit_end;
-	unsigned scanned_blocks;
-	u64 scan_start;
-	u64 scan_end;
+	void (*color_adjust)(const struct drm_mm_node *node,
+			     unsigned long color,
+			     u64 *start, u64 *end);
+
+	unsigned long scan_active;
+};
+
+struct drm_mm_scan {
+	struct drm_mm *mm;
+
+	u64 size;
+	u64 alignment;
+
+	u64 range_start;
+	u64 range_end;
+
+	u64 hit_start;
+	u64 hit_end;
+
 	struct drm_mm_node *prev_scanned_node;
 
-	void (*color_adjust)(struct drm_mm_node *node, unsigned long color,
-			     u64 *start, u64 *end);
+	unsigned long color;
+	bool check_range : 1;
 };
 
 /**
  * drm_mm_node_allocated - checks whether a node is allocated
  * @node: drm_mm_node to check
  *
- * Drivers should use this helpers for proper encapusulation of drm_mm
+ * Drivers are required to clear a node prior to using it with the
+ * drm_mm range manager.
+ *
+ * Drivers should use this helper for proper encapsulation of drm_mm
  * internals.
  *
  * Returns:
  * True if the @node is allocated.
  */
-static inline bool drm_mm_node_allocated(struct drm_mm_node *node)
+static inline bool drm_mm_node_allocated(const struct drm_mm_node *node)
 {
 	return node->allocated;
 }
@@ -125,18 +145,21 @@ static inline bool drm_mm_node_allocated(struct drm_mm_node *node)
  * drm_mm_initialized - checks whether an allocator is initialized
  * @mm: drm_mm to check
  *
- * Drivers should use this helpers for proper encapusulation of drm_mm
+ * Drivers should clear the struct drm_mm prior to initialisation if they
+ * want to use this function.
+ *
+ * Drivers should use this helper for proper encapsulation of drm_mm
  * internals.
  *
  * Returns:
  * True if the @mm is initialized.
  */
-static inline bool drm_mm_initialized(struct drm_mm *mm)
+static inline bool drm_mm_initialized(const struct drm_mm *mm)
 {
 	return mm->hole_stack.next;
 }
 
-static inline u64 __drm_mm_hole_node_start(struct drm_mm_node *hole_node)
+static inline u64 __drm_mm_hole_node_start(const struct drm_mm_node *hole_node)
 {
 	return hole_node->start + hole_node->size;
 }
@@ -145,20 +168,20 @@ static inline u64 __drm_mm_hole_node_start(struct drm_mm_node *hole_node)
  * drm_mm_hole_node_start - computes the start of the hole following @node
  * @hole_node: drm_mm_node which implicitly tracks the following hole
  *
- * This is useful for driver-sepific debug dumpers. Otherwise drivers should not
- * inspect holes themselves. Drivers must check first whether a hole indeed
+ * This is useful for driver-specific debug dumpers. Otherwise drivers should
+ * not inspect holes themselves. Drivers must check first whether a hole indeed
  * follows by looking at node->hole_follows.
  *
  * Returns:
  * Start of the subsequent hole.
  */
-static inline u64 drm_mm_hole_node_start(struct drm_mm_node *hole_node)
+static inline u64 drm_mm_hole_node_start(const struct drm_mm_node *hole_node)
 {
-	BUG_ON(!hole_node->hole_follows);
+	DRM_MM_BUG_ON(!hole_node->hole_follows);
 	return __drm_mm_hole_node_start(hole_node);
 }
 
-static inline u64 __drm_mm_hole_node_end(struct drm_mm_node *hole_node)
+static inline u64 __drm_mm_hole_node_end(const struct drm_mm_node *hole_node)
 {
 	return list_next_entry(hole_node, node_list)->start;
 }
@@ -167,17 +190,31 @@ static inline u64 __drm_mm_hole_node_end(struct drm_mm_node *hole_node)
  * drm_mm_hole_node_end - computes the end of the hole following @node
  * @hole_node: drm_mm_node which implicitly tracks the following hole
  *
- * This is useful for driver-sepific debug dumpers. Otherwise drivers should not
- * inspect holes themselves. Drivers must check first whether a hole indeed
+ * This is useful for driver-specific debug dumpers. Otherwise drivers should
+ * not inspect holes themselves. Drivers must check first whether a hole indeed
  * follows by looking at node->hole_follows.
  *
  * Returns:
  * End of the subsequent hole.
  */
-static inline u64 drm_mm_hole_node_end(struct drm_mm_node *hole_node)
+static inline u64 drm_mm_hole_node_end(const struct drm_mm_node *hole_node)
 {
 	return __drm_mm_hole_node_end(hole_node);
 }
+
+/**
+ * drm_mm_nodes - list of nodes under the drm_mm range manager
+ * @mm: the struct drm_mm range manger
+ *
+ * As the drm_mm range manager hides its node_list deep with its
+ * structure, extracting it looks painful and repetitive. This is
+ * not expected to be used outside of the drm_mm_for_each_node()
+ * macros and similar internal functions.
+ *
+ * Returns:
+ * The node list, may be empty.
+ */
+#define drm_mm_nodes(mm) (&(mm)->head_node.node_list)
 
 /**
  * drm_mm_for_each_node - iterator to walk over all allocated nodes
@@ -187,9 +224,20 @@ static inline u64 drm_mm_hole_node_end(struct drm_mm_node *hole_node)
  * This iterator walks over all nodes in the range allocator. It is implemented
  * with list_for_each, so not save against removal of elements.
  */
-#define drm_mm_for_each_node(entry, mm) list_for_each_entry(entry, \
-						&(mm)->head_node.node_list, \
-						node_list)
+#define drm_mm_for_each_node(entry, mm) \
+	list_for_each_entry(entry, drm_mm_nodes(mm), node_list)
+
+/**
+ * drm_mm_for_each_node_safe - iterator to walk over all allocated nodes
+ * @entry: drm_mm_node structure to assign to in each iteration step
+ * @next: drm_mm_node structure to store the next step
+ * @mm: drm_mm allocator to walk
+ *
+ * This iterator walks over all nodes in the range allocator. It is implemented
+ * with list_for_each_safe, so save against removal of elements.
+ */
+#define drm_mm_for_each_node_safe(entry, next, mm) \
+	list_for_each_entry_safe(entry, next, drm_mm_nodes(mm), node_list)
 
 #define __drm_mm_for_each_hole(entry, mm, hole_start, hole_end, backwards) \
 	for (entry = list_entry((backwards) ? (mm)->hole_stack.prev : (mm)->hole_stack.next, struct drm_mm_node, hole_stack); \
@@ -229,7 +277,7 @@ int drm_mm_reserve_node(struct drm_mm *mm, struct drm_mm_node *node);
 int drm_mm_insert_node_generic(struct drm_mm *mm,
 			       struct drm_mm_node *node,
 			       u64 size,
-			       unsigned alignment,
+			       u64 alignment,
 			       unsigned long color,
 			       enum drm_mm_search_flags sflags,
 			       enum drm_mm_allocator_flags aflags);
@@ -252,7 +300,7 @@ int drm_mm_insert_node_generic(struct drm_mm *mm,
 static inline int drm_mm_insert_node(struct drm_mm *mm,
 				     struct drm_mm_node *node,
 				     u64 size,
-				     unsigned alignment,
+				     u64 alignment,
 				     enum drm_mm_search_flags flags)
 {
 	return drm_mm_insert_node_generic(mm, node, size, alignment, 0, flags,
@@ -262,7 +310,7 @@ static inline int drm_mm_insert_node(struct drm_mm *mm,
 int drm_mm_insert_node_in_range_generic(struct drm_mm *mm,
 					struct drm_mm_node *node,
 					u64 size,
-					unsigned alignment,
+					u64 alignment,
 					unsigned long color,
 					u64 start,
 					u64 end,
@@ -289,7 +337,7 @@ int drm_mm_insert_node_in_range_generic(struct drm_mm *mm,
 static inline int drm_mm_insert_node_in_range(struct drm_mm *mm,
 					      struct drm_mm_node *node,
 					      u64 size,
-					      unsigned alignment,
+					      u64 alignment,
 					      u64 start,
 					      u64 end,
 					      enum drm_mm_search_flags flags)
@@ -301,14 +349,24 @@ static inline int drm_mm_insert_node_in_range(struct drm_mm *mm,
 
 void drm_mm_remove_node(struct drm_mm_node *node);
 void drm_mm_replace_node(struct drm_mm_node *old, struct drm_mm_node *new);
-void drm_mm_init(struct drm_mm *mm,
-		 u64 start,
-		 u64 size);
+void drm_mm_init(struct drm_mm *mm, u64 start, u64 size);
 void drm_mm_takedown(struct drm_mm *mm);
-bool drm_mm_clean(struct drm_mm *mm);
+
+/**
+ * drm_mm_clean - checks whether an allocator is clean
+ * @mm: drm_mm allocator to check
+ *
+ * Returns:
+ * True if the allocator is completely free, false if there's still a node
+ * allocated in it.
+ */
+static inline bool drm_mm_clean(const struct drm_mm *mm)
+{
+	return list_empty(drm_mm_nodes(mm));
+}
 
 struct drm_mm_node *
-__drm_mm_interval_first(struct drm_mm *mm, u64 start, u64 last);
+__drm_mm_interval_first(const struct drm_mm *mm, u64 start, u64 last);
 
 /**
  * drm_mm_for_each_node_in_range - iterator to walk over a range of
@@ -329,22 +387,26 @@ __drm_mm_interval_first(struct drm_mm *mm, u64 start, u64 last);
 	     node__ && node__->start < (end__);				\
 	     node__ = list_next_entry(node__, node_list))
 
-void drm_mm_init_scan(struct drm_mm *mm,
+void drm_mm_scan_init(struct drm_mm_scan *scan,
+		      struct drm_mm *mm,
 		      u64 size,
-		      unsigned alignment,
+		      u64 alignment,
 		      unsigned long color);
-void drm_mm_init_scan_with_range(struct drm_mm *mm,
+void drm_mm_scan_init_with_range(struct drm_mm_scan *scan,
+				 struct drm_mm *mm,
 				 u64 size,
-				 unsigned alignment,
+				 u64 alignment,
 				 unsigned long color,
 				 u64 start,
 				 u64 end);
-bool drm_mm_scan_add_block(struct drm_mm_node *node);
-bool drm_mm_scan_remove_block(struct drm_mm_node *node);
+bool drm_mm_scan_add_block(struct drm_mm_scan *scan,
+			   struct drm_mm_node *node);
+bool drm_mm_scan_remove_block(struct drm_mm_scan *scan,
+			      struct drm_mm_node *node);
 
-void drm_mm_debug_table(struct drm_mm *mm, const char *prefix);
+void drm_mm_debug_table(const struct drm_mm *mm, const char *prefix);
 #ifdef CONFIG_DEBUG_FS
-int drm_mm_dump_table(struct seq_file *m, struct drm_mm *mm);
+int drm_mm_dump_table(struct seq_file *m, const struct drm_mm *mm);
 #endif
 
 #endif
