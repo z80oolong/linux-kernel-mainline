@@ -1,0 +1,22 @@
+drm-intel drm-intel-fixes 2471eb5fb6e1433e28426ece235e3730348019ec
+	drm/i915: Prevent timeline updates whilst performing reset
+drm-upstream drm-fixes 4a401ceeef7bf3bc55f5e913cbf19d6038cf83c6
+	Merge tag 'drm-intel-next-fixes-2016-12-22' of git://anongit.freedesktop.org/git/drm-intel into drm-fixes
+drm-intel drm-intel-next-fixes 6ba0566cf2afcdb17bff882e3a95cbbcb22c4a83
+	drm/i915: skip the first 4k of stolen memory on everything >= gen8
+drm-intel drm-intel-next-queued 5390974f981907cd02d1cb48145b03471279877a
+	drm/i915: Update SKL SRV GT4 pci ids reference.
+drm-upstream drm-next 2cf026ae85c42f253feb9f420d1b4bc99bd5503d
+	Merge branch 'linux-4.10' of git://github.com/skeggsb/linux into drm-next
+sound-upstream for-next 337ccfce2332ecd37a793afb72da4250ed59a866
+	Merge branch 'for-linus' into for-next
+sound-upstream for-linus 6b7e95d1336b9eb0d4c6db190ce756480496bd13
+	ALSA: firewire-lib: change structure member with proper type
+drm-intel topic/core-for-CI 862847fa9da07e06eeee1b6075c9767f84b98309
+	mm/vmalloc: Replace opencoded 4-level page walkers
+drm-misc drm-misc-next 23c4cfbdab494568600ae6073a2bf02be4b10f4e
+	drm/edid: constify edid quirk list
+drm-misc drm-misc-next-fixes 6449b088dd51dd5aa6b38455888bbf538d21f2fc
+	drm: Add fake controlD* symlinks for backwards compat
+drm-misc drm-misc-fixes 7ce7d89f48834cefece7804d38fc5d85382edf77
+	Linux 4.10-rc1
