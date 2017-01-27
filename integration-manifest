@@ -1,0 +1,22 @@
+drm-intel drm-intel-fixes 45d9f43911a96c23ebd08efea0ff57af7016eb32
+	Merge tag 'gvt-fixes-2017-01-25' of https://github.com/01org/gvt-linux into drm-intel-fixes
+drm-upstream drm-fixes 736a1494e27a0e0f2e09d0b218c1475771807f8f
+	Merge tag 'drm-intel-fixes-2017-01-26' of git://anongit.freedesktop.org/git/drm-intel into drm-fixes
+drm-intel drm-intel-next-fixes 8adabb8928bcf75d6dc3f81b30a82884e70599cf
+	drm/i915: Pevent copying uninitialised garbage into vma->ggtt_view
+drm-intel drm-intel-next-queued fec0445caa273209d2809760ac7c63e743d6f512
+	drm/i915: Support explicit fencing for execbuf
+drm-upstream drm-next a5b2b6ebf34b20e70a2bdb5214c371744e7fa260
+	drm/sti: Fix compilation failure for drm_framebuffer.pixel_format
+sound-upstream for-next 287215e9c4664d8bc15140105a6ce2836722aa94
+	Merge branch 'topic/intel-lpe-audio' into for-next
+sound-upstream for-linus 6cf4569ce3561dec560147e6051959d6896b23d1
+	Merge tag 'asoc-fix-v4.10-rc3' of git://git.kernel.org/pub/scm/linux/kernel/git/broonie/sound into for-linus
+drm-intel topic/core-for-CI 404d55afb92c959a117a138484d8507829be3818
+	ACPICA: Tables: Remove a hidden logic related to acpi_tb_install_standard_table()
+drm-misc drm-misc-next 8c96c678011eeb1676da18f203e90dea7e0d69d2
+	dma/fence: Export enable-signaling tracepoint for emission by drivers
+drm-misc drm-misc-next-fixes 6449b088dd51dd5aa6b38455888bbf538d21f2fc
+	drm: Add fake controlD* symlinks for backwards compat
+drm-misc drm-misc-fixes 7c6d639d465eb3a8b59c0c2cdb40418f847f0119
+	drm/ttm: Make sure BOs being swapped out are cacheable
