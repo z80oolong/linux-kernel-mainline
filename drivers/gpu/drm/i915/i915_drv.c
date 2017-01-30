@@ -349,6 +349,8 @@ static int i915_getparam(struct drm_device *dev, void *data,
 	case I915_PARAM_HAS_EXEC_HANDLE_LUT:
 	case I915_PARAM_HAS_COHERENT_PHYS_GTT:
 	case I915_PARAM_HAS_EXEC_SOFTPIN:
+	case I915_PARAM_HAS_EXEC_ASYNC:
+	case I915_PARAM_HAS_EXEC_FENCE:
 		/* For the time being all of these are always true;
 		 * if some supported hardware does not have one of these
 		 * features this value needs to be provided from
@@ -755,6 +757,15 @@ out_err:
 	return -ENOMEM;
 }
 
+static void i915_engines_cleanup(struct drm_i915_private *i915)
+{
+	struct intel_engine_cs *engine;
+	enum intel_engine_id id;
+
+	for_each_engine(engine, i915, id)
+		kfree(engine);
+}
+
 static void i915_workqueues_cleanup(struct drm_i915_private *dev_priv)
 {
 	destroy_workqueue(dev_priv->hotplug.dp_wq);
@@ -817,12 +828,15 @@ static int i915_driver_init_early(struct drm_i915_private *dev_priv,
 	mutex_init(&dev_priv->pps_mutex);
 
 	intel_uc_init_early(dev_priv);
-
 	i915_memcpy_init_early(dev_priv);
+
+	ret = intel_engines_init_early(dev_priv);
+	if (ret)
+		return ret;
 
 	ret = i915_workqueues_init(dev_priv);
 	if (ret < 0)
-		return ret;
+		goto err_engines;
 
 	ret = intel_gvt_init(dev_priv);
 	if (ret < 0)
@@ -857,6 +871,8 @@ err_gvt:
 	intel_gvt_cleanup(dev_priv);
 err_workqueues:
 	i915_workqueues_cleanup(dev_priv);
+err_engines:
+	i915_engines_cleanup(dev_priv);
 	return ret;
 }
 
@@ -869,6 +885,7 @@ static void i915_driver_cleanup_early(struct drm_i915_private *dev_priv)
 	i915_perf_fini(dev_priv);
 	i915_gem_load_cleanup(dev_priv);
 	i915_workqueues_cleanup(dev_priv);
+	i915_engines_cleanup(dev_priv);
 }
 
 static int i915_mmio_setup(struct drm_i915_private *dev_priv)
@@ -935,6 +952,7 @@ static int i915_driver_init_mmio(struct drm_i915_private *dev_priv)
 		goto put_bridge;
 
 	intel_uncore_init(dev_priv);
+	i915_gem_init_mmio(dev_priv);
 
 	return 0;
 
@@ -1715,6 +1733,8 @@ static int i915_drm_resume_early(struct drm_device *dev)
 	if (IS_GEN9_LP(dev_priv) ||
 	    !(dev_priv->suspended_to_idle && dev_priv->csr.dmc_payload))
 		intel_power_domains_init_hw(dev_priv, true);
+
+	i915_gem_sanitize(dev_priv);
 
 	enable_rpm_wakeref_asserts(dev_priv);
 
@@ -2531,7 +2551,7 @@ static const struct drm_ioctl_desc i915_ioctls[] = {
 	DRM_IOCTL_DEF_DRV(I915_HWS_ADDR, drm_noop, DRM_AUTH|DRM_MASTER|DRM_ROOT_ONLY),
 	DRM_IOCTL_DEF_DRV(I915_GEM_INIT, drm_noop, DRM_AUTH|DRM_MASTER|DRM_ROOT_ONLY),
 	DRM_IOCTL_DEF_DRV(I915_GEM_EXECBUFFER, i915_gem_execbuffer, DRM_AUTH),
-	DRM_IOCTL_DEF_DRV(I915_GEM_EXECBUFFER2, i915_gem_execbuffer2, DRM_AUTH|DRM_RENDER_ALLOW),
+	DRM_IOCTL_DEF_DRV(I915_GEM_EXECBUFFER2_WR, i915_gem_execbuffer2, DRM_AUTH|DRM_RENDER_ALLOW),
 	DRM_IOCTL_DEF_DRV(I915_GEM_PIN, i915_gem_reject_pin_ioctl, DRM_AUTH|DRM_ROOT_ONLY),
 	DRM_IOCTL_DEF_DRV(I915_GEM_UNPIN, i915_gem_reject_pin_ioctl, DRM_AUTH|DRM_ROOT_ONLY),
 	DRM_IOCTL_DEF_DRV(I915_GEM_BUSY, i915_gem_busy_ioctl, DRM_AUTH|DRM_RENDER_ALLOW),
