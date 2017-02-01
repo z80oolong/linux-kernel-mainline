@@ -1,0 +1,24 @@
+drm-intel drm-intel-fixes 566cf877a1fcb6d6dc0126b076aad062054c2637
+	Linux 4.10-rc6
+drm-intel topic/vma-fix-for-4.10 e8fe4f4b2b7b93048729538321c681c0cff33b39
+	drm/i915: Track pinned vma in intel_plane_state
+drm-upstream drm-fixes 52b679f60e2a68af88411f12318675a2424a0e14
+	Merge tag 'drm-misc-fixes-2017-01-31' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm-intel drm-intel-next-fixes 18566acac18f5784347bc5fe636a26897d1c963b
+	Merge branch 'exynos-drm-next' of git://git.kernel.org/pub/scm/linux/kernel/git/daeinki/drm-exynos into drm-next
+drm-intel drm-intel-next-queued 453cfe21711f644e744e834d5c61042b2fac218d
+	drm/i915/execlists: Add interrupt-pending check to intel_execlists_idle()
+drm-upstream drm-next 18566acac18f5784347bc5fe636a26897d1c963b
+	Merge branch 'exynos-drm-next' of git://git.kernel.org/pub/scm/linux/kernel/git/daeinki/drm-exynos into drm-next
+sound-upstream for-next fc28ab1882b59f65d88f99348fdf01073e67349c
+	sound: oss/ad1848: remove some dead code
+sound-upstream for-linus 6cf4569ce3561dec560147e6051959d6896b23d1
+	Merge tag 'asoc-fix-v4.10-rc3' of git://git.kernel.org/pub/scm/linux/kernel/git/broonie/sound into for-linus
+drm-intel topic/core-for-CI 404d55afb92c959a117a138484d8507829be3818
+	ACPICA: Tables: Remove a hidden logic related to acpi_tb_install_standard_table()
+drm-misc drm-misc-next 969218fee101af5335314e8521fb1a29e49e560b
+	drm: Clean up the 1366x768 fixup codes
+drm-misc drm-misc-next-fixes 6449b088dd51dd5aa6b38455888bbf538d21f2fc
+	drm: Add fake controlD* symlinks for backwards compat
+drm-misc drm-misc-fixes 92c715fca907686f5298220ece53423e38ba3aed
+	drm/atomic: Fix double free in drm_atomic_state_default_clear
