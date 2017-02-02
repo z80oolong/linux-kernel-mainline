@@ -1,0 +1,24 @@
+drm-intel drm-intel-fixes 566cf877a1fcb6d6dc0126b076aad062054c2637
+	Linux 4.10-rc6
+drm-intel topic/vma-fix-for-4.10 e8fe4f4b2b7b93048729538321c681c0cff33b39
+	drm/i915: Track pinned vma in intel_plane_state
+drm-upstream drm-fixes 52b679f60e2a68af88411f12318675a2424a0e14
+	Merge tag 'drm-misc-fixes-2017-01-31' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm-intel drm-intel-next-fixes 18566acac18f5784347bc5fe636a26897d1c963b
+	Merge branch 'exynos-drm-next' of git://git.kernel.org/pub/scm/linux/kernel/git/daeinki/drm-exynos into drm-next
+drm-intel drm-intel-next-queued 3aac4acb89710fe782c9e78e7b1febf76e112c6c
+	drm/i915: don't warn about Skylake CPU - KabyPoint PCH combo
+drm-upstream drm-next 99743ae4c5f52f8f8ceb17783056fcc9b4f8b64c
+	Merge branch 'drm-etnaviv-next' of https://git.pengutronix.de/git/lst/linux into drm-next
+sound-upstream for-next 374a504025a0913d3d639cec7fbb46a5800fc447
+	Merge branch 'topic/intel-lpe-audio-dp' into for-next
+sound-upstream for-linus 6cf4569ce3561dec560147e6051959d6896b23d1
+	Merge tag 'asoc-fix-v4.10-rc3' of git://git.kernel.org/pub/scm/linux/kernel/git/broonie/sound into for-linus
+drm-intel topic/core-for-CI 404d55afb92c959a117a138484d8507829be3818
+	ACPICA: Tables: Remove a hidden logic related to acpi_tb_install_standard_table()
+drm-misc drm-misc-next 7e6328fd1f84f366b4cc17dc757025f485139f1a
+	drm: Fix build when FBDEV_EMULATION is disabled
+drm-misc drm-misc-next-fixes 6449b088dd51dd5aa6b38455888bbf538d21f2fc
+	drm: Add fake controlD* symlinks for backwards compat
+drm-misc drm-misc-fixes 92c715fca907686f5298220ece53423e38ba3aed
+	drm/atomic: Fix double free in drm_atomic_state_default_clear
