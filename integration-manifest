@@ -1,0 +1,24 @@
+drm-intel drm-intel-fixes 566cf877a1fcb6d6dc0126b076aad062054c2637
+	Linux 4.10-rc6
+drm-intel topic/vma-fix-for-4.10 e8fe4f4b2b7b93048729538321c681c0cff33b39
+	drm/i915: Track pinned vma in intel_plane_state
+drm-upstream drm-fixes f63cf464fc379382a271f94ddef36e8c5a0628eb
+	Merge branch 'drm-fixes-4.10' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+drm-intel drm-intel-next-fixes 18566acac18f5784347bc5fe636a26897d1c963b
+	Merge branch 'exynos-drm-next' of git://git.kernel.org/pub/scm/linux/kernel/git/daeinki/drm-exynos into drm-next
+drm-intel drm-intel-next-queued 4a04e371228937d104fd03d5219f8c25fda29757
+	drm/i915: fix pm refcounting on fence error in execbuf
+drm-upstream drm-next 99743ae4c5f52f8f8ceb17783056fcc9b4f8b64c
+	Merge branch 'drm-etnaviv-next' of https://git.pengutronix.de/git/lst/linux into drm-next
+sound-upstream for-next c1a7c40cff65719e0a5a2f101aa59868ff5eb8ce
+	Merge branch 'topic/intel-lpe-audio' into for-next
+sound-upstream for-linus 6cf4569ce3561dec560147e6051959d6896b23d1
+	Merge tag 'asoc-fix-v4.10-rc3' of git://git.kernel.org/pub/scm/linux/kernel/git/broonie/sound into for-linus
+drm-intel topic/core-for-CI 404d55afb92c959a117a138484d8507829be3818
+	ACPICA: Tables: Remove a hidden logic related to acpi_tb_install_standard_table()
+drm-misc drm-misc-next 612fb5d9f41622ad86c94f897faa2343817abb1a
+	drm/nouveau/kms/nv50: Switch to using atomic helper for flip.
+drm-misc drm-misc-next-fixes bb18dfcc640d0551073e756e0af2ff60bea89e6d
+	drm: kselftest for drm_mm and bottom-up allocation
+drm-misc drm-misc-fixes 92c715fca907686f5298220ece53423e38ba3aed
+	drm/atomic: Fix double free in drm_atomic_state_default_clear
