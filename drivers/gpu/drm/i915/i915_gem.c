@@ -2009,8 +2009,16 @@ void i915_gem_runtime_suspend(struct drm_i915_private *dev_priv)
 	for (i = 0; i < dev_priv->num_fence_regs; i++) {
 		struct drm_i915_fence_reg *reg = &dev_priv->fence_regs[i];
 
-		if (WARN_ON(reg->pin_count))
-			continue;
+		/* Ideally we want to assert that the fence register is not
+		 * live at this point (i.e. that no piece of code will be
+		 * trying to write through fence + GTT, as that both violates
+		 * our tracking of activity and associated locking/barriers,
+		 * but also is illegal given that the hw is powered down).
+		 *
+		 * Previously we used reg->pin_count as a "liveness" indicator.
+		 * That is not sufficient, and we need a more fine-grained
+		 * tool if we want to have a sanity check here.
+		 */
 
 		if (!reg->vma)
 			continue;
@@ -2735,21 +2743,17 @@ static void i915_gem_reset_engine(struct intel_engine_cs *engine)
 		engine->irq_seqno_barrier(engine);
 
 	request = i915_gem_find_active_request(engine);
-	if (!request)
-		return;
+	if (request && i915_gem_reset_request(request)) {
+		DRM_DEBUG_DRIVER("resetting %s to restart from tail of request 0x%x\n",
+				 engine->name, request->global_seqno);
 
-	if (!i915_gem_reset_request(request))
-		return;
-
-	DRM_DEBUG_DRIVER("resetting %s to restart from tail of request 0x%x\n",
-			 engine->name, request->global_seqno);
+		/* If this context is now banned, skip all pending requests. */
+		if (i915_gem_context_is_banned(request->ctx))
+			engine_skip_context(request);
+	}
 
 	/* Setup the CS to resume from the breadcrumb of the hung request */
 	engine->reset_hw(engine, request);
-
-	/* If this context is now banned, skip all of its pending requests. */
-	if (i915_gem_context_is_banned(request->ctx))
-		engine_skip_context(request);
 }
 
 void i915_gem_reset_finish(struct drm_i915_private *dev_priv)
@@ -3517,7 +3521,7 @@ i915_gem_object_pin_to_display_plane(struct drm_i915_gem_object *obj,
 	vma->display_alignment = max_t(u64, vma->display_alignment, alignment);
 
 	/* Treat this as an end-of-frame, like intel_user_framebuffer_dirty() */
-	if (obj->cache_dirty) {
+	if (obj->cache_dirty || obj->base.write_domain == I915_GEM_DOMAIN_CPU) {
 		i915_gem_clflush_object(obj, true);
 		intel_fb_obj_flush(obj, false, ORIGIN_DIRTYFB);
 	}
@@ -4199,6 +4203,23 @@ static void assert_kernel_context_is_current(struct drm_i915_private *dev_priv)
 			   !i915_gem_context_is_kernel(engine->last_retired_context));
 }
 
+void i915_gem_sanitize(struct drm_i915_private *i915)
+{
+	/*
+	 * If we inherit context state from the BIOS or earlier occupants
+	 * of the GPU, the GPU may be in an inconsistent state when we
+	 * try to take over. The only way to remove the earlier state
+	 * is by resetting. However, resetting on earlier gen is tricky as
+	 * it may impact the display and we are uncertain about the stability
+	 * of the reset, so we only reset recent machines with logical
+	 * context support (that must be reset to remove any stray contexts).
+	 */
+	if (HAS_HW_CONTEXTS(i915)) {
+		int reset = intel_gpu_reset(i915, ALL_ENGINES);
+		WARN_ON(reset && reset != -ENODEV);
+	}
+}
+
 int i915_gem_suspend(struct drm_i915_private *dev_priv)
 {
 	struct drm_device *dev = &dev_priv->drm;
@@ -4269,10 +4290,7 @@ int i915_gem_suspend(struct drm_i915_private *dev_priv)
 	 * machines is a good idea, we don't - just in case it leaves the
 	 * machine in an unusable condition.
 	 */
-	if (HAS_HW_CONTEXTS(dev_priv)) {
-		int reset = intel_gpu_reset(dev_priv, ALL_ENGINES);
-		WARN_ON(reset && reset != -ENODEV);
-	}
+	i915_gem_sanitize(dev_priv);
 
 	return 0;
 
@@ -4488,6 +4506,11 @@ out_unlock:
 	mutex_unlock(&dev_priv->drm.struct_mutex);
 
 	return ret;
+}
+
+void i915_gem_init_mmio(struct drm_i915_private *i915)
+{
+	i915_gem_sanitize(i915);
 }
 
 void
