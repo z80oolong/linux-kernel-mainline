@@ -1,0 +1,22 @@
+drm-intel drm-intel-fixes d5adbfcd5f7bcc6fa58a41c5c5ada0e5c826ce2c
+	Linux 4.10-rc7
+drm-upstream drm-fixes f63cf464fc379382a271f94ddef36e8c5a0628eb
+	Merge branch 'drm-fixes-4.10' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+drm-intel drm-intel-next-fixes 05e7866a174f6acdc02558848b3ee0cdf20a51a6
+	Merge tag 'gvt-next-2017-02-07' of https://github.com/01org/gvt-linux into drm-intel-next-fixes
+drm-intel drm-intel-next-queued c0dcb203fb009678e5be9e7782329dcfbbf16439
+	drm/i915: Restore context and pd for ringbuffer submission after reset
+drm-upstream drm-next 260efc65930529ec2822b242541aa7e66769bfe8
+	Merge branch 'drm-rockchip-next-2017-02-07' of https://github.com/markyzq/kernel-drm-rockchip into drm-next
+sound-upstream for-next 8d8c9aec9ae31b17d9c8ceec8eaa2a0192b6de52
+	ALSA: x86: Avoid unconditional call of snd_pcm_period_elapsed()
+sound-upstream for-linus f3d83317a69e7d658e7c83e24f8b31ac533c39e3
+	Revert "ALSA: line6: Only determine control port properties if needed"
+drm-intel topic/core-for-CI 3f7a5fb77af4f5b38e514b85d491da0046d6bfb8
+	locking/mutex: Clear mutex-handoff flag on interrupt
+drm-misc drm-misc-next 64b0e1d6c6a14dcbf0bde8b98207fc6b3569ce50
+	drm: exynos: use vblank hooks in struct drm_crtc_funcs
+drm-misc drm-misc-next-fixes 645455969380c2f1c1b56a8bd6aada527e22d0b9
+	drm: Cancel drm_fb_helper_resume_work on unload
+drm-misc drm-misc-fixes d5adbfcd5f7bcc6fa58a41c5c5ada0e5c826ce2c
+	Linux 4.10-rc7
