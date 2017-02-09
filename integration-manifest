@@ -1,0 +1,22 @@
+drm-intel drm-intel-fixes 6e7eb1783be7f19eb071c96ddda0bbf22279ff46
+	drm/i915: Always convert incoming exec offsets to non-canonical
+drm-upstream drm-fixes 5d18a619976944dc3114bbe1525880c431196c7a
+	Merge branch 'drm-vmwgfx-fixes-4_10' of git://people.freedesktop.org/~syeh/repos_linux into drm-fixes
+drm-intel drm-intel-next-fixes 05e7866a174f6acdc02558848b3ee0cdf20a51a6
+	Merge tag 'gvt-next-2017-02-07' of https://github.com/01org/gvt-linux into drm-intel-next-fixes
+drm-intel drm-intel-next-queued 949e8ab3a94befd514eb79f2535f6017d8b4488f
+	drm/i915: Use the size/type of address space to make decisions
+drm-upstream drm-next 4eaa39c63caf535dc1a8cc43b9a8677a100c09e1
+	Merge branch 'drm-rockchip-next-2017-02-07' of https://github.com/markyzq/kernel-drm-rockchip into drm-next
+sound-upstream for-next 8d8c9aec9ae31b17d9c8ceec8eaa2a0192b6de52
+	ALSA: x86: Avoid unconditional call of snd_pcm_period_elapsed()
+sound-upstream for-linus af677166cf63c179dc2485053166e02c4aea01eb
+	ALSA: hda - adding a new NV HDMI/DP codec ID in the driver
+drm-intel topic/core-for-CI 3f7a5fb77af4f5b38e514b85d491da0046d6bfb8
+	locking/mutex: Clear mutex-handoff flag on interrupt
+drm-misc drm-misc-next e5b8afbe34545f259fb4d15ccca34428f1c39792
+	drm: zte: use vblank hooks in struct drm_crtc_funcs
+drm-misc drm-misc-next-fixes f9ad86e42d0303eeb8e0d41bb208153022ebd9d2
+	drm/atomic: fix an error code in mode_fixup()
+drm-misc drm-misc-fixes 49d29a077af8d2ee3b291ccd8d053541bebe09d7
+	drm: vc4: adapt to new behaviour of drm_crtc.c
