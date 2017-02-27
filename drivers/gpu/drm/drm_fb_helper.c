@@ -48,6 +48,12 @@ module_param_named(fbdev_emulation, drm_fbdev_emulation, bool, 0600);
 MODULE_PARM_DESC(fbdev_emulation,
 		 "Enable legacy fbdev emulation [default=true]");
 
+static int drm_fbdev_overalloc = CONFIG_DRM_FBDEV_OVERALLOC;
+module_param(drm_fbdev_overalloc, int, 0444);
+MODULE_PARM_DESC(drm_fbdev_overalloc,
+		 "Overallocation of the fbdev buffer (%) [default="
+		 __MODULE_STRING(CONFIG_DRM_FBDEV_OVERALLOC) "]");
+
 static LIST_HEAD(kernel_fb_helper_list);
 static DEFINE_MUTEX(kernel_fb_helper_lock);
 
@@ -63,7 +69,8 @@ static DEFINE_MUTEX(kernel_fb_helper_lock);
  * drm_fb_helper_init(), drm_fb_helper_single_add_all_connectors() and
  * drm_fb_helper_initial_config(). Drivers with fancier requirements than the
  * default behaviour can override the third step with their own code.
- * Teardown is done with drm_fb_helper_fini().
+ * Teardown is done with drm_fb_helper_fini() after the fbdev device is
+ * unregisters using drm_fb_helper_unregister_fbi().
  *
  * At runtime drivers should restore the fbdev console by calling
  * drm_fb_helper_restore_fbdev_mode_unlocked() from their &drm_driver.lastclose
@@ -709,7 +716,7 @@ void drm_fb_helper_prepare(struct drm_device *dev, struct drm_fb_helper *helper,
 EXPORT_SYMBOL(drm_fb_helper_prepare);
 
 /**
- * drm_fb_helper_init - initialize a drm_fb_helper structure
+ * drm_fb_helper_init - initialize a &struct drm_fb_helper
  * @dev: drm device
  * @fb_helper: driver-allocated fbdev helper structure to initialize
  * @max_conn_count: max connector count
@@ -780,7 +787,9 @@ EXPORT_SYMBOL(drm_fb_helper_init);
  * @fb_helper: driver-allocated fbdev helper
  *
  * A helper to alloc fb_info and the members cmap and apertures. Called
- * by the driver within the fb_probe fb_helper callback function.
+ * by the driver within the fb_probe fb_helper callback function. Drivers do not
+ * need to release the allocated fb_info structure themselves, this is
+ * automatically done when calling drm_fb_helper_fini().
  *
  * RETURNS:
  * fb_info pointer if things went okay, pointer containing error code
@@ -823,7 +832,8 @@ EXPORT_SYMBOL(drm_fb_helper_alloc_fbi);
  * @fb_helper: driver-allocated fbdev helper
  *
  * A wrapper around unregister_framebuffer, to release the fb_info
- * framebuffer device
+ * framebuffer device. This must be called before releasing all resources for
+ * @fb_helper by calling drm_fb_helper_fini().
  */
 void drm_fb_helper_unregister_fbi(struct drm_fb_helper *fb_helper)
 {
@@ -833,32 +843,26 @@ void drm_fb_helper_unregister_fbi(struct drm_fb_helper *fb_helper)
 EXPORT_SYMBOL(drm_fb_helper_unregister_fbi);
 
 /**
- * drm_fb_helper_release_fbi - dealloc fb_info and its members
+ * drm_fb_helper_fini - finialize a &struct drm_fb_helper
  * @fb_helper: driver-allocated fbdev helper
  *
- * A helper to free memory taken by fb_info and the members cmap and
- * apertures
+ * This cleans up all remaining resources associated with @fb_helper. Must be
+ * called after drm_fb_helper_unlink_fbi() was called.
  */
-void drm_fb_helper_release_fbi(struct drm_fb_helper *fb_helper)
-{
-	if (fb_helper) {
-		struct fb_info *info = fb_helper->fbdev;
-
-		if (info) {
-			if (info->cmap.len)
-				fb_dealloc_cmap(&info->cmap);
-			framebuffer_release(info);
-		}
-
-		fb_helper->fbdev = NULL;
-	}
-}
-EXPORT_SYMBOL(drm_fb_helper_release_fbi);
-
 void drm_fb_helper_fini(struct drm_fb_helper *fb_helper)
 {
-	if (!drm_fbdev_emulation)
+	struct fb_info *info;
+
+	if (!drm_fbdev_emulation || !fb_helper)
 		return;
+
+	info = fb_helper->fbdev;
+	if (info) {
+		if (info->cmap.len)
+			fb_dealloc_cmap(&info->cmap);
+		framebuffer_release(info);
+	}
+	fb_helper->fbdev = NULL;
 
 	cancel_work_sync(&fb_helper->resume_work);
 	cancel_work_sync(&fb_helper->dirty_work);
@@ -1579,6 +1583,10 @@ static int drm_fb_helper_single_fb_probe(struct drm_fb_helper *fb_helper,
 		sizes.fb_width = sizes.surface_width = 1024;
 		sizes.fb_height = sizes.surface_height = 768;
 	}
+
+	/* Handle our overallocation */
+	sizes.surface_height *= drm_fbdev_overalloc;
+	sizes.surface_height /= 100;
 
 	/* push down into drivers */
 	ret = (*fb_helper->funcs->fb_probe)(fb_helper, &sizes);
