@@ -320,6 +320,9 @@ struct intel_connector {
 	void *port; /* store this opaque as its illegal to dereference it */
 
 	struct intel_dp *mst_port;
+
+	/* Work struct to schedule a uevent on link train failure */
+	struct work_struct modeset_retry_work;
 };
 
 struct dpll {
@@ -1939,7 +1942,6 @@ void lspcon_wait_pcon_mode(struct intel_lspcon *lspcon);
 
 /* intel_pipe_crc.c */
 int intel_pipe_crc_create(struct drm_minor *minor);
-void intel_pipe_crc_cleanup(struct drm_minor *minor);
 #ifdef CONFIG_DEBUG_FS
 int intel_crtc_set_crc_source(struct drm_crtc *crtc, const char *source_name,
 			      size_t *values_cnt);
