@@ -1,0 +1,22 @@
+drm-intel drm-intel-fixes c053b5a506d3afc038c485a86e3d461f6c7fb207
+	drm/i915: Don't call synchronize_rcu_expedited under struct_mutex
+drm-upstream drm-fixes 2ca62d8a606a95e098799f128f6a40a6300d2a2a
+	Merge branch 'linux-4.11' of git://github.com/skeggsb/linux into drm-fixes
+drm-intel drm-intel-next-fixes ab6eb211b07a42a6346e284056422fd9a8576a99
+	Merge tag 'drm/panel/for-4.12-rc1' of git://anongit.freedesktop.org/tegra/linux into drm-next
+drm-intel drm-intel-next-queued 2d6c4c84230df9ff99b626b52b11049e449632c9
+	drm/i915: Use discardable buffers for rings
+drm-upstream drm-next cb2e77c1d53366696a7f47dbcedba99603ca1b55
+	Merge tag 'sunxi-drm-for-4.12' of https://git.kernel.org/pub/scm/linux/kernel/git/mripard/linux into drm-next
+sound-upstream for-next fa8323bf49f5c92363fe7c3c80b6b342f5430baa
+	ALSA: firewire-motu: mark trace helpers as __maybe_unused
+sound-upstream for-linus dfb00a56935186171abb5280b3407c3f910011f1
+	ALSA: firewire-lib: fix inappropriate assignment between signed/unsigned type
+drm-intel topic/core-for-CI 841c8c95663fe5743f958dfcd1adc4e27b3748b8
+	Revert "sched/clock: Fix broken stable to unstable transfer"
+drm-misc drm-misc-next ab6a46ea6842ce812a32986e0a8b3f918f8e3957
+	drm: Add DPCD definitions for DP 1.4 DSC feature
+drm-misc drm-misc-next-fixes f9b67f0014cba18f1aabb6fa9272335a043eb6fd
+	dma-buf: Rename dma-ops to prevent conflict with kunmap_atomic macro
+drm-misc drm-misc-fixes 0c45b36f8acc89cb94c8696a27574f01e0e411dc
+	drm/udl: Fix unaligned memory access in udl_render_hline
