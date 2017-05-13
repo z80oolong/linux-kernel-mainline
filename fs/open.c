@@ -193,7 +193,8 @@ static long do_sys_ftruncate(unsigned int fd, loff_t length, int small)
 		goto out_putf;
 
 	error = -EPERM;
-	if (IS_APPEND(inode))
+	/* Check IS_APPEND on real upper inode */
+	if (IS_APPEND(file_inode(f.file)))
 		goto out_putf;
 
 	sb_start_write(inode->i_sb);
@@ -900,6 +901,12 @@ static inline int build_open_flags(int flags, umode_t mode, struct open_flags *o
 	int lookup_flags = 0;
 	int acc_mode = ACC_MODE(flags);
 
+	/*
+	 * Clear out all open flags we don't know about so that we don't report
+	 * them in fcntl(F_GETFD) or similar interfaces.
+	 */
+	flags &= VALID_OPEN_FLAGS;
+
 	if (flags & (O_CREAT | __O_TMPFILE))
 		op->mode = (mode & S_IALLUGO) | S_IFREG;
 	else
@@ -1077,6 +1084,26 @@ SYSCALL_DEFINE4(openat, int, dfd, const char __user *, filename, int, flags,
 
 	return do_sys_open(dfd, filename, flags, mode);
 }
+
+#ifdef CONFIG_COMPAT
+/*
+ * Exactly like sys_open(), except that it doesn't set the
+ * O_LARGEFILE flag.
+ */
+COMPAT_SYSCALL_DEFINE3(open, const char __user *, filename, int, flags, umode_t, mode)
+{
+	return do_sys_open(AT_FDCWD, filename, flags, mode);
+}
+
+/*
+ * Exactly like sys_openat(), except that it doesn't set the
+ * O_LARGEFILE flag.
+ */
+COMPAT_SYSCALL_DEFINE4(openat, int, dfd, const char __user *, filename, int, flags, umode_t, mode)
+{
+	return do_sys_open(dfd, filename, flags, mode);
+}
+#endif
 
 #ifndef __alpha__
 
