@@ -1,0 +1,22 @@
+drm-intel drm-intel-fixes a351e9b9fc24e982ec2f0e76379a49826036da12
+	Linux 4.11
+drm-upstream drm-fixes 2ca62d8a606a95e098799f128f6a40a6300d2a2a
+	Merge branch 'linux-4.11' of git://github.com/skeggsb/linux into drm-fixes
+drm-intel drm-intel-next-fixes 88326ef05b262f681d837ecf65db10a7edb609f1
+	drm/i915: Confirm the request is still active before adding it to the await
+drm-intel drm-intel-next-queued 712122eaa105cfa865b08020a3e47fca628e9c44
+	drm/i915/perf: rate limit spurious oa report notice
+drm-upstream drm-next 7b8cd3363e8a0e6b90a7067f75aaeaae61a7d612
+	drm/i915: Make vblank evade warnings optional
+sound-upstream for-next 037ea61a92412a0684f70442b71b00948bc1bd46
+	ALSA: usb-audio: fix Amanero Combo384 quirk on big-endian hosts
+sound-upstream for-linus 31cbee6a5611f07d2d66f55bb6f8648db5947e32
+	sound: Disable the build of OSS drivers
+drm-intel topic/core-for-CI e1503c1a1c4ff2125fd62a51c8549959449869d0
+	drm/i915: Try harder to reset the GPU
+drm-misc drm-misc-next bebc1d55d2923ee365de394bcac8ed80ca558f42
+	drm/prime: Forward declare struct device
+drm-misc drm-misc-next-fixes e345da82bd6bdfa8492f80b3ce4370acfd868d95
+	drm/edid: Add 10 bpc quirk for LGD 764 panel in HP zBook 17 G2
+drm-misc drm-misc-fixes 0c45b36f8acc89cb94c8696a27574f01e0e411dc
+	drm/udl: Fix unaligned memory access in udl_render_hline
