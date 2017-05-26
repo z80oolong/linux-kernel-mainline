@@ -1,0 +1,22 @@
+drm-intel drm-intel-fixes 9bd9590997b92fbd79fd028f704f6c584b4439d7
+	drm/i915: Stop pretending to mask/unmask LPE audio interrupts
+drm-upstream drm-fixes bc1f0e04da20473d6fea4444b0cd9ac638a348d5
+	Merge branch 'drm-fixes-4.12' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+drm-intel drm-intel-next-fixes 88326ef05b262f681d837ecf65db10a7edb609f1
+	drm/i915: Confirm the request is still active before adding it to the await
+drm-intel drm-intel-next-queued c9e0c6da53231f685d7dbd3d420483e1ede212e2
+	drm/i915: Keep the forcewake timer alive for 1ms past the most recent use
+drm-upstream drm-next e98c58e55f68f8785aebfab1f8c9a03d8de0afe1
+	Merge tag 'drm-misc-next-2017-05-16' of git://anongit.freedesktop.org/git/drm-misc into drm-next
+sound-upstream for-next 9027c4639ef1e3254779e3033f229133222445f7
+	ALSA: pcm: Call ack() whenever appl_ptr is updated
+sound-upstream for-linus 1fc2e41f7af4572b07190f9dec28396b418e9a36
+	ALSA: hda - apply STAC_9200_DELL_M22 quirk for Dell Latitude D430
+drm-intel topic/core-for-CI a39464f0d1052890ec71cc377657b4e6d37f09e9
+	perf/core: Avoid removing shared pmu_context on unregister
+drm-misc drm-misc-next a301b11186151271c20ecebcc1e2ce1928832c93
+	drm: todo: remove task about switch to drm_connector_list_iter
+drm-misc drm-misc-next-fixes e345da82bd6bdfa8492f80b3ce4370acfd868d95
+	drm/edid: Add 10 bpc quirk for LGD 764 panel in HP zBook 17 G2
+drm-misc drm-misc-fixes 82bc9a42cf854fdf63155759c0aa790bd1f361b0
+	drm/gma500/psb: Actually use VBT mode when it is found
