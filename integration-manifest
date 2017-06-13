@@ -1,0 +1,26 @@
+drm-intel drm-intel-fixes c380f681245d7ae57f17d9ebbbe8f8f1557ee1fb
+	drm/i915: Fix GVT-g PVINFO version compatibility check
+drm-upstream drm-fixes 6e88007e224ce51969ccf9afeec645146c638816
+	Merge branch 'vmwgfx-fixes-4.12' of git://people.freedesktop.org/~thomash/linux into drm-fixes
+drm-intel drm-intel-next-fixes 88326ef05b262f681d837ecf65db10a7edb609f1
+	drm/i915: Confirm the request is still active before adding it to the await
+drm-intel drm-intel-next-queued da411a48bdeb648153dc9a485c15c18f3d063eac
+	drm/i915/cfl: Basic DDI plumbing for Coffee Lake.
+drm-upstream drm-next c9f0726ff360cf75aaafd326e439e9234630aee9
+	Merge tag 'exynos-drm-next-for-v4.13' of git://git.kernel.org/pub/scm/linux/kernel/git/daeinki/drm-exynos into drm-next
+sound-upstream for-next 7f8a01b77b5be996d0665d5eb7be8645f3ecb217
+	Merge branch 'topic/seq-kconfig' into for-next
+sound-upstream for-linus ba3021b2c79b2fa9114f92790a99deb27a65b728
+	ALSA: timer: Fix missing queue indices reset at SNDRV_TIMER_IOCTL_SELECT
+drm-intel topic/core-for-CI a856f7ee9acc3586408f103ed56e8d2914c1e466
+	NOTFORUPSTREAM sound/hda: add debug information in call_hp_automute
+drm-misc drm-misc-next d0b1d259a4b58b21a21ea82d7174bf7ea825e9cc
+	drm/vc4: Fix resource leak in 'vc4_get_hang_state_ioctl()' in error handling path
+drm-misc drm-misc-next-fixes 2d7b56378d32b0cf006f8944cbba4046df45dd25
+	drm/rockchip: gem: add the lacks lock and trivial changes
+drm-misc drm-misc-fixes d758619ba6a5d250914b06b2b923a65e48bdd002
+	drm: dw-hdmi: Fix compilation breakage by selecting REGMAP_MMIO
+drm-intel topic/dp-quirks b31e85eda38c58cae986162ae2c462b53b0a2065
+	drm/i915: Detect USB-C specific dongles before reducing M and N
+drm-intel topic/e1000e-fix 4e5684f930587bd22565f404eb3c5e417a994ccc
+	e1000e: Undo e1000e_pm_freeze if __e1000_shutdown fails
