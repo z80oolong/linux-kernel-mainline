@@ -1,0 +1,26 @@
+drm-intel drm-intel-fixes c380f681245d7ae57f17d9ebbbe8f8f1557ee1fb
+	drm/i915: Fix GVT-g PVINFO version compatibility check
+drm-upstream drm-fixes 7119dbdf7c52042acb1b02f116fa3257e97659ea
+	Merge tag 'drm-intel-fixes-2017-06-15' of git://anongit.freedesktop.org/git/drm-intel into drm-fixes
+drm-intel drm-intel-next-fixes 88326ef05b262f681d837ecf65db10a7edb609f1
+	drm/i915: Confirm the request is still active before adding it to the await
+drm-intel drm-intel-next-queued 46c26662d2fb8377f5d387cf2e5ee3246af780b7
+	drm/i915/cfl: Introduce Coffee Lake workarounds.
+drm-upstream drm-next 925344ccc91d7a7fd84cab2dece1c34bbd86fd8c
+	BackMerge tag 'v4.12-rc5' into drm-next
+sound-upstream for-next 4a219ef8f37071ce0993959fe52ffa5034689f42
+	ALSA: hda/realtek - Add ALC256 HP depop function
+sound-upstream for-linus 2deaeaf102d692cb6f764123b1df7aa118a8e97c
+	ALSA: pcm: Don't treat NULL chmap as a fatal error
+drm-intel topic/core-for-CI a856f7ee9acc3586408f103ed56e8d2914c1e466
+	NOTFORUPSTREAM sound/hda: add debug information in call_hp_automute
+drm-misc drm-misc-next 34c8ea400ff6383b028f63df2453914163afc07c
+	drm/vc4: Mimic drm_atomic_helper_commit() behavior
+drm-misc drm-misc-next-fixes 2d7b56378d32b0cf006f8944cbba4046df45dd25
+	drm/rockchip: gem: add the lacks lock and trivial changes
+drm-misc drm-misc-fixes 0f933328f018c118ded2035f12068bbdfdef399d
+	drm: mxsfb_crtc: Reset the eLCDIF controller
+drm-intel topic/dp-quirks b31e85eda38c58cae986162ae2c462b53b0a2065
+	drm/i915: Detect USB-C specific dongles before reducing M and N
+drm-intel topic/e1000e-fix 4e5684f930587bd22565f404eb3c5e417a994ccc
+	e1000e: Undo e1000e_pm_freeze if __e1000_shutdown fails
