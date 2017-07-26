@@ -560,9 +560,6 @@ static int eb_reserve_vma(const struct i915_execbuffer *eb,
 		eb->args->flags |= __EXEC_HAS_RELOC;
 	}
 
-	entry->flags |= __EXEC_OBJECT_HAS_PIN;
-	GEM_BUG_ON(eb_vma_misplaced(entry, vma));
-
 	if (unlikely(entry->flags & EXEC_OBJECT_NEEDS_FENCE)) {
 		err = i915_vma_get_fence(vma);
 		if (unlikely(err)) {
@@ -573,6 +570,9 @@ static int eb_reserve_vma(const struct i915_execbuffer *eb,
 		if (i915_vma_pin_fence(vma))
 			entry->flags |= __EXEC_OBJECT_HAS_FENCE;
 	}
+
+	entry->flags |= __EXEC_OBJECT_HAS_PIN;
+	GEM_BUG_ON(eb_vma_misplaced(entry, vma));
 
 	return 0;
 }
@@ -675,16 +675,17 @@ static int eb_select_context(struct i915_execbuffer *eb)
 	struct i915_gem_context *ctx;
 
 	ctx = i915_gem_context_lookup(eb->file->driver_priv, eb->args->rsvd1);
-	if (unlikely(IS_ERR(ctx)))
-		return PTR_ERR(ctx);
+	if (unlikely(!ctx))
+		return -ENOENT;
 
 	if (unlikely(i915_gem_context_is_banned(ctx))) {
 		DRM_DEBUG("Context %u tried to submit while banned\n",
 			  ctx->user_handle);
+		i915_gem_context_put(ctx);
 		return -EIO;
 	}
 
-	eb->ctx = i915_gem_context_get(ctx);
+	eb->ctx = ctx;
 	eb->vm = ctx->ppgtt ? &ctx->ppgtt->base : &eb->i915->ggtt.base;
 
 	eb->context_flags = 0;
@@ -1458,7 +1459,7 @@ static int eb_relocate_vma(struct i915_execbuffer *eb, struct i915_vma *vma)
 	 * to read. However, if the array is not writable the user loses
 	 * the updated relocation values.
 	 */
-	if (unlikely(!access_ok(VERIFY_READ, urelocs, remain*sizeof(urelocs))))
+	if (unlikely(!access_ok(VERIFY_READ, urelocs, remain*sizeof(*urelocs))))
 		return -EFAULT;
 
 	do {
@@ -1775,7 +1776,7 @@ out:
 		}
 	}
 
-	return err ?: have_copy;
+	return err;
 }
 
 static int eb_relocate(struct i915_execbuffer *eb)
@@ -1825,7 +1826,7 @@ static int eb_move_to_gpu(struct i915_execbuffer *eb)
 	int err;
 
 	for (i = 0; i < count; i++) {
-		const struct drm_i915_gem_exec_object2 *entry = &eb->exec[i];
+		struct drm_i915_gem_exec_object2 *entry = &eb->exec[i];
 		struct i915_vma *vma = exec_to_vma(entry);
 		struct drm_i915_gem_object *obj = vma->obj;
 
@@ -1841,11 +1842,13 @@ static int eb_move_to_gpu(struct i915_execbuffer *eb)
 			eb->request->capture_list = capture;
 		}
 
+		if (unlikely(obj->cache_dirty && !obj->cache_coherent)) {
+			if (i915_gem_clflush_object(obj, 0))
+				entry->flags &= ~EXEC_OBJECT_ASYNC;
+		}
+
 		if (entry->flags & EXEC_OBJECT_ASYNC)
 			goto skip_flushes;
-
-		if (unlikely(obj->cache_dirty && !obj->cache_coherent))
-			i915_gem_clflush_object(obj, 0);
 
 		err = i915_gem_request_await_object
 			(eb->request, obj, entry->flags & EXEC_OBJECT_WRITE);
@@ -2134,7 +2137,6 @@ i915_gem_do_execbuffer(struct drm_device *dev,
 	if (DBG_FORCE_RELOC || !(args->flags & I915_EXEC_NO_RELOC))
 		args->flags |= __EXEC_HAS_RELOC;
 	eb.exec = exec;
-	eb.ctx = NULL;
 	eb.invalid_flags = __EXEC_OBJECT_UNKNOWN_FLAGS;
 	if (USES_FULL_PPGTT(eb.i915))
 		eb.invalid_flags |= EXEC_OBJECT_NEEDS_GTT;
@@ -2192,6 +2194,10 @@ i915_gem_do_execbuffer(struct drm_device *dev,
 
 	GEM_BUG_ON(!eb.lut_size);
 
+	err = eb_select_context(&eb);
+	if (unlikely(err))
+		goto err_destroy;
+
 	/*
 	 * Take a local wakeref for preparing to dispatch the execbuf as
 	 * we expect to access the hardware fairly frequently in the
@@ -2200,16 +2206,13 @@ i915_gem_do_execbuffer(struct drm_device *dev,
 	 * 100ms.
 	 */
 	intel_runtime_pm_get(eb.i915);
+
 	err = i915_mutex_lock_interruptible(dev);
 	if (err)
 		goto err_rpm;
 
-	err = eb_select_context(&eb);
-	if (unlikely(err))
-		goto err_unlock;
-
 	err = eb_relocate(&eb);
-	if (err)
+	if (err) {
 		/*
 		 * If the user expects the execobject.offset and
 		 * reloc.presumed_offset to be an exact match,
@@ -2218,8 +2221,8 @@ i915_gem_do_execbuffer(struct drm_device *dev,
 		 * relocation.
 		 */
 		args->flags &= ~__EXEC_HAS_RELOC;
-	if (err < 0)
 		goto err_vma;
+	}
 
 	if (unlikely(eb.batch->exec_entry->flags & EXEC_OBJECT_WRITE)) {
 		DRM_DEBUG("Attempting to use self-modifying batch buffer\n");
@@ -2343,11 +2346,11 @@ err_batch_unpin:
 err_vma:
 	if (eb.exec)
 		eb_release_vmas(&eb);
-	i915_gem_context_put(eb.ctx);
-err_unlock:
 	mutex_unlock(&dev->struct_mutex);
 err_rpm:
 	intel_runtime_pm_put(eb.i915);
+	i915_gem_context_put(eb.ctx);
+err_destroy:
 	eb_destroy(&eb);
 err_out_fence:
 	if (out_fence_fd != -1)
