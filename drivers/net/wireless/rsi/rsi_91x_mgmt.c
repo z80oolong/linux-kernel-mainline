@@ -1663,7 +1663,12 @@ int rsi_send_ps_request(struct rsi_hw *adapter, bool enable,
 		ps->desc.desc_dword3.token = cpu_to_le16(RSI_WAKEUP_REQUEST);
 	}
 
-	ps->ps_uapsd_acs = common->uapsd_bitmap;
+	if (common->uapsd_bitmap) {
+		ps->ps_uapsd_acs = (adapter->hw->uapsd_max_sp_len <<
+				    IEEE80211_WMM_IE_STA_QOSINFO_SP_SHIFT) |
+				   IEEE80211_WMM_IE_STA_QOSINFO_AC_MASK;
+		ps->ps_uapsd_wakeup_period = RSI_UAPSD_WAKEUP_PERIOD;
+	}
 
 	ps->ps_sleep.sleep_type = ps_info->sleep_type;
 	ps->ps_sleep.num_bcns_per_lis_int =
@@ -1677,13 +1682,11 @@ int rsi_send_ps_request(struct rsi_hw *adapter, bool enable,
 		ps->ps_sleep.connected_sleep = RSI_DEEP_SLEEP;
 
 	ps->ps_listen_interval = cpu_to_le32(ps_info->listen_interval);
-	ps->ps_dtim_interval_duration =
-		cpu_to_le32(ps_info->dtim_interval_duration);
+	ps->ps_dtim_interval_duration = RSI_DEFAULT_DTIM_INTERVAL;
 
 	if (ps_info->listen_interval > ps_info->dtim_interval_duration)
 		ps->ps_listen_interval = cpu_to_le32(RSI_PS_DISABLE);
 
-	ps->ps_num_dtim_intervals = cpu_to_le16(ps_info->num_dtims_per_sleep);
 	skb_put(skb, frame_len);
 
 	return rsi_send_internal_mgmt_frame(common, skb);
