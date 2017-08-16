@@ -1,0 +1,22 @@
+drm-intel drm-intel-fixes 31c1a7b8f966470ce136710a95afcf5822fecef8
+	drm/i915/cnl: Fix LSPCON support.
+drm-upstream drm-fixes 46828dc77961d9286e55671c4dd3b6c9effadf1a
+	Merge branch 'linux-4.13' of git://github.com/skeggsb/linux into drm-fixes
+drm-intel drm-intel-next-fixes 04941829b0049d2446c7042ab9686dd057d809a6
+	drm/i915: Hold RPM wakelock while initializing OA buffer
+drm-intel drm-intel-next-queued a029fa4d758f6a0a0f53c8f226d446206f32373f
+	drm/i915/cnl: Reuse skl_wm_get_hw_state on Cannonlake.
+drm-upstream drm-next efa479352fc780b305fa186cafb5f416fdf2b2cb
+	drm/nouveau: Fix merge commit
+sound-upstream for-next fdbf0488040622b225e8019d96693236dceaf832
+	ALSA: hda: make snd_kcontrol_new const
+sound-upstream for-linus a8e800fe0f68bc28ce309914f47e432742b865ed
+	ALSA: usb-audio: Apply sample rate quirk to Sennheiser headset
+drm-intel topic/core-for-CI 01cbe29aa8f8d7ffca23cf6e147a17529fae680e
+	e1000e: fix buffer overrun while the I219 is processing DMA transactions
+drm-misc drm-misc-next b9c55b6e2cc4369b0688961fa5de0e057f3ec0c4
+	drm/vc4: Continue the switch to drm_*_put() helpers
+drm-misc drm-misc-next-fixes 1ed134e6526b1b513a14fba938f6d96aa1c7f3dd
+	drm/vc4: Fix VBLANK handling in crtc->enable() path
+drm-misc drm-misc-fixes a0ffc51e20e90e0c1c2491de2b4b03f48b6caaba
+	drm/atomic: If the atomic check fails, return its value first
