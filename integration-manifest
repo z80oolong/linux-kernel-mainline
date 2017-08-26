@@ -1,0 +1,22 @@
+drm-intel drm-intel-fixes e7c50e1156b6418004187104b1135e88921efa50
+	Merge tag 'gvt-fixes-2017-08-23' of https://github.com/01org/gvt-linux into drm-intel-fixes
+drm-upstream drm-fixes da6119797705c2270f17b287660a1e7bd782a1eb
+	Merge tag 'drm-misc-fixes-2017-08-24' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm-intel drm-intel-next-fixes 04941829b0049d2446c7042ab9686dd057d809a6
+	drm/i915: Hold RPM wakelock while initializing OA buffer
+drm-intel drm-intel-next-queued 5654a1623c8717c40384b1b79251b4d9dd73b751
+	drm/i915: Fix FBC cfb stride programming for non X-tiled FB
+drm-upstream drm-next 7c0059dd832cc686bf0febefdcf8295cdd93007f
+	Merge branch 'linux-4.14' of git://github.com/skeggsb/linux into drm-next
+sound-upstream for-next e6b4c525d94e6fb28d5c4b9eb4016caa12f68841
+	ALSA: pcm: Correct broken procfs set up
+sound-upstream for-linus 9ce76511b67be8fbcdff36b7e1662e3887bb7377
+	ASoC: rt5677: Reintroduce I2C device IDs
+drm-intel topic/core-for-CI da922ca0a7b61742e8d31d53caf6b6837eb92c52
+	Revert "time: Clean up CLOCK_MONOTONIC_RAW time handling"
+drm-misc drm-misc-next 179c02fe90a4104d32e92a46b9ff4ecc32bf3647
+	drm/tve200: Add new driver for TVE200
+drm-misc drm-misc-next-fixes f44d85389e17b2e960620c1c6d89bda978a11f2b
+	drm: rename u32 in __u32 in uapi
+drm-misc drm-misc-fixes 79964dbaf662229253b281c42e82e2675a9d3b80
+	drm/bridge/sii8620: Fix memory corruption
