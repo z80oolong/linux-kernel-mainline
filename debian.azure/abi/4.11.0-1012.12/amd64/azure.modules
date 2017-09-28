@@ -366,6 +366,9 @@ joydev
 jsm
 keywrap
 khazad
+kvm
+kvm-amd
+kvm-intel
 lapb
 lec
 libahci
