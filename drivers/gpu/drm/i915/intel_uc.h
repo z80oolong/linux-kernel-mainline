@@ -24,13 +24,13 @@
 #ifndef _INTEL_UC_H_
 #define _INTEL_UC_H_
 
+#include "intel_uc_fw.h"
 #include "intel_guc_fwif.h"
 #include "i915_guc_reg.h"
 #include "intel_ringbuffer.h"
 #include "intel_guc_ct.h"
 #include "i915_vma.h"
-
-struct drm_i915_gem_request;
+#include "intel_huc.h"
 
 /*
  * This structure primarily describes the GEM object shared with the GuC.
@@ -52,17 +52,6 @@ struct drm_i915_gem_request;
  * GuC). The subsequent  pages of the client object constitute the work
  * queue (a circular array of work items), again described in the process
  * descriptor. Work queue pages are mapped momentarily as required.
- *
- * We also keep a few statistics on failures. Ideally, these should all
- * be zero!
- *   no_wq_space: times that the submission pre-check found no space was
- *                available in the work queue (note, the queue is shared,
- *                not per-engine). It is OK for this to be nonzero, but
- *                it should not be huge!
- *   b_fail: failed to ring the doorbell. This should never happen, unless
- *           somehow the hardware misbehaves, or maybe if the GuC firmware
- *           crashes? We probably need to reset the GPU to recover.
- *   retcode: errno from last guc_submit()
  */
 struct i915_guc_client {
 	struct i915_vma *vma;
@@ -77,83 +66,10 @@ struct i915_guc_client {
 
 	u16 doorbell_id;
 	unsigned long doorbell_offset;
-	u32 doorbell_cookie;
 
 	spinlock_t wq_lock;
-	uint32_t wq_offset;
-	uint32_t wq_size;
-	uint32_t wq_tail;
-	uint32_t wq_rsvd;
-	uint32_t no_wq_space;
-
 	/* Per-engine counts of GuC submissions */
 	uint64_t submissions[I915_NUM_ENGINES];
-};
-
-enum intel_uc_fw_status {
-	INTEL_UC_FIRMWARE_FAIL = -1,
-	INTEL_UC_FIRMWARE_NONE = 0,
-	INTEL_UC_FIRMWARE_PENDING,
-	INTEL_UC_FIRMWARE_SUCCESS
-};
-
-/* User-friendly representation of an enum */
-static inline
-const char *intel_uc_fw_status_repr(enum intel_uc_fw_status status)
-{
-	switch (status) {
-	case INTEL_UC_FIRMWARE_FAIL:
-		return "FAIL";
-	case INTEL_UC_FIRMWARE_NONE:
-		return "NONE";
-	case INTEL_UC_FIRMWARE_PENDING:
-		return "PENDING";
-	case INTEL_UC_FIRMWARE_SUCCESS:
-		return "SUCCESS";
-	}
-	return "<invalid>";
-}
-
-enum intel_uc_fw_type {
-	INTEL_UC_FW_TYPE_GUC,
-	INTEL_UC_FW_TYPE_HUC
-};
-
-/* User-friendly representation of an enum */
-static inline const char *intel_uc_fw_type_repr(enum intel_uc_fw_type type)
-{
-	switch (type) {
-	case INTEL_UC_FW_TYPE_GUC:
-		return "GuC";
-	case INTEL_UC_FW_TYPE_HUC:
-		return "HuC";
-	}
-	return "uC";
-}
-
-/*
- * This structure encapsulates all the data needed during the process
- * of fetching, caching, and loading the firmware image into the GuC.
- */
-struct intel_uc_fw {
-	const char *path;
-	size_t size;
-	struct drm_i915_gem_object *obj;
-	enum intel_uc_fw_status fetch_status;
-	enum intel_uc_fw_status load_status;
-
-	uint16_t major_ver_wanted;
-	uint16_t minor_ver_wanted;
-	uint16_t major_ver_found;
-	uint16_t minor_ver_found;
-
-	enum intel_uc_fw_type type;
-	uint32_t header_size;
-	uint32_t header_offset;
-	uint32_t rsa_size;
-	uint32_t rsa_offset;
-	uint32_t ucode_size;
-	uint32_t ucode_offset;
 };
 
 struct intel_guc_log {
@@ -212,16 +128,10 @@ struct intel_guc {
 	void (*notify)(struct intel_guc *guc);
 };
 
-struct intel_huc {
-	/* Generic uC firmware management */
-	struct intel_uc_fw fw;
-
-	/* HuC-specific additions */
-};
-
 /* intel_uc.c */
 void intel_uc_sanitize_options(struct drm_i915_private *dev_priv);
 void intel_uc_init_early(struct drm_i915_private *dev_priv);
+void intel_uc_init_mmio(struct drm_i915_private *dev_priv);
 void intel_uc_init_fw(struct drm_i915_private *dev_priv);
 void intel_uc_fini_fw(struct drm_i915_private *dev_priv);
 int intel_uc_init_hw(struct drm_i915_private *dev_priv);
@@ -229,6 +139,7 @@ void intel_uc_fini_hw(struct drm_i915_private *dev_priv);
 int intel_guc_sample_forcewake(struct intel_guc *guc);
 int intel_guc_send_nop(struct intel_guc *guc, const u32 *action, u32 len);
 int intel_guc_send_mmio(struct intel_guc *guc, const u32 *action, u32 len);
+int intel_guc_auth_huc(struct intel_guc *guc, u32 rsa_offset);
 
 static inline int intel_guc_send(struct intel_guc *guc, const u32 *action, u32 len)
 {
@@ -250,8 +161,6 @@ u32 intel_guc_wopcm_size(struct drm_i915_private *dev_priv);
 /* i915_guc_submission.c */
 int i915_guc_submission_init(struct drm_i915_private *dev_priv);
 int i915_guc_submission_enable(struct drm_i915_private *dev_priv);
-int i915_guc_wq_reserve(struct drm_i915_gem_request *rq);
-void i915_guc_wq_unreserve(struct drm_i915_gem_request *request);
 void i915_guc_submission_disable(struct drm_i915_private *dev_priv);
 void i915_guc_submission_fini(struct drm_i915_private *dev_priv);
 struct i915_vma *intel_guc_allocate_vma(struct intel_guc *guc, u32 size);
@@ -270,10 +179,5 @@ static inline u32 guc_ggtt_offset(struct i915_vma *vma)
 	GEM_BUG_ON(range_overflows_t(u64, offset, vma->size, GUC_GGTT_TOP));
 	return offset;
 }
-
-/* intel_huc.c */
-void intel_huc_select_fw(struct intel_huc *huc);
-void intel_huc_init_hw(struct intel_huc *huc);
-void intel_guc_auth_huc(struct drm_i915_private *dev_priv);
 
 #endif
