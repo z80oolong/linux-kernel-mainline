@@ -123,7 +123,7 @@ CONFIG_64BIT                                    policy<{'amd64': 'y', 'arm64': '
 CONFIG_CMDLINE                                  policy<{'arm64': '"console=ttyAMA0"', 'armhf': '""'}>
 CONFIG_KEXEC                                    policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y', 'ppc64el': 'y', 's390x': 'y'}>
 CONFIG_CRASH_DUMP                               policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y', 'ppc64el': 'y', 's390x': 'y'}>
-CONFIG_EFI                                      policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'n', 'i386': 'y'}>
+CONFIG_EFI                                      policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y'}>
 CONFIG_DMI                                      policy<{'amd64': 'y', 'arm64': 'y', 'i386': 'y'}>
 CONFIG_CMDLINE_FORCE                            policy<{'arm64': 'n'}>
 #
@@ -481,8 +481,8 @@ CONFIG_X509_CERTIFICATE_PARSER                  note<module signing>
 CONFIG_MODULE_SIG_KEY                           policy<{'amd64': '"certs/signing_key.pem"', 'arm64': '"certs/signing_key.pem"', 'armhf': '"certs/signing_key.pem"', 'i386': '"certs/signing_key.pem"', 'ppc64el': '"certs/signing_key.pem"', 's390x': '"certs/signing_key.pem"'}>
 CONFIG_SYSTEM_BLACKLIST_KEYRING                 policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y', 'ppc64el': 'y', 's390x': 'y'}>
 CONFIG_SYSTEM_BLACKLIST_HASH_LIST               policy<{'amd64': '""', 'arm64': '""', 'armhf': '""', 'i386': '""', 'ppc64el': '""', 's390x': '""'}>
-CONFIG_EFI_SIGNATURE_LIST_PARSER                policy<{'amd64': 'y', 'arm64': 'y', 'i386': 'y'}>
-CONFIG_LOAD_UEFI_KEYS                           policy<{'amd64': 'y', 'arm64': 'y', 'i386': 'y'}>
+CONFIG_EFI_SIGNATURE_LIST_PARSER                policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y'}>
+CONFIG_LOAD_UEFI_KEYS                           policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y'}>
 #
 CONFIG_EFI_SIGNATURE_LIST_PARSER                mark<ENFORCED>
 CONFIG_LOAD_UEFI_KEYS                           mark<ENFORCED>
@@ -1952,7 +1952,7 @@ CONFIG_FB_IMSTT                                 policy<{'amd64': 'y', 'arm64': '
 CONFIG_FB_VGA16                                 policy<{'amd64': 'm', 'i386': 'm', 'ppc64el': 'm'}>
 CONFIG_FB_UVESA                                 policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'ppc64el': 'm'}>
 CONFIG_FB_VESA                                  policy<{'amd64': 'y', 'i386': 'y'}>
-CONFIG_FB_EFI                                   policy<{'amd64': 'y', 'arm64': 'y', 'i386': 'y'}>
+CONFIG_FB_EFI                                   policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y'}>
 CONFIG_FB_N411                                  policy<{'amd64': 'm', 'i386': 'm'}>
 CONFIG_FB_HGA                                   policy<{'amd64': 'm', 'i386': 'm'}>
 CONFIG_FB_OPENCORES                             policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'ppc64el': 'm'}>
@@ -9092,7 +9092,7 @@ CONFIG_TMPFS_POSIX_ACL                          policy<{'amd64': 'y', 'arm64': '
 CONFIG_TMPFS_XATTR                              policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y', 'ppc64el': 'y', 's390x': 'y'}>
 CONFIG_HUGETLBFS                                policy<{'amd64': 'y', 'arm64': 'y', 'armhf-generic-lpae': 'y', 'i386': 'y', 'ppc64el': 'y', 's390x': 'y'}>
 CONFIG_CONFIGFS_FS                              policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y', 'ppc64el': 'y', 's390x': 'y'}>
-CONFIG_EFIVAR_FS                                policy<{'amd64': 'y', 'arm64': 'y', 'i386': 'y'}>
+CONFIG_EFIVAR_FS                                policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y'}>
 #
 CONFIG_CONFIGFS_FS                              flag<REVIEW>
 CONFIG_EFIVAR_FS                                note<needed for variable EFI update>
@@ -9156,7 +9156,7 @@ CONFIG_FW_CFG_SYSFS_CMDLINE                     policy<{'amd64': 'n', 'arm64': '
 CONFIG_QCOM_SCM_DOWNLOAD_MODE_DEFAULT           policy<{'arm64': 'n', 'armhf': 'n'}>
 
 # Menu: Firmware Drivers >> EFI (Extensible Firmware Interface) Support
-CONFIG_EFI_VARS                                 policy<{'amd64': 'y', 'arm64': 'y', 'i386': 'y'}>
+CONFIG_EFI_VARS                                 policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y'}>
 CONFIG_EFI_VARS_PSTORE                          policy<{'amd64': 'm', 'arm64': 'm', 'i386': 'm'}>
 CONFIG_EFI_VARS_PSTORE_DEFAULT_DISABLE          policy<{'amd64': 'n', 'arm64': 'n', 'i386': 'n'}>
 CONFIG_EFI_RUNTIME_MAP                          policy<{'amd64': 'y', 'i386': 'y'}>
