@@ -976,7 +976,6 @@ static int sti_hdmi_connector_get_modes(struct drm_connector *connector)
 
 	count = drm_add_edid_modes(connector, edid);
 	drm_mode_connector_update_edid_property(connector, edid);
-	drm_edid_to_eld(connector, edid);
 
 	kfree(edid);
 	return count;
@@ -1414,6 +1413,11 @@ static int sti_hdmi_probe(struct platform_device *pdev)
 	init_waitqueue_head(&hdmi->wait_event);
 
 	hdmi->irq = platform_get_irq_byname(pdev, "irq");
+	if (hdmi->irq < 0) {
+		DRM_ERROR("Cannot get HDMI irq\n");
+		ret = hdmi->irq;
+		goto release_adapter;
+	}
 
 	ret = devm_request_threaded_irq(dev, hdmi->irq, hdmi_irq,
 			hdmi_irq_thread, IRQF_ONESHOT, dev_name(dev), hdmi);
