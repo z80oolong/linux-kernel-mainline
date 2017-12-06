@@ -250,6 +250,8 @@ typedef unsigned int __bitwise iwl_ucode_tlv_api_t;
  *	include information about ACL time sharing.
  * @IWL_UCODE_TLV_API_QUOTA_LOW_LATENCY: Quota command includes a field
  *	indicating low latency direction.
+ * @IWL_UCODE_TLV_API_DEPRECATE_TTAK: RX status flag TTAK ok (bit 7) is
+ *	deprecated.
  *
  * @NUM_IWL_UCODE_TLV_API: number of bits used
  */
@@ -269,6 +271,7 @@ enum iwl_ucode_tlv_api {
 	IWL_UCODE_TLV_API_NEW_RX_STATS		= (__force iwl_ucode_tlv_api_t)35,
 	IWL_UCODE_TLV_API_COEX_ATS_EXTERNAL	= (__force iwl_ucode_tlv_api_t)37,
 	IWL_UCODE_TLV_API_QUOTA_LOW_LATENCY	= (__force iwl_ucode_tlv_api_t)38,
+	IWL_UCODE_TLV_API_DEPRECATE_TTAK	= (__force iwl_ucode_tlv_api_t)41,
 
 	NUM_IWL_UCODE_TLV_API
 #ifdef __CHECKER__
