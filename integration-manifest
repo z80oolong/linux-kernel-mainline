@@ -1,0 +1,28 @@
+drm-upstream drm-fixes db8f884ca7fe6af64d443d1510464efe23826131
+	Merge branch 'drm-fixes-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+drm-misc drm-misc-fixes a703c55004e1c5076d57e43771b3e11117796ea0
+	drm: safely free connectors from connector_iter
+drm-intel drm-intel-fixes ae64f9bd1d3621b5e60d7363bc20afb46aede215
+	Linux 4.15-rc2
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm-upstream drm-next 9c606cd4117a3c45e04a6616b1a0dbeb18eeee62
+	Merge branch 'drm-next-4.16' of git://people.freedesktop.org/~agd5f/linux into drm-next
+drm-misc drm-misc-next-fixes c209101fc1c91a318422733a3721ff6a9ff7899f
+	Merge tag 'drm-misc-fixes-2017-11-20' of git://anongit.freedesktop.org/drm/drm-misc into drm-next
+drm-intel drm-intel-next-fixes 3572f04c69ed4369da5d3c65d84fb18774aa60b6
+	drm/i915: Fix init_clock_gating for resume
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 89f3f35620c7f244880485de11079cb4d98ed604
+	drm/fb-helper: Fix potential NULL pointer dereference
+drm-intel drm-intel-next-queued 0dfa1cee613e03cee295b8d1ed8130c84311b584
+	drm/i915/huc: Load HuC only if requested
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 362bca57f5d78220f8b5907b875961af9436e229
+	ALSA: pcm: prevent UAF in snd_pcm_info
+sound-upstream for-next 108884e6c5aa731c6704000e27444d51d090078b
+	ALSA: usb-audio: Change the semantics of the enable option
+drm-intel topic/core-for-CI 0e49019717d1c285558747b0833d72ad400d0b56
+	lockdep: finer-grained completion key for kthread
