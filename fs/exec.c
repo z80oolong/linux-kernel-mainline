@@ -62,6 +62,7 @@
 #include <linux/oom.h>
 #include <linux/compat.h>
 #include <linux/vmalloc.h>
+#include <linux/delay.h>
 
 #include <trace/events/fs.h>
 
@@ -1465,6 +1466,7 @@ static void check_unsafe_exec(struct linux_binprm *bprm)
 	struct task_struct *p = current, *t;
 	unsigned n_fs;
 	bool fs_recheck;
+	int count = 0;
 
 	if (p->ptrace)
 		bprm->unsafe |= LSM_UNSAFE_PTRACE;
@@ -1492,8 +1494,11 @@ recheck:
 
 	if (p->fs->users > n_fs) {
 		if (fs_recheck) {
-			spin_unlock(&p->fs->lock);
-			goto recheck;
+			if (count++ < 20) {
+				spin_unlock(&p->fs->lock);
+				msleep_interruptible(1);
+				goto recheck;
+			}
 		}
 		bprm->unsafe |= LSM_UNSAFE_SHARE;
 	} else
