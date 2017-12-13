@@ -1702,6 +1702,18 @@ linux-azure (4.13.0-1000.0) xenial; urgency=low
 
  -- Marcelo Henrique Cerri <marcelo.cerri@canonical.com>  Wed, 22 Nov 2017 11:17:34 -0200
 
+linux-azure (4.11.0-1016.16) xenial; urgency=low
+
+  * linux-azure: 4.11.0-1016.16 -proposed tracker (LP: #1736123)
+
+  * CVE-2017-1000405
+    - mm, thp: Do not make page table dirty unconditionally in touch_p[mu]d()
+
+  * CVE-2017-16939
+    - ipsec: Fix aborted xfrm policy dump crash
+
+ -- Marcelo Henrique Cerri <marcelo.cerri@canonical.com>  Tue, 05 Dec 2017 14:20:03 -0200
+
 linux-azure (4.11.0-1015.15) xenial; urgency=low
 
   * linux-azure: 4.11.0-1015.15 -proposed tracker (LP: #1728930)
