@@ -61,7 +61,8 @@ static u32 rsi_sdio_set_cmd52_arg(bool rw,
  */
 static int rsi_cmd52writebyte(struct mmc_card *card,
 			      u32 address,
-			      u8 byte)
+			      u8 byte,
+			      bool expect_resp)
 {
 	struct mmc_command io_cmd;
 	u32 arg;
@@ -70,8 +71,10 @@ static int rsi_cmd52writebyte(struct mmc_card *card,
 	arg = rsi_sdio_set_cmd52_arg(1, 0, 0, address, byte);
 	io_cmd.opcode = SD_IO_RW_DIRECT;
 	io_cmd.arg = arg;
-	io_cmd.flags = MMC_RSP_R5 | MMC_CMD_AC;
+	io_cmd.flags = MMC_CMD_AC;
 
+	if (expect_resp)
+		io_cmd.flags |= MMC_RSP_R5;
 	return mmc_wait_for_cmd(card->host, &io_cmd, 0);
 }
 
@@ -85,7 +88,8 @@ static int rsi_cmd52writebyte(struct mmc_card *card,
  */
 static int rsi_cmd52readbyte(struct mmc_card *card,
 			     u32 address,
-			     u8 *byte)
+			     u8 *byte,
+			     bool expect_resp)
 {
 	struct mmc_command io_cmd;
 	u32 arg;
@@ -95,7 +99,9 @@ static int rsi_cmd52readbyte(struct mmc_card *card,
 	arg = rsi_sdio_set_cmd52_arg(0, 0, 0, address, 0);
 	io_cmd.opcode = SD_IO_RW_DIRECT;
 	io_cmd.arg = arg;
-	io_cmd.flags = MMC_RSP_R5 | MMC_CMD_AC;
+	io_cmd.flags = MMC_CMD_AC;
+	if (expect_resp)
+		io_cmd.flags |= MMC_RSP_R5;
 
 	err = mmc_wait_for_cmd(card->host, &io_cmd, 0);
 	if ((!err) && (byte))
@@ -177,7 +183,7 @@ static void rsi_reset_card(struct sdio_func *pfunction)
 	/* Reset 9110 chip */
 	ret = rsi_cmd52writebyte(pfunction->card,
 				 SDIO_CCCR_ABORT,
-				 (1 << 3));
+				 (1 << 3), true);
 
 	/* Card will not send any response as it is getting reset immediately
 	 * Hence expect a timeout status from host controller
@@ -286,14 +292,16 @@ static void rsi_reset_card(struct sdio_func *pfunction)
 	/* Enable high speed */
 	if (card->host->caps & MMC_CAP_SD_HIGHSPEED) {
 		rsi_dbg(ERR_ZONE, "%s: Set high speed mode\n", __func__);
-		err = rsi_cmd52readbyte(card, SDIO_CCCR_SPEED, &cmd52_resp);
+		err = rsi_cmd52readbyte(card, SDIO_CCCR_SPEED, &cmd52_resp,
+					true);
 		if (err) {
 			rsi_dbg(ERR_ZONE, "%s: CCCR speed reg read failed: %d\n",
 				__func__, err);
 		} else {
 			err = rsi_cmd52writebyte(card,
 						 SDIO_CCCR_SPEED,
-						 (cmd52_resp | SDIO_SPEED_EHS));
+						 (cmd52_resp | SDIO_SPEED_EHS),
+						 true);
 			if (err) {
 				rsi_dbg(ERR_ZONE,
 					"%s: CCR speed regwrite failed %d\n",
@@ -322,7 +330,7 @@ static void rsi_reset_card(struct sdio_func *pfunction)
 		err = rsi_cmd52writebyte(card,
 					 SDIO_CCCR_IF,
 					 (SDIO_BUS_CD_DISABLE |
-					  SDIO_BUS_WIDTH_4BIT));
+					  SDIO_BUS_WIDTH_4BIT), true);
 		if (err) {
 			rsi_dbg(ERR_ZONE, "%s: Set bus mode failed : %d\n",
 				__func__, err);
@@ -1176,7 +1184,8 @@ static int rsi_sdio_disable_interrupts(struct sdio_func *pfunc)
 	rsi_dbg(INFO_ZONE, "Interrupts cleared\n");
 
 	sdio_claim_host(pfunc);
-	ret = rsi_cmd52readbyte(pfunc->card, RSI_INT_ENABLE_REGISTER, &data);
+	ret = rsi_cmd52readbyte(pfunc->card, RSI_INT_ENABLE_REGISTER, &data,
+				false);
 	if (ret < 0) {
 		rsi_dbg(ERR_ZONE,
 			"%s: Failed to read int enable register\n",
@@ -1185,14 +1194,16 @@ static int rsi_sdio_disable_interrupts(struct sdio_func *pfunc)
 	}
 
 	data &= RSI_INT_ENABLE_MASK;
-	ret = rsi_cmd52writebyte(pfunc->card, RSI_INT_ENABLE_REGISTER, data);
+	ret = rsi_cmd52writebyte(pfunc->card, RSI_INT_ENABLE_REGISTER, data,
+				 false);
 	if (ret < 0) {
 		rsi_dbg(ERR_ZONE,
 			"%s: Failed to write to int enable register\n",
 			__func__);
 		goto done;
 	}
-	ret = rsi_cmd52readbyte(pfunc->card, RSI_INT_ENABLE_REGISTER, &data);
+	ret = rsi_cmd52readbyte(pfunc->card, RSI_INT_ENABLE_REGISTER, &data,
+				false);
 	if (ret < 0) {
 		rsi_dbg(ERR_ZONE,
 			"%s: Failed to read int enable register\n",
@@ -1214,7 +1225,8 @@ static int rsi_sdio_enable_interrupts(struct sdio_func *pfunc)
 	struct rsi_common *common = adapter->priv;
 
 	sdio_claim_host(pfunc);
-	ret = rsi_cmd52readbyte(pfunc->card, RSI_INT_ENABLE_REGISTER, &data);
+	ret = rsi_cmd52readbyte(pfunc->card, RSI_INT_ENABLE_REGISTER, &data,
+				false);
 	if (ret < 0) {
 		rsi_dbg(ERR_ZONE,
 			"%s: Failed to read int enable register\n", __func__);
@@ -1223,7 +1235,8 @@ static int rsi_sdio_enable_interrupts(struct sdio_func *pfunc)
 
 	data |= ~RSI_INT_ENABLE_MASK & 0xff;
 
-	ret = rsi_cmd52writebyte(pfunc->card, RSI_INT_ENABLE_REGISTER, data);
+	ret = rsi_cmd52writebyte(pfunc->card, RSI_INT_ENABLE_REGISTER, data,
+				 false);
 	if (ret < 0) {
 		rsi_dbg(ERR_ZONE,
 			"%s: Failed to write to int enable register\n",
@@ -1236,7 +1249,8 @@ static int rsi_sdio_enable_interrupts(struct sdio_func *pfunc)
 		rsi_dbg(ERR_ZONE,
 			"##### Device can not wake up through WLAN\n");
 
-	ret = rsi_cmd52readbyte(pfunc->card, RSI_INT_ENABLE_REGISTER, &data);
+	ret = rsi_cmd52readbyte(pfunc->card, RSI_INT_ENABLE_REGISTER, &data,
+				false);
 	if (ret < 0) {
 		rsi_dbg(ERR_ZONE,
 			"%s: Failed to read int enable register\n", __func__);
