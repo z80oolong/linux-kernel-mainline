@@ -1376,8 +1376,12 @@ static int rsi_restore(struct device *dev)
 	common->iface_down = true;
 
 	adapter->sc_nvifs = 0;
+	rsi_mac80211_cancel_hw_scan(adapter->hw, adapter->priv->scan_vif);
+	flush_workqueue(adapter->priv->scan_workqueue);
+	ieee80211_stop_queues(adapter->hw);
 	ieee80211_restart_hw(adapter->hw);
 
+	adapter->priv->reinit_hw = true;
 	common->wow_flags = 0;
 	common->iface_down = false;
 
