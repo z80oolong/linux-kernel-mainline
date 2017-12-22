@@ -246,6 +246,11 @@ static int rsi_mac80211_hw_scan_start(struct ieee80211_hw *hw,
 	if (common->fsm_state != FSM_MAC_INIT_DONE)
 		return -ENODEV;
 
+#ifdef CONFIG_RSI_WOW
+	if (common->wow_flags & RSI_WOW_ENABLED)
+		return -ENETDOWN;
+#endif
+
 	if ((common->wow_flags & RSI_WOW_ENABLED) ||
 	    scan_req->n_channels == 0)
 		return -EINVAL;
@@ -276,8 +281,8 @@ static int rsi_mac80211_hw_scan_start(struct ieee80211_hw *hw,
 	return 0;
 }
 
-static void rsi_mac80211_cancel_hw_scan(struct ieee80211_hw *hw,
-					struct ieee80211_vif *vif)
+void rsi_mac80211_cancel_hw_scan(struct ieee80211_hw *hw,
+				 struct ieee80211_vif *vif)
 {
 	struct rsi_hw *adapter = hw->priv;
 	struct rsi_common *common = adapter->priv;
@@ -304,7 +309,7 @@ static void rsi_mac80211_cancel_hw_scan(struct ieee80211_hw *hw,
 	common->scan_vif = NULL;
 	mutex_unlock(&common->mutex);
 }
-
+EXPORT_SYMBOL_GPL(rsi_mac80211_cancel_hw_scan);
 /**
  * rsi_mac80211_detach() - This function is used to de-initialize the
  *			   Mac80211 stack.
@@ -2126,8 +2131,11 @@ static int rsi_mac80211_resume(struct ieee80211_hw *hw)
 
 	rsi_dbg(INFO_ZONE, "%s: mac80211 resume\n", __func__);
 
-	if (common->hibernate_resume)
+	if (common->hibernate_resume) {
+		if (common->reinit_hw)
+			wait_for_completion(&common->wlan_init_completion);
 		return 0;
+	}
 
 	mutex_lock(&common->mutex);
 	rsi_send_wowlan_request(common, 0, 0);
