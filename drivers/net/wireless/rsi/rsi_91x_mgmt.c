@@ -2152,7 +2152,10 @@ static int rsi_handle_ta_confirm_type(struct rsi_common *common,
 			if (!common->bb_rf_prog_count) {
 				common->fsm_state = FSM_MAC_INIT_DONE;
 				if (common->reinit_hw) {
+					common->hw_data_qs_blocked = false;
+					ieee80211_wake_queues(adapter->hw);
 					complete(&common->wlan_init_completion);
+					common->reinit_hw = false;
 				} else {
 					return rsi_mac80211_attach(common);
 				}
