@@ -90,6 +90,8 @@ int rsi_read_pkt(struct rsi_common *common, u8 *rx_pkt, s32 rcv_pkt_len);
 #ifdef CONFIG_PM
 int rsi_config_wowlan(struct rsi_hw *adapter, struct cfg80211_wowlan *wowlan);
 #endif
+void rsi_mac80211_cancel_hw_scan(struct ieee80211_hw *hw,
+				 struct ieee80211_vif *vif);
 struct rsi_sta *rsi_find_sta(struct rsi_common *common, u8 *mac_addr);
 struct ieee80211_vif *rsi_get_vif(struct rsi_hw *adapter, u8 *mac);
 void rsi_roc_timeout(struct timer_list *t);
