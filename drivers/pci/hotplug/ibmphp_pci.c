@@ -153,10 +153,9 @@ int ibmphp_configure_card(struct pci_func *func, u8 slotno)
 						goto error;
 					}
 					newfunc = kzalloc(sizeof(*newfunc), GFP_KERNEL);
-					if (!newfunc) {
-						err("out of system memory\n");
+					if (!newfunc)
 						return -ENOMEM;
-					}
+
 					newfunc->busno = cur_func->busno;
 					newfunc->device = device;
 					cur_func->next = newfunc;
@@ -191,10 +190,9 @@ int ibmphp_configure_card(struct pci_func *func, u8 slotno)
 					for (i = 0; i < 32; i++) {
 						if (func->devices[i]) {
 							newfunc = kzalloc(sizeof(*newfunc), GFP_KERNEL);
-							if (!newfunc) {
-								err("out of system memory\n");
+							if (!newfunc)
 								return -ENOMEM;
-							}
+
 							newfunc->busno = sec_number;
 							newfunc->device = (u8) i;
 							for (j = 0; j < 4; j++)
@@ -219,10 +217,9 @@ int ibmphp_configure_card(struct pci_func *func, u8 slotno)
 					}
 
 					newfunc = kzalloc(sizeof(*newfunc), GFP_KERNEL);
-					if (!newfunc) {
-						err("out of system memory\n");
+					if (!newfunc)
 						return -ENOMEM;
-					}
+
 					newfunc->busno = cur_func->busno;
 					newfunc->device = device;
 					for (j = 0; j < 4; j++)
@@ -265,10 +262,9 @@ int ibmphp_configure_card(struct pci_func *func, u8 slotno)
 						if (func->devices[i]) {
 							debug("inside for loop, device is %x\n", i);
 							newfunc = kzalloc(sizeof(*newfunc), GFP_KERNEL);
-							if (!newfunc) {
-								err(" out of system memory\n");
+							if (!newfunc)
 								return -ENOMEM;
-							}
+
 							newfunc->busno = sec_number;
 							newfunc->device = (u8) i;
 							for (j = 0; j < 4; j++)
@@ -391,10 +387,9 @@ static int configure_device(struct pci_func *func)
 
 			io[count] = kzalloc(sizeof(struct resource_node), GFP_KERNEL);
 
-			if (!io[count]) {
-				err("out of system memory\n");
+			if (!io[count])
 				return -ENOMEM;
-			}
+
 			io[count]->type = IO;
 			io[count]->busno = func->busno;
 			io[count]->devfunc = PCI_DEVFN(func->device, func->function);
@@ -428,10 +423,9 @@ static int configure_device(struct pci_func *func)
 				debug("len[count] in PFMEM %x, count %d\n", len[count], count);
 
 				pfmem[count] = kzalloc(sizeof(struct resource_node), GFP_KERNEL);
-				if (!pfmem[count]) {
-					err("out of system memory\n");
+				if (!pfmem[count])
 					return -ENOMEM;
-				}
+
 				pfmem[count]->type = PFMEM;
 				pfmem[count]->busno = func->busno;
 				pfmem[count]->devfunc = PCI_DEVFN(func->device,
@@ -444,7 +438,6 @@ static int configure_device(struct pci_func *func)
 				} else {
 					mem_tmp = kzalloc(sizeof(*mem_tmp), GFP_KERNEL);
 					if (!mem_tmp) {
-						err("out of system memory\n");
 						kfree(pfmem[count]);
 						return -ENOMEM;
 					}
@@ -494,10 +487,9 @@ static int configure_device(struct pci_func *func)
 				debug("len[count] in Mem %x, count %d\n", len[count], count);
 
 				mem[count] = kzalloc(sizeof(struct resource_node), GFP_KERNEL);
-				if (!mem[count]) {
-					err("out of system memory\n");
+				if (!mem[count])
 					return -ENOMEM;
-				}
+
 				mem[count]->type = MEM;
 				mem[count]->busno = func->busno;
 				mem[count]->devfunc = PCI_DEVFN(func->device,
@@ -660,7 +652,6 @@ static int configure_bridge(struct pci_func **func_passed, u8 slotno)
 			bus_io[count] = kzalloc(sizeof(struct resource_node), GFP_KERNEL);
 
 			if (!bus_io[count]) {
-				err("out of system memory\n");
 				retval = -ENOMEM;
 				goto error;
 			}
@@ -692,7 +683,6 @@ static int configure_bridge(struct pci_func **func_passed, u8 slotno)
 
 				bus_pfmem[count] = kzalloc(sizeof(struct resource_node), GFP_KERNEL);
 				if (!bus_pfmem[count]) {
-					err("out of system memory\n");
 					retval = -ENOMEM;
 					goto error;
 				}
@@ -708,7 +698,6 @@ static int configure_bridge(struct pci_func **func_passed, u8 slotno)
 				} else {
 					mem_tmp = kzalloc(sizeof(*mem_tmp), GFP_KERNEL);
 					if (!mem_tmp) {
-						err("out of system memory\n");
 						retval = -ENOMEM;
 						goto error;
 					}
@@ -749,7 +738,6 @@ static int configure_bridge(struct pci_func **func_passed, u8 slotno)
 
 				bus_mem[count] = kzalloc(sizeof(struct resource_node), GFP_KERNEL);
 				if (!bus_mem[count]) {
-					err("out of system memory\n");
 					retval = -ENOMEM;
 					goto error;
 				}
@@ -820,7 +808,6 @@ static int configure_bridge(struct pci_func **func_passed, u8 slotno)
 		io = kzalloc(sizeof(*io), GFP_KERNEL);
 
 		if (!io) {
-			err("out of system memory\n");
 			retval = -ENOMEM;
 			goto error;
 		}
@@ -842,7 +829,6 @@ static int configure_bridge(struct pci_func **func_passed, u8 slotno)
 		debug("it wants %x memory behind the bridge\n", amount_needed->mem);
 		mem = kzalloc(sizeof(*mem), GFP_KERNEL);
 		if (!mem) {
-			err("out of system memory\n");
 			retval = -ENOMEM;
 			goto error;
 		}
@@ -864,7 +850,6 @@ static int configure_bridge(struct pci_func **func_passed, u8 slotno)
 		debug("it wants %x pfmemory behind the bridge\n", amount_needed->pfmem);
 		pfmem = kzalloc(sizeof(*pfmem), GFP_KERNEL);
 		if (!pfmem) {
-			err("out of system memory\n");
 			retval = -ENOMEM;
 			goto error;
 		}
@@ -879,7 +864,6 @@ static int configure_bridge(struct pci_func **func_passed, u8 slotno)
 		} else {
 			mem_tmp = kzalloc(sizeof(*mem_tmp), GFP_KERNEL);
 			if (!mem_tmp) {
-				err("out of system memory\n");
 				retval = -ENOMEM;
 				goto error;
 			}
@@ -910,7 +894,6 @@ static int configure_bridge(struct pci_func **func_passed, u8 slotno)
 		if (!bus) {
 			bus = kzalloc(sizeof(*bus), GFP_KERNEL);
 			if (!bus) {
-				err("out of system memory\n");
 				retval = -ENOMEM;
 				goto error;
 			}
@@ -1638,10 +1621,9 @@ static int add_new_bus(struct bus_node *bus, struct resource_node *io, struct re
 	}
 	if (io) {
 		io_range = kzalloc(sizeof(*io_range), GFP_KERNEL);
-		if (!io_range) {
-			err("out of system memory\n");
+		if (!io_range)
 			return -ENOMEM;
-		}
+
 		io_range->start = io->start;
 		io_range->end = io->end;
 		io_range->rangeno = 1;
@@ -1650,10 +1632,9 @@ static int add_new_bus(struct bus_node *bus, struct resource_node *io, struct re
 	}
 	if (mem) {
 		mem_range = kzalloc(sizeof(*mem_range), GFP_KERNEL);
-		if (!mem_range) {
-			err("out of system memory\n");
+		if (!mem_range)
 			return -ENOMEM;
-		}
+
 		mem_range->start = mem->start;
 		mem_range->end = mem->end;
 		mem_range->rangeno = 1;
@@ -1662,10 +1643,9 @@ static int add_new_bus(struct bus_node *bus, struct resource_node *io, struct re
 	}
 	if (pfmem) {
 		pfmem_range = kzalloc(sizeof(*pfmem_range), GFP_KERNEL);
-		if (!pfmem_range) {
-			err("out of system memory\n");
+		if (!pfmem_range)
 			return -ENOMEM;
-		}
+
 		pfmem_range->start = pfmem->start;
 		pfmem_range->end = pfmem->end;
 		pfmem_range->rangeno = 1;
