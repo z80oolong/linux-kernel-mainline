@@ -42,10 +42,8 @@ static struct bus_node * __init alloc_error_bus(struct ebda_pci_rsrc *curr, u8 b
 	}
 
 	newbus = kzalloc(sizeof(struct bus_node), GFP_KERNEL);
-	if (!newbus) {
-		err("out of system memory\n");
+	if (!newbus)
 		return NULL;
-	}
 
 	if (flag)
 		newbus->busno = busno;
@@ -65,10 +63,9 @@ static struct resource_node * __init alloc_resources(struct ebda_pci_rsrc *curr)
 	}
 
 	rs = kzalloc(sizeof(struct resource_node), GFP_KERNEL);
-	if (!rs) {
-		err("out of system memory\n");
+	if (!rs)
 		return NULL;
-	}
+
 	rs->busno = curr->bus_num;
 	rs->devfunc = curr->dev_fun;
 	rs->start = curr->start_addr;
@@ -85,10 +82,9 @@ static int __init alloc_bus_range(struct bus_node **new_bus, struct range_node *
 
 	if (first_bus) {
 		newbus = kzalloc(sizeof(struct bus_node), GFP_KERNEL);
-		if (!newbus) {
-			err("out of system memory.\n");
+		if (!newbus)
 			return -ENOMEM;
-		}
+
 		newbus->busno = curr->bus_num;
 	} else {
 		newbus = *new_bus;
@@ -109,7 +105,6 @@ static int __init alloc_bus_range(struct bus_node **new_bus, struct range_node *
 	if (!newrange) {
 		if (first_bus)
 			kfree(newbus);
-		err("out of system memory\n");
 		return -ENOMEM;
 	}
 	newrange->start = curr->start_addr;
@@ -1693,10 +1688,9 @@ static int __init once_over(void)
 				bus_cur->firstPFMemFromMem = pfmem_cur;
 
 				mem = kzalloc(sizeof(struct resource_node), GFP_KERNEL);
-				if (!mem) {
-					err("out of system memory\n");
+				if (!mem)
 					return -ENOMEM;
-				}
+
 				mem->type = MEM;
 				mem->busno = pfmem_cur->busno;
 				mem->devfunc = pfmem_cur->devfunc;
@@ -1975,10 +1969,9 @@ static int __init update_bridge_ranges(struct bus_node **bus)
 
 						if ((start_address) && (start_address <= end_address)) {
 							range = kzalloc(sizeof(struct range_node), GFP_KERNEL);
-							if (!range) {
-								err("out of system memory\n");
+							if (!range)
 								return -ENOMEM;
-							}
+
 							range->start = start_address;
 							range->end = end_address + 0xfff;
 
@@ -2002,7 +1995,6 @@ static int __init update_bridge_ranges(struct bus_node **bus)
 								io = kzalloc(sizeof(struct resource_node), GFP_KERNEL);
 								if (!io) {
 									kfree(range);
-									err("out of system memory\n");
 									return -ENOMEM;
 								}
 								io->type = IO;
@@ -2024,10 +2016,9 @@ static int __init update_bridge_ranges(struct bus_node **bus)
 						if ((start_address) && (start_address <= end_address)) {
 
 							range = kzalloc(sizeof(struct range_node), GFP_KERNEL);
-							if (!range) {
-								err("out of system memory\n");
+							if (!range)
 								return -ENOMEM;
-							}
+
 							range->start = start_address;
 							range->end = end_address + 0xfffff;
 
@@ -2052,7 +2043,6 @@ static int __init update_bridge_ranges(struct bus_node **bus)
 								mem = kzalloc(sizeof(struct resource_node), GFP_KERNEL);
 								if (!mem) {
 									kfree(range);
-									err("out of system memory\n");
 									return -ENOMEM;
 								}
 								mem->type = MEM;
@@ -2078,10 +2068,9 @@ static int __init update_bridge_ranges(struct bus_node **bus)
 						if ((start_address) && (start_address <= end_address)) {
 
 							range = kzalloc(sizeof(struct range_node), GFP_KERNEL);
-							if (!range) {
-								err("out of system memory\n");
+							if (!range)
 								return -ENOMEM;
-							}
+
 							range->start = start_address;
 							range->end = end_address + 0xfffff;
 
@@ -2105,7 +2094,6 @@ static int __init update_bridge_ranges(struct bus_node **bus)
 								pfmem = kzalloc(sizeof(struct resource_node), GFP_KERNEL);
 								if (!pfmem) {
 									kfree(range);
-									err("out of system memory\n");
 									return -ENOMEM;
 								}
 								pfmem->type = PFMEM;
