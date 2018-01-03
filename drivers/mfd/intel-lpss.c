@@ -469,6 +469,8 @@ int intel_lpss_probe(struct device *dev,
 	if (ret)
 		goto err_remove_ltr;
 
+	dev_pm_set_driver_flags(dev, DPM_FLAG_SMART_SUSPEND);
+
 	return 0;
 
 err_remove_ltr:
@@ -497,7 +499,9 @@ EXPORT_SYMBOL_GPL(intel_lpss_remove);
 
 static int resume_lpss_device(struct device *dev, void *data)
 {
-	pm_runtime_resume(dev);
+	if (!dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND))
+		pm_runtime_resume(dev);
+
 	return 0;
 }
 
