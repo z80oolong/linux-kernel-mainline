@@ -36,6 +36,81 @@
 #define dmb(x) __asm__ __volatile__ ("" : : : "memory")
 #endif
 
+#ifdef CONFIG_THUMB2_KERNEL
+#define __load_no_speculate_n(ptr, lo, hi, failval, cmpptr, sz)	\
+({								\
+	typeof(*ptr) __nln_val;					\
+	typeof(*ptr) __failval =				\
+		(typeof(*ptr))(unsigned long)(failval);		\
+								\
+	asm volatile (						\
+	"	cmp	%[c], %[l]\n"				\
+	"	it	hs\n"					\
+	"	cmphs	%[h], %[c]\n"				\
+	"	blo	1f\n"					\
+	"	ld" #sz " %[v], %[p]\n"				\
+	"1:	it	lo\n"					\
+	"	movlo	%[v], %[f]\n"				\
+	"	.inst 0xf3af8014 @ CSDB\n"			\
+	: [v] "=&r" (__nln_val)					\
+	: [p] "m" (*(ptr)), [l] "r" (lo), [h] "r" (hi),		\
+	  [f] "r" (__failval), [c] "r" (cmpptr)			\
+	: "cc");						\
+								\
+	__nln_val;						\
+})
+#else
+#define __load_no_speculate_n(ptr, lo, hi, failval, cmpptr, sz)	\
+({								\
+	typeof(*ptr) __nln_val;					\
+	typeof(*ptr) __failval =				\
+		(typeof(*ptr))(unsigned long)(failval);		\
+								\
+	asm volatile (						\
+	"	cmp	%[c], %[l]\n"				\
+	"	cmphs	%[h], %[c]\n"				\
+	"	ldr" #sz "hi %[v], %[p]\n"			\
+	"	movls	%[v], %[f]\n"				\
+	"	.inst 0xe320f014 @ CSDB\n"			\
+	: [v] "=&r" (__nln_val)					\
+	: [p] "m" (*(ptr)), [l] "r" (lo), [h] "r" (hi),		\
+	  [f] "r" (__failval), [c] "r" (cmpptr)			\
+	: "cc");						\
+								\
+	__nln_val;						\
+})
+#endif
+
+#define __load_no_speculate(ptr, lo, hi, failval, cmpptr)		\
+({									\
+	typeof(*(ptr)) __nl_val;					\
+									\
+	switch (sizeof(__nl_val)) {					\
+	case 1:								\
+		__nl_val = __load_no_speculate_n(ptr, lo, hi, failval,	\
+						 cmpptr, b);		\
+		break;							\
+	case 2:								\
+		__nl_val = __load_no_speculate_n(ptr, lo, hi, failval,	\
+						 cmpptr, h);		\
+		break;							\
+	case 4:								\
+		__nl_val = __load_no_speculate_n(ptr, lo, hi, failval,	\
+						 cmpptr, );		\
+		break;							\
+	default:							\
+		BUILD_BUG();						\
+	}								\
+									\
+	__nl_val;							\
+})
+
+#define nospec_ptr(ptr, lo, hi)						\
+({									\
+	typeof(ptr) __np_ptr = (ptr);					\
+	__load_no_speculate(&__np_ptr, lo, hi, 0, __np_ptr);		\
+})
+
 #ifdef CONFIG_ARM_HEAVY_MB
 extern void (*soc_mb)(void);
 extern void arm_heavy_mb(void);
