@@ -4107,7 +4107,7 @@ EXPORT_SYMBOL vmlinux 0x00000000	cpu_rmap_add
 EXPORT_SYMBOL vmlinux 0x00000000	cpu_rmap_put
 EXPORT_SYMBOL vmlinux 0x00000000	cpu_rmap_update
 EXPORT_SYMBOL vmlinux 0x00000000	cpu_sibling_map
-EXPORT_SYMBOL vmlinux 0x00000000	cpu_tss
+EXPORT_SYMBOL vmlinux 0x00000000	cpu_tss_rw
 EXPORT_SYMBOL vmlinux 0x00000000	cpufreq_generic_suspend
 EXPORT_SYMBOL vmlinux 0x00000000	cpufreq_get
 EXPORT_SYMBOL vmlinux 0x00000000	cpufreq_get_policy
@@ -4858,6 +4858,7 @@ EXPORT_SYMBOL vmlinux 0x00000000	get_anon_bdev
 EXPORT_SYMBOL vmlinux 0x00000000	get_bitmap_from_slot
 EXPORT_SYMBOL vmlinux 0x00000000	get_cached_acl
 EXPORT_SYMBOL vmlinux 0x00000000	get_cached_acl_rcu
+EXPORT_SYMBOL vmlinux 0x00000000	get_cpu_entry_area
 EXPORT_SYMBOL vmlinux 0x00000000	get_default_font
 EXPORT_SYMBOL vmlinux 0x00000000	get_disk
 EXPORT_SYMBOL vmlinux 0x00000000	get_fs_type
@@ -7698,9 +7699,7 @@ EXPORT_SYMBOL vmlinux 0x00000000	x86_cpu_to_acpiid
 EXPORT_SYMBOL vmlinux 0x00000000	x86_cpu_to_apicid
 EXPORT_SYMBOL vmlinux 0x00000000	x86_cpu_to_node_map
 EXPORT_SYMBOL vmlinux 0x00000000	x86_dma_fallback_dev
-EXPORT_SYMBOL vmlinux 0x00000000	x86_hyper
-EXPORT_SYMBOL vmlinux 0x00000000	x86_hyper_ms_hyperv
-EXPORT_SYMBOL vmlinux 0x00000000	x86_hyper_vmware
+EXPORT_SYMBOL vmlinux 0x00000000	x86_hyper_type
 EXPORT_SYMBOL vmlinux 0x00000000	x86_match_cpu
 EXPORT_SYMBOL vmlinux 0x00000000	xattr_full_name
 EXPORT_SYMBOL vmlinux 0x00000000	xfrm4_prepare_output
@@ -13657,7 +13656,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	pskb_put
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pstore_cannot_block_path
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pstore_register
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pstore_unregister
-EXPORT_SYMBOL_GPL vmlinux 0x00000000	ptdump_walk_pgd_level
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	ptdump_walk_pgd_level_debugfs
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	ptp_classify_raw
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	public_key_free
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	public_key_signature_free
@@ -14820,7 +14819,6 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	x509_cert_parse
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	x509_decode_time
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	x509_free_certificate
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	x86_family
-EXPORT_SYMBOL_GPL vmlinux 0x00000000	x86_hyper_kvm
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	x86_model
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	x86_platform
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	x86_stepping
