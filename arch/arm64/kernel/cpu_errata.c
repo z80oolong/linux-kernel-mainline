@@ -335,8 +335,17 @@ const struct arm64_cpu_capabilities arm64_errata[] = {
 		.enable = qcom_enable_link_stack_sanitization,
 	},
 	{
+		.capability = ARM64_HARDEN_BRANCH_PREDICTOR,
+		MIDR_ALL_VERSIONS(MIDR_QCOM_FALKOR),
+		.enable = qcom_enable_link_stack_sanitization,
+	},
+	{
 		.capability = ARM64_HARDEN_BP_POST_GUEST_EXIT,
 		MIDR_ALL_VERSIONS(MIDR_QCOM_FALKOR_V1),
+	},
+	{
+		.capability = ARM64_HARDEN_BP_POST_GUEST_EXIT,
+		MIDR_ALL_VERSIONS(MIDR_QCOM_FALKOR),
 	},
 	{
 		.capability = ARM64_HARDEN_BRANCH_PREDICTOR,
