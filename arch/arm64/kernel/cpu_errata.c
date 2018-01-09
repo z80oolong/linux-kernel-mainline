@@ -128,6 +128,7 @@ static void  install_bp_hardening_cb(const struct arm64_cpu_capabilities *entry,
 	__install_bp_hardening_cb(fn, hyp_vecs_start, hyp_vecs_end);
 }
 
+#include <linux/arm-smccc.h>
 #include <linux/psci.h>
 
 static int enable_psci_bp_hardening(void *data)
@@ -162,6 +163,33 @@ static int qcom_enable_link_stack_sanitization(void *data)
 	install_bp_hardening_cb(entry, qcom_link_stack_sanitization,
 				__qcom_hyp_sanitize_link_stack_start,
 				__qcom_hyp_sanitize_link_stack_end);
+
+	return 0;
+}
+
+#define CAVIUM_TX2_SIP_SMC_CALL		0xC200FF00
+#define CAVIUM_TX2_BTB_HARDEN_CAP	0xB0A0
+
+static int enable_tx2_psci_bp_hardening(void *data)
+{
+	const struct arm64_cpu_capabilities *entry = data;
+	struct arm_smccc_res res;
+
+	if (!entry->matches(entry, SCOPE_LOCAL_CPU))
+		return 0;
+
+	arm_smccc_smc(CAVIUM_TX2_SIP_SMC_CALL, CAVIUM_TX2_BTB_HARDEN_CAP, 0, 0, 0, 0, 0, 0, &res);
+	if (res.a0 != 0) {
+		pr_warn_once("Error: CONFIG_HARDEN_BRANCH_PREDICTOR enabled, but firmware does not support it\n");
+		return 0;
+	}
+	if (res.a1 == 1 && psci_ops.get_version) {
+		pr_info_once("Branch predictor hardening: Enabled, using PSCI version call.\n");
+		install_bp_hardening_cb(entry,
+				       (bp_hardening_cb_t)psci_ops.get_version,
+				       __psci_hyp_bp_inval_start,
+				       __psci_hyp_bp_inval_end);
+	}
 
 	return 0;
 }
@@ -350,12 +378,12 @@ const struct arm64_cpu_capabilities arm64_errata[] = {
 	{
 		.capability = ARM64_HARDEN_BRANCH_PREDICTOR,
 		MIDR_ALL_VERSIONS(MIDR_BRCM_VULCAN),
-		.enable = enable_psci_bp_hardening,
+		.enable = enable_tx2_psci_bp_hardening,
 	},
 	{
 		.capability = ARM64_HARDEN_BRANCH_PREDICTOR,
 		MIDR_ALL_VERSIONS(MIDR_CAVIUM_THUNDERX2),
-		.enable = enable_psci_bp_hardening,
+		.enable = enable_tx2_psci_bp_hardening,
 	},
 #endif
 	{
