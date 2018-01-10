@@ -961,14 +961,22 @@ void setup_stf_barrier(void)
 		stf_barrier_enable(enable);
 }
 
-static void init_fallback_flush(void)
+static bool init_fallback_flush(void)
 {
 	u64 l1d_size, limit;
 	int cpu;
 
 	/* Only allocate the fallback flush area once (at boot time). */
 	if (l1d_flush_fallback_area)
-		return;
+		return true;
+
+	/*
+	 * Once the slab allocator is up it's too late to allocate the fallback
+	 * flush area, so return an error. This could happen if we migrated from
+	 * a patched machine to an unpatched machine.
+	 */
+	if (slab_is_available())
+		return false;
 
 	l1d_size = ppc64_caches.dsize;
 	limit = min(safe_stack_limit(), ppc64_rma_size);
@@ -985,13 +993,19 @@ static void init_fallback_flush(void)
 		paca[cpu].rfi_flush_fallback_area = l1d_flush_fallback_area;
 		paca[cpu].l1d_flush_size = l1d_size;
 	}
+
+	return true;
 }
 
 void setup_rfi_flush(enum l1d_flush_type types, bool enable)
 {
 	if (types & L1D_FLUSH_FALLBACK) {
-		pr_info("rfi-flush: fallback displacement flush available\n");
-		init_fallback_flush();
+		if (init_fallback_flush())
+			pr_info("rfi-flush: Using fallback displacement flush\n");
+		else {
+			pr_warn("rfi-flush: Error unable to use fallback displacement flush!\n");
+			types &= ~L1D_FLUSH_FALLBACK;
+		}
 	}
 
 	if (types & L1D_FLUSH_ORI)
