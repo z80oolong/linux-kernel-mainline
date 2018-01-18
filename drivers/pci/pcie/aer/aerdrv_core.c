@@ -227,9 +227,8 @@ static bool find_source_device(struct pci_dev *parent,
 	pci_walk_bus(parent->subordinate, find_device_iter, e_info);
 
 	if (!e_info->error_dev_num) {
-		dev_printk(KERN_DEBUG, &parent->dev,
-				"can't find device of ID%04x\n",
-				e_info->id);
+		pci_printk(KERN_DEBUG, parent, "can't find device of ID%04x\n",
+			   e_info->id);
 		return false;
 	}
 	return true;
