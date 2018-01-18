@@ -1,0 +1,32 @@
+drm-upstream drm-fixes 75f195f46f27a2524b249b95e6f241cd13c7e549
+	Merge tag 'drm-misc-fixes-2018-01-17' of git://anongit.freedesktop.org/drm/drm-misc into drm-fixes
+drm-misc drm-misc-fixes 17b11b76b87afe9f8be199d7a5f442497133e2b0
+	drm/vc4: Fix NULL pointer dereference in vc4_save_hang_state()
+drm-intel drm-intel-fixes 4488496d58200c7511842e049a4cc891d928da56
+	drm/i915: Fix deadlock in i830_disable_pipe()
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm-upstream drm-next 4a6cc7a44e98a0460bd094b68c75f0705fdc450a
+	BackMerge tag 'v4.15-rc8' into drm-next
+drm-misc drm-misc-next-fixes 341a0ffceaa44660c43d219a3b2569ebbd7d3ad1
+	drm: Fix PANEL_ORIENTATION_QUIRKS breaking the Kconfig DRM menuconfig
+drm-intel drm-intel-next-fixes 0b8a77f5a6eb321f2ee0eed51b67f6c2699ee32f
+	drm/i915: Only attempt to scan the requested number of shrinker slabs
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next e1ca774b3e06228ad75a2e4afc7f3a4cb45eef64
+	drm/i2c: tda998x: Remove duplicate NULL check
+drm-intel drm-intel-next-queued c4fb60b9aba9f939d3f8575df23fd8d5958ec6ed
+	drm/i915/bios: add DP max link rate to VBT child device struct
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus b3defb791b26ea0683a93a4f49c77ec45ec96f10
+	ALSA: seq: Make ioctls race-free
+sound-upstream for-next 388fdb8f882af67ff8394d9420c1e0e42ba35619
+	ALSA: usb-audio: Support changing input on Sound Blaster E1
+drm-intel topic/core-for-CI be8dea61d8de396928bee848407f5fe683c34221
+	lockdep: finer-grained completion key for kthread
+drm-misc topic/hdcp b7fc1a9b7e62dcae40d51e83390cbb678ae5c6c2
+	drm/i915/dp: Fix compilation of intel_dp_hdcp_check_link
+drm-misc topic/hdcp b7fc1a9b7e62dcae40d51e83390cbb678ae5c6c2
+	drm/i915/dp: Fix compilation of intel_dp_hdcp_check_link
