@@ -2134,7 +2134,10 @@ static int rsi_mac80211_resume(struct ieee80211_hw *hw)
 	if (common->hibernate_resume) {
 		if (common->reinit_hw)
 			wait_for_completion(&common->wlan_init_completion);
-		return 0;
+		/* Device need a complete restart of all MAC operations.
+		 * returning 1 will serve this purpose.
+		 */
+		return 1;
 	}
 
 	mutex_lock(&common->mutex);
