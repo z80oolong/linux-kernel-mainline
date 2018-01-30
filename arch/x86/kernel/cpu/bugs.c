@@ -232,6 +232,8 @@ ssize_t cpu_show_spectre_v1(struct device *dev,
 {
 	if (!boot_cpu_has_bug(X86_BUG_SPECTRE_V1))
 		return sprintf(buf, "Not affected\n");
+	if (osb_is_enabled)
+		return sprintf(buf, "Mitigation: OSB (observable speculation barrier, Intel v6)\n");
 	return sprintf(buf, "Vulnerable\n");
 }
 

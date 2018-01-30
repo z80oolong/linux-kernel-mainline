@@ -255,6 +255,10 @@ do {									\
  */
 #ifndef osb
 #define osb()	do { } while (0)
+#define osb_is_enabled (0)
+#endif
+#ifndef osb_is_enabled
+#define osb_is_enabled (1)
 #endif
 
 #endif /* !__ASSEMBLY__ */
