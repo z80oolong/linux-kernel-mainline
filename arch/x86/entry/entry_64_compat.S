@@ -13,7 +13,6 @@
 #include <asm/irqflags.h>
 #include <asm/asm.h>
 #include <asm/smap.h>
-#include <asm/spec_ctrl.h>
 #include <linux/linkage.h>
 #include <linux/err.h>
 
@@ -95,8 +94,6 @@ ENTRY(entry_SYSENTER_compat)
 	pushq   $0			/* pt_regs->r14 = 0 */
 	pushq   $0			/* pt_regs->r15 = 0 */
 	cld
-
-	ENABLE_IBRS
 
 	/*
 	 * SYSENTER doesn't filter flags, so we need to clear NT and AC
@@ -197,7 +194,6 @@ ENTRY(entry_SYSCALL_compat)
 
 	/* Use %rsp as scratch reg. User ESP is stashed in r8 */
 	SWITCH_TO_KERNEL_CR3 scratch_reg=%rsp
-	ENABLE_IBRS
 
 	/* Switch to the kernel stack */
 	movq	PER_CPU_VAR(cpu_current_top_of_stack), %rsp
@@ -253,7 +249,6 @@ sysret32_from_system_call:
 	popq	%rsi			/* pt_regs->si */
 	popq	%rdi			/* pt_regs->di */
 
-	DISABLE_IBRS
         /*
          * USERGS_SYSRET32 does:
          *  GSBASE = user's GS base
@@ -352,8 +347,6 @@ ENTRY(entry_INT80_compat)
 	pushq   %r14                    /* pt_regs->r14 */
 	pushq   %r15                    /* pt_regs->r15 */
 	cld
-
-	ENABLE_IBRS
 
 	/*
 	 * User mode is traced as though IRQs are on, and the interrupt
