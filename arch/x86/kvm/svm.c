@@ -191,7 +191,7 @@ static const struct svm_direct_access_msrs {
 	{ .index = MSR_SYSCALL_MASK,			.always = true  },
 #endif
 	{ .index = MSR_IA32_SPEC_CTRL,			.always = true },
-	{ .index = MSR_IA32_PRED_CMD,			.always = true },
+	{ .index = MSR_IA32_PRED_CMD,			.always = false },
 	{ .index = MSR_IA32_LASTBRANCHFROMIP,		.always = false },
 	{ .index = MSR_IA32_LASTBRANCHTOIP,		.always = false },
 	{ .index = MSR_IA32_LASTINTFROMIP,		.always = false },
@@ -421,7 +421,6 @@ struct svm_cpu_data {
 	struct kvm_ldttss_desc *tss_desc;
 
 	struct page *save_area;
-
 	struct vmcb *current_vmcb;
 };
 
@@ -1225,10 +1224,9 @@ static void svm_free_vcpu(struct kvm_vcpu *vcpu)
 	__free_pages(virt_to_page(svm->nested.msrpm), MSRPM_ALLOC_ORDER);
 	kvm_vcpu_uninit(vcpu);
 	kmem_cache_free(kvm_vcpu_cache, svm);
-
 	/*
-	 * The VMCB could be recycled, causing a false negative in svm_vcpu_load;
-	 * block speculative execution.
+	 * The vmcb page can be recycled, causing a false negative in
+	 * svm_vcpu_load(). So do a full IBPB now.
 	 */
 	indirect_branch_prediction_barrier();
 }
@@ -3179,6 +3177,22 @@ static int svm_set_msr(struct kvm_vcpu *vcpu, struct msr_data *msr)
 		break;
 	case MSR_IA32_TSC:
 		kvm_write_tsc(vcpu, msr);
+		break;
+	case MSR_IA32_PRED_CMD:
+		if (!msr->host_initiated &&
+		    !guest_cpuid_has_ibpb(vcpu))
+			return 1;
+
+		if (data & ~PRED_CMD_IBPB)
+			return 1;
+
+		if (!data)
+			break;
+
+		wrmsrl(MSR_IA32_PRED_CMD, PRED_CMD_IBPB);
+		if (is_guest_mode(vcpu))
+			break;
+		set_msr_interception(svm->msrpm, MSR_IA32_PRED_CMD, 0, 1);
 		break;
 	case MSR_AMD64_VIRT_SPEC_CTRL:
 		if (data & ~SPEC_CTRL_SSBD)
