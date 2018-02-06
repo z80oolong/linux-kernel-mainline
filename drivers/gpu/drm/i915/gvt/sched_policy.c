@@ -308,8 +308,15 @@ static int tbs_sched_init_vgpu(struct intel_vgpu *vgpu)
 
 static void tbs_sched_clean_vgpu(struct intel_vgpu *vgpu)
 {
+	struct intel_gvt *gvt = vgpu->gvt;
+	struct gvt_sched_data *sched_data = gvt->scheduler.sched_data;
+
 	kfree(vgpu->sched_data);
 	vgpu->sched_data = NULL;
+
+	/* this vgpu id has been removed */
+	if (idr_is_empty(&gvt->vgpu_idr))
+		hrtimer_cancel(&sched_data->timer);
 }
 
 static void tbs_sched_start_schedule(struct intel_vgpu *vgpu)
@@ -370,6 +377,11 @@ void intel_vgpu_start_schedule(struct intel_vgpu *vgpu)
 	gvt_dbg_core("vgpu%d: start schedule\n", vgpu->id);
 
 	vgpu->gvt->scheduler.sched_ops->start_schedule(vgpu);
+}
+
+void intel_gvt_kick_schedule(struct intel_gvt *gvt)
+{
+	intel_gvt_request_service(gvt, INTEL_GVT_REQUEST_EVENT_SCHED);
 }
 
 void intel_vgpu_stop_schedule(struct intel_vgpu *vgpu)
