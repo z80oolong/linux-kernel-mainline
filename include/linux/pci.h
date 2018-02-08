@@ -2285,6 +2285,10 @@ static inline bool pci_is_thunderbolt_attached(struct pci_dev *pdev)
 	return false;
 }
 
+#if defined(CONFIG_PCIEAER) || defined(CONFIG_EEH)
+void pci_uevent_ers(struct pci_dev *pdev, enum  pci_ers_result err_type);
+#endif
+
 /* Provide the legacy pci_dma_* API */
 #include <linux/pci-dma-compat.h>
 
