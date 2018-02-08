@@ -232,6 +232,17 @@ retpoline_auto:
 	pr_info("%s\n", spectre_v2_strings[mode]);
 
 	/*
+	 * If we have a full retpoline mode and then disable IBPB in kernel mode
+	 * we do not require both.
+	 */
+	if (mode == SPECTRE_V2_RETPOLINE_AMD ||
+	    mode == SPECTRE_V2_RETPOLINE_GENERIC)
+	{
+		pr_info("Retpoline compiled kernel disabling IBPB in kernel");
+		set_ibpb_retpoline_enabled();
+	}
+
+	/*
 	 * If neither SMEP or KPTI are available, there is a risk of
 	 * hitting userspace addresses in the RSB after a context switch
 	 * from a shallow call stack to a deeper one. To prevent this fill
@@ -279,6 +290,7 @@ ssize_t cpu_show_spectre_v2(struct device *dev,
 	if (!boot_cpu_has_bug(X86_BUG_SPECTRE_V2))
 		return sprintf(buf, "Not affected\n");
 
-	return sprintf(buf, "%s\n", spectre_v2_strings[spectre_v2_enabled]);
+	return sprintf(buf, "%s%s\n", spectre_v2_strings[spectre_v2_enabled],
+		       ibpb_enabled_user ? ", IBPB (Intel v4)" : "");
 }
 #endif
