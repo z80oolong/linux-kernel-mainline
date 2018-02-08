@@ -1452,7 +1452,7 @@ static const struct reg_whitelist {
 } reg_read_whitelist[] = { {
 	.offset_ldw = RING_TIMESTAMP(RENDER_RING_BASE),
 	.offset_udw = RING_TIMESTAMP_UDW(RENDER_RING_BASE),
-	.gen_mask = INTEL_GEN_MASK(4, 10),
+	.gen_mask = INTEL_GEN_MASK(4, 11),
 	.size = 8
 } };
 
@@ -1522,9 +1522,11 @@ static void gen3_stop_engine(struct intel_engine_cs *engine)
 				 engine->name);
 
 	I915_WRITE_FW(RING_HEAD(base), I915_READ_FW(RING_TAIL(base)));
+	POSTING_READ_FW(RING_HEAD(base)); /* paranoia */
 
 	I915_WRITE_FW(RING_HEAD(base), 0);
 	I915_WRITE_FW(RING_TAIL(base), 0);
+	POSTING_READ_FW(RING_TAIL(base));
 
 	/* The ring must be empty before it is disabled */
 	I915_WRITE_FW(RING_CTL(base), 0);
@@ -1548,24 +1550,31 @@ static void i915_stop_engines(struct drm_i915_private *dev_priv,
 		gen3_stop_engine(engine);
 }
 
-static bool i915_reset_complete(struct pci_dev *pdev)
+static bool i915_in_reset(struct pci_dev *pdev)
 {
 	u8 gdrst;
 
 	pci_read_config_byte(pdev, I915_GDRST, &gdrst);
-	return (gdrst & GRDOM_RESET_STATUS) == 0;
+	return gdrst & GRDOM_RESET_STATUS;
 }
 
 static int i915_do_reset(struct drm_i915_private *dev_priv, unsigned engine_mask)
 {
 	struct pci_dev *pdev = dev_priv->drm.pdev;
+	int err;
 
-	/* assert reset for at least 20 usec */
+	/* Assert reset for at least 20 usec, and wait for acknowledgement. */
 	pci_write_config_byte(pdev, I915_GDRST, GRDOM_RESET_ENABLE);
 	usleep_range(50, 200);
-	pci_write_config_byte(pdev, I915_GDRST, 0);
+	err = wait_for(i915_in_reset(pdev), 500);
 
-	return wait_for(i915_reset_complete(pdev), 500);
+	/* Clear the reset request. */
+	pci_write_config_byte(pdev, I915_GDRST, 0);
+	usleep_range(50, 200);
+	if (!err)
+		err = wait_for(!i915_in_reset(pdev), 500);
+
+	return err;
 }
 
 static bool g4x_reset_complete(struct pci_dev *pdev)
@@ -1936,8 +1945,7 @@ int intel_reset_guc(struct drm_i915_private *dev_priv)
 {
 	int ret;
 
-	if (!HAS_GUC(dev_priv))
-		return -EINVAL;
+	GEM_BUG_ON(!HAS_GUC(dev_priv));
 
 	intel_uncore_forcewake_get(dev_priv, FORCEWAKE_ALL);
 	ret = gen6_hw_domain_reset(dev_priv, GEN9_GRDOM_GUC);
