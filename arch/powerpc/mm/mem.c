@@ -127,13 +127,17 @@ int __weak remove_section_mapping(unsigned long start, unsigned long end)
 	return -ENODEV;
 }
 
-int arch_add_memory(int nid, u64 start, u64 size, bool want_memblock)
+int arch_add_memory(int nid, u64 start, u64 size, bool for_device)
 {
+	struct pglist_data *pgdata;
+	struct zone *zone;
 	unsigned long start_pfn = start >> PAGE_SHIFT;
 	unsigned long nr_pages = size >> PAGE_SHIFT;
 	int rc;
 
 	resize_hpt_for_hotplug(memblock_phys_mem_size());
+
+	pgdata = NODE_DATA(nid);
 
 	start = (unsigned long)__va(start);
 	rc = create_section_mapping(start, start + size);
@@ -144,7 +148,11 @@ int arch_add_memory(int nid, u64 start, u64 size, bool want_memblock)
 		return -EFAULT;
 	}
 
-	return __add_pages(nid, start_pfn, nr_pages, want_memblock);
+	/* this should work for most non-highmem platforms */
+	zone = pgdata->node_zones +
+		zone_for_memory(nid, start, size, 0, for_device);
+
+	return __add_pages(nid, zone, start_pfn, nr_pages, !for_device);
 }
 
 #ifdef CONFIG_MEMORY_HOTREMOVE
