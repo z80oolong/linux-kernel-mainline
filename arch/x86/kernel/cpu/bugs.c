@@ -10,6 +10,7 @@
 #include <linux/init.h>
 #include <linux/utsname.h>
 #include <linux/cpu.h>
+#include <linux/smp.h>
 
 #include <asm/nospec-branch.h>
 #include <asm/cmdline.h>
@@ -231,6 +232,25 @@ retpoline_auto:
 	spectre_v2_enabled = mode;
 	pr_info("%s\n", spectre_v2_strings[mode]);
 
+	pr_info("Speculation control IBPB %s IBRS %s",
+	        ibpb_supported ? "supported" : "not-supported",
+	        ibrs_supported ? "supported" : "not-supported");
+
+	/*
+	 * If we have a full retpoline mode and then disable IBPB in kernel mode
+	 * we do not require both.
+	 */
+	if (mode == SPECTRE_V2_RETPOLINE_AMD ||
+	    mode == SPECTRE_V2_RETPOLINE_GENERIC)
+	{
+		if (ibrs_supported) {
+			pr_info("Retpoline compiled kernel.  Defaulting IBRS to disabled");
+			set_ibrs_disabled();
+			if (!ibrs_inuse)
+				sysctl_ibrs_enabled = 0;
+		}
+	}
+
 	/*
 	 * If neither SMEP or KPTI are available, there is a risk of
 	 * hitting userspace addresses in the RSB after a context switch
@@ -279,6 +299,7 @@ ssize_t cpu_show_spectre_v2(struct device *dev,
 	if (!boot_cpu_has_bug(X86_BUG_SPECTRE_V2))
 		return sprintf(buf, "Not affected\n");
 
-	return sprintf(buf, "%s\n", spectre_v2_strings[spectre_v2_enabled]);
+	return sprintf(buf, "%s%s\n", spectre_v2_strings[spectre_v2_enabled],
+		       ibpb_inuse ? ", IBPB (Intel v4)" : "");
 }
 #endif
