@@ -253,6 +253,7 @@ ib_core
 ib_iser
 ib_isert
 ib_uverbs
+icp
 ieee802154
 ieee802154_6lowpan
 ieee802154_socket
@@ -346,11 +347,6 @@ iptable_security
 ipvlan
 ipvtap
 ipx
-ircomm
-ircomm-tty
-irda
-irlan
-irnet
 irqbypass
 iscsi_boot_sysfs
 iscsi_ibft
@@ -514,6 +510,7 @@ nft_fib
 nft_fib_inet
 nft_fib_ipv4
 nft_fib_ipv6
+nft_fib_netdev
 nft_fwd_netdev
 nft_hash
 nft_limit
@@ -550,6 +547,7 @@ nhc_udp
 nls_iso8859-1
 nls_utf8
 notifier-error-inject
+nsh
 nvme-core
 nvme-fabrics
 nvme-fc
@@ -618,6 +616,7 @@ salsa20-x86_64
 salsa20_generic
 sch_atm
 sch_cbq
+sch_cbs
 sch_choke
 sch_codel
 sch_drr
@@ -668,6 +667,7 @@ sha512-ssse3
 sit
 skfp
 slip
+sm3_generic
 sm501
 sm501fb
 softdog
@@ -764,6 +764,7 @@ vport-gre
 vport-vxlan
 vringh
 vsock
+vsock_diag
 vxlan
 wp512
 x25
@@ -860,4 +861,5 @@ zcommon
 zfs
 znvpair
 zpios
+zstd_compress
 zunicode
