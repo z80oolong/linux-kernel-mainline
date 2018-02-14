@@ -1922,7 +1922,7 @@ static inline int insert_handle(struct hvnd_dev *dev, struct idr *idr,
 	spin_unlock_irqrestore(&dev->id_lock, flags);
 	idr_preload_end();
 
-	BUG_ON(ret == -ENOSPC);
+	WARN(ret < 0, "Failed to allocate for id=%d ret=%d\n", id, ret);
 	return ret < 0 ? ret : 0;
 }
 
