@@ -688,7 +688,7 @@ static void guc_dequeue(struct intel_engine_cs *engine)
 		goto unlock;
 
 	if (port_isset(port)) {
-		if (HAS_LOGICAL_RING_PREEMPTION(engine->i915)) {
+		if (engine->i915->preempt_context) {
 			struct guc_preempt_work *preempt_work =
 				&engine->i915->guc.preempt_work[engine->id];
 
@@ -832,10 +832,12 @@ static int guc_clients_doorbell_init(struct intel_guc *guc)
 	if (ret)
 		return ret;
 
-	ret = create_doorbell(guc->preempt_client);
-	if (ret) {
-		destroy_doorbell(guc->execbuf_client);
-		return ret;
+	if (guc->preempt_client) {
+		ret = create_doorbell(guc->preempt_client);
+		if (ret) {
+			destroy_doorbell(guc->execbuf_client);
+			return ret;
+		}
 	}
 
 	return 0;
@@ -848,8 +850,11 @@ static void guc_clients_doorbell_fini(struct intel_guc *guc)
 	 * Instead of trying (in vain) to communicate with it, let's just
 	 * cleanup the doorbell HW and our internal state.
 	 */
-	__destroy_doorbell(guc->preempt_client);
-	__update_doorbell_desc(guc->preempt_client, GUC_DOORBELL_INVALID);
+	if (guc->preempt_client) {
+		__destroy_doorbell(guc->preempt_client);
+		__update_doorbell_desc(guc->preempt_client,
+				       GUC_DOORBELL_INVALID);
+	}
 	__destroy_doorbell(guc->execbuf_client);
 	__update_doorbell_desc(guc->execbuf_client, GUC_DOORBELL_INVALID);
 }
@@ -979,17 +984,19 @@ static int guc_clients_create(struct intel_guc *guc)
 	}
 	guc->execbuf_client = client;
 
-	client = guc_client_alloc(dev_priv,
-				  INTEL_INFO(dev_priv)->ring_mask,
-				  GUC_CLIENT_PRIORITY_KMD_HIGH,
-				  dev_priv->preempt_context);
-	if (IS_ERR(client)) {
-		DRM_ERROR("Failed to create GuC client for preemption!\n");
-		guc_client_free(guc->execbuf_client);
-		guc->execbuf_client = NULL;
-		return PTR_ERR(client);
+	if (dev_priv->preempt_context) {
+		client = guc_client_alloc(dev_priv,
+					  INTEL_INFO(dev_priv)->ring_mask,
+					  GUC_CLIENT_PRIORITY_KMD_HIGH,
+					  dev_priv->preempt_context);
+		if (IS_ERR(client)) {
+			DRM_ERROR("Failed to create GuC client for preemption!\n");
+			guc_client_free(guc->execbuf_client);
+			guc->execbuf_client = NULL;
+			return PTR_ERR(client);
+		}
+		guc->preempt_client = client;
 	}
-	guc->preempt_client = client;
 
 	return 0;
 }
@@ -998,10 +1005,11 @@ static void guc_clients_destroy(struct intel_guc *guc)
 {
 	struct intel_guc_client *client;
 
-	client = fetch_and_zero(&guc->execbuf_client);
-	guc_client_free(client);
-
 	client = fetch_and_zero(&guc->preempt_client);
+	if (client)
+		guc_client_free(client);
+
+	client = fetch_and_zero(&guc->execbuf_client);
 	guc_client_free(client);
 }
 
@@ -1160,7 +1168,8 @@ int intel_guc_submission_enable(struct intel_guc *guc)
 	GEM_BUG_ON(!guc->execbuf_client);
 
 	guc_reset_wq(guc->execbuf_client);
-	guc_reset_wq(guc->preempt_client);
+	if (guc->preempt_client)
+		guc_reset_wq(guc->preempt_client);
 
 	err = intel_guc_sample_forcewake(guc);
 	if (err)

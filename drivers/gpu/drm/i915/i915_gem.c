@@ -3205,6 +3205,9 @@ void i915_gem_set_wedged(struct drm_i915_private *i915)
 			intel_engine_dump(engine, &p, "%s\n", engine->name);
 	}
 
+	set_bit(I915_WEDGED, &i915->gpu_error.flags);
+	smp_mb__after_atomic();
+
 	/*
 	 * First, stop submission to hw, but do not yet complete requests by
 	 * rolling the global seqno forward (since this would complete requests
@@ -3229,7 +3232,10 @@ void i915_gem_set_wedged(struct drm_i915_private *i915)
 		 * start to complete all requests.
 		 */
 		engine->submit_request = nop_complete_submit_request;
+		engine->schedule = NULL;
 	}
+
+	i915->caps.scheduler = 0;
 
 	/*
 	 * Make sure no request can slip through without getting completed by
@@ -3241,7 +3247,8 @@ void i915_gem_set_wedged(struct drm_i915_private *i915)
 	for_each_engine(engine, i915, id) {
 		unsigned long flags;
 
-		/* Mark all pending requests as complete so that any concurrent
+		/*
+		 * Mark all pending requests as complete so that any concurrent
 		 * (lockless) lookup doesn't try and wait upon the request as we
 		 * reset it.
 		 */
@@ -3251,7 +3258,6 @@ void i915_gem_set_wedged(struct drm_i915_private *i915)
 		spin_unlock_irqrestore(&engine->timeline->lock, flags);
 	}
 
-	set_bit(I915_WEDGED, &i915->gpu_error.flags);
 	wake_up_all(&i915->gpu_error.reset_queue);
 }
 
@@ -4882,10 +4888,8 @@ void i915_gem_sanitize(struct drm_i915_private *i915)
 	 * it may impact the display and we are uncertain about the stability
 	 * of the reset, so this could be applied to even earlier gen.
 	 */
-	if (INTEL_GEN(i915) >= 5) {
-		int reset = intel_gpu_reset(i915, ALL_ENGINES);
-		WARN_ON(reset && reset != -ENODEV);
-	}
+	if (INTEL_GEN(i915) >= 5 && intel_has_gpu_reset(i915))
+		WARN_ON(intel_gpu_reset(i915, ALL_ENGINES));
 }
 
 int i915_gem_suspend(struct drm_i915_private *dev_priv)
@@ -5065,8 +5069,11 @@ static int __i915_gem_restart_engines(void *data)
 
 	for_each_engine(engine, i915, id) {
 		err = engine->init_hw(engine);
-		if (err)
+		if (err) {
+			DRM_ERROR("Failed to restart %s (%d)\n",
+				  engine->name, err);
 			return err;
+		}
 	}
 
 	return 0;
@@ -5118,14 +5125,16 @@ int i915_gem_init_hw(struct drm_i915_private *dev_priv)
 
 	ret = i915_ppgtt_init_hw(dev_priv);
 	if (ret) {
-		DRM_ERROR("PPGTT enable HW failed %d\n", ret);
+		DRM_ERROR("Enabling PPGTT failed (%d)\n", ret);
 		goto out;
 	}
 
 	/* We can't enable contexts until all firmware is loaded */
 	ret = intel_uc_init_hw(dev_priv);
-	if (ret)
+	if (ret) {
+		DRM_ERROR("Enabling uc failed (%d)\n", ret);
 		goto out;
+	}
 
 	intel_mocs_init_l3cc_table(dev_priv);
 
@@ -5415,10 +5424,10 @@ i915_gem_load_init_fences(struct drm_i915_private *dev_priv)
 {
 	int i;
 
-	if (INTEL_INFO(dev_priv)->gen >= 7 && !IS_VALLEYVIEW(dev_priv) &&
+	if (INTEL_GEN(dev_priv) >= 7 && !IS_VALLEYVIEW(dev_priv) &&
 	    !IS_CHERRYVIEW(dev_priv))
 		dev_priv->num_fence_regs = 32;
-	else if (INTEL_INFO(dev_priv)->gen >= 4 ||
+	else if (INTEL_GEN(dev_priv) >= 4 ||
 		 IS_I945G(dev_priv) || IS_I945GM(dev_priv) ||
 		 IS_G33(dev_priv) || IS_PINEVIEW(dev_priv))
 		dev_priv->num_fence_regs = 16;
