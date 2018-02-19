@@ -1,0 +1,32 @@
+drm-upstream drm-fixes bfad2d08e540b18cfd92694fbb388e7d202df31f
+	Merge branch 'linux-4.16' of git://github.com/skeggsb/linux into drm-fixes
+drm-misc drm-misc-fixes 06998a756a3865817b87a129a7e5d5bb66dc1ec3
+	drm/edid: Add 6 bpc quirk for CPT panel in Asus UX303LA
+drm-intel drm-intel-fixes ee622fe757f6de612dad0f01805eea815a5b3025
+	drm/i915: Fix DSI panels with v1 MIPI sequences without a DEASSERT sequence v3
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm-upstream drm-next 933519a5a269d8460450545adefcb5caec622cac
+	Merge tag 'topic/hdcp-2018-02-13' of git://anongit.freedesktop.org/drm/drm-misc into drm-next
+drm-misc drm-misc-next-fixes 761e05a702f5d537ffcca1ba933f9f0a968aa022
+	drm: Check for lessee in DROP_MASTER ioctl
+drm-intel drm-intel-next-fixes 6dd3104e78943685d5183efe883d83a5f2361bf1
+	drm/i915/bios: add DP max link rate to VBT child device struct
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 1aecabb5b2d1dc1a821cdecda607eb70a8dd5124
+	drm/todo: Add idr_init_base todo
+drm-intel drm-intel-next-queued be3fa66857051e2943960a06f8046e8445cdfe6e
+	drm/i915/: Initialise trans_min for skl_compute_transition_wm()
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus fdcc968a3b290407bcba9d4c90e2fba6d8d928f1
+	ALSA: hda/realtek: PCI quirk for Fujitsu U7x7
+sound-upstream for-next 04f8773a3e980f60953e7aeb36ec6c2631e11f10
+	ALSA: emu10k1: add a IOMMU workaround
+drm-intel topic/core-for-CI aebb1fbb1780998d4dc719e7c8162ad85a945f02
+	scripts: kernel-doc: support in-line comments on nested structs/unions
+drm-misc topic/hdcp 2834d9dfaf0276e197158be6af8e1a1d59e58289
+	drm/i915: fix misalignment in HDCP register def
+drm-misc topic/backlight_for_lag 2e4ef3347b4a4eb65c4fd950d94bbd75fed4d798
+	video: backlight: Add devres versions of of_find_backlight
