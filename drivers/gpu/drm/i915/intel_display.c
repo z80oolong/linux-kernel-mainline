@@ -558,11 +558,11 @@ int chv_calc_dpll_params(int refclk, struct dpll *clock)
 }
 
 #define INTELPllInvalid(s)   do { /* DRM_DEBUG(s); */ return false; } while (0)
-/**
+
+/*
  * Returns whether the given set of divisors are valid for a given refclk with
  * the given connectors.
  */
-
 static bool intel_PLL_is_valid(struct drm_i915_private *dev_priv,
 			       const struct intel_limit *limit,
 			       const struct dpll *clock)
@@ -2029,12 +2029,12 @@ static unsigned int intel_cursor_alignment(const struct drm_i915_private *dev_pr
 
 static unsigned int intel_linear_alignment(const struct drm_i915_private *dev_priv)
 {
-	if (INTEL_INFO(dev_priv)->gen >= 9)
+	if (INTEL_GEN(dev_priv) >= 9)
 		return 256 * 1024;
 	else if (IS_I965G(dev_priv) || IS_I965GM(dev_priv) ||
 		 IS_VALLEYVIEW(dev_priv) || IS_CHERRYVIEW(dev_priv))
 		return 128 * 1024;
-	else if (INTEL_INFO(dev_priv)->gen >= 4)
+	else if (INTEL_GEN(dev_priv) >= 4)
 		return 4 * 1024;
 	else
 		return 0;
@@ -4756,8 +4756,7 @@ int skl_update_scaler_crtc(struct intel_crtc_state *state)
 
 /**
  * skl_update_scaler_plane - Stages update to scaler state for a given plane.
- *
- * @state: crtc's scaler state
+ * @crtc_state: crtc's scaler state
  * @plane_state: atomic plane state to update
  *
  * Return
@@ -4954,6 +4953,7 @@ static void intel_crtc_dpms_overlay_disable(struct intel_crtc *intel_crtc)
 /**
  * intel_post_enable_primary - Perform operations after enabling primary plane
  * @crtc: the CRTC whose primary plane was just enabled
+ * @new_crtc_state: the enabling state
  *
  * Performs potentially sleeping operations that must be done after the primary
  * plane is enabled, such as updating FBC and IPS.  Note that this may be
@@ -5418,6 +5418,20 @@ static void glk_pipe_scaler_clock_gating_wa(struct drm_i915_private *dev_priv,
 	I915_WRITE(CLKGATE_DIS_PSL(pipe), val);
 }
 
+static void icl_pipe_mbus_enable(struct intel_crtc *crtc)
+{
+	struct drm_i915_private *dev_priv = to_i915(crtc->base.dev);
+	enum pipe pipe = crtc->pipe;
+	uint32_t val;
+
+	val = MBUS_DBOX_BW_CREDIT(1) | MBUS_DBOX_A_CREDIT(2);
+
+	/* Program B credit equally to all pipes */
+	val |= MBUS_DBOX_B_CREDIT(24 / INTEL_INFO(dev_priv)->num_pipes);
+
+	I915_WRITE(PIPE_MBUS_DBOX_CTL(pipe), val);
+}
+
 static void haswell_crtc_enable(struct intel_crtc_state *pipe_config,
 				struct drm_atomic_state *old_state)
 {
@@ -5494,6 +5508,9 @@ static void haswell_crtc_enable(struct intel_crtc_state *pipe_config,
 
 	if (dev_priv->display.initial_watermarks != NULL)
 		dev_priv->display.initial_watermarks(old_intel_state, pipe_config);
+
+	if (INTEL_GEN(dev_priv) >= 11)
+		icl_pipe_mbus_enable(intel_crtc);
 
 	/* XXX: Do the pipe assertions at the right place for BXT DSI. */
 	if (!transcoder_is_dsi(cpu_transcoder))
@@ -6307,7 +6324,7 @@ static bool intel_crtc_supports_double_wide(const struct intel_crtc *crtc)
 	const struct drm_i915_private *dev_priv = to_i915(crtc->base.dev);
 
 	/* GDG double wide on either pipe, otherwise pipe A only */
-	return INTEL_INFO(dev_priv)->gen < 4 &&
+	return INTEL_GEN(dev_priv) < 4 &&
 		(crtc->pipe == PIPE_A || IS_I915G(dev_priv));
 }
 
@@ -8194,7 +8211,7 @@ static void haswell_set_pipemisc(struct drm_crtc *crtc)
 	struct intel_crtc *intel_crtc = to_intel_crtc(crtc);
 	struct intel_crtc_state *config = intel_crtc->config;
 
-	if (IS_BROADWELL(dev_priv) || INTEL_INFO(dev_priv)->gen >= 9) {
+	if (IS_BROADWELL(dev_priv) || INTEL_GEN(dev_priv) >= 9) {
 		u32 val = 0;
 
 		switch (intel_crtc->config->pipe_bpp) {
@@ -10702,6 +10719,7 @@ static bool check_digital_port_conflicts(struct drm_atomic_state *state)
 	struct drm_connector_list_iter conn_iter;
 	unsigned int used_ports = 0;
 	unsigned int used_mst_ports = 0;
+	bool ret = true;
 
 	/*
 	 * Walk the connector list instead of the encoder
@@ -10736,7 +10754,7 @@ static bool check_digital_port_conflicts(struct drm_atomic_state *state)
 
 			/* the same port mustn't appear more than once */
 			if (used_ports & port_mask)
-				return false;
+				ret = false;
 
 			used_ports |= port_mask;
 			break;
@@ -10754,7 +10772,7 @@ static bool check_digital_port_conflicts(struct drm_atomic_state *state)
 	if (used_ports & used_mst_ports)
 		return false;
 
-	return true;
+	return ret;
 }
 
 static void
@@ -12075,7 +12093,7 @@ u32 intel_crtc_get_vblank_counter(struct intel_crtc *crtc)
 	struct drm_device *dev = crtc->base.dev;
 
 	if (!dev->max_vblank_count)
-		return drm_crtc_accurate_vblank_count(&crtc->base);
+		return (u32)drm_crtc_accurate_vblank_count(&crtc->base);
 
 	return dev->driver->get_vblank_counter(dev, crtc->pipe);
 }
@@ -12616,7 +12634,7 @@ static void add_rps_boost_after_vblank(struct drm_crtc *crtc,
 /**
  * intel_prepare_plane_fb - Prepare fb for usage on plane
  * @plane: drm plane to prepare for
- * @fb: framebuffer to prepare for presentation
+ * @new_state: the plane state being prepared
  *
  * Prepares a framebuffer for usage on a display plane.  Generally this
  * involves pinning the underlying object and updating the frontbuffer tracking
@@ -12734,7 +12752,7 @@ intel_prepare_plane_fb(struct drm_plane *plane,
 /**
  * intel_cleanup_plane_fb - Cleans up an fb after plane use
  * @plane: drm plane to clean up for
- * @fb: old framebuffer that was on plane
+ * @old_state: the state from the previous modeset
  *
  * Cleans up a framebuffer that has just been removed from a plane.
  *
@@ -13498,8 +13516,8 @@ enum pipe intel_get_pipe_from_connector(struct intel_connector *connector)
 	return to_intel_crtc(connector->base.state->crtc)->pipe;
 }
 
-int intel_get_pipe_from_crtc_id(struct drm_device *dev, void *data,
-				struct drm_file *file)
+int intel_get_pipe_from_crtc_id_ioctl(struct drm_device *dev, void *data,
+				      struct drm_file *file)
 {
 	struct drm_i915_get_pipe_from_crtc_id *pipe_from_crtc_id = data;
 	struct drm_crtc *drmmode_crtc;
@@ -13947,7 +13965,7 @@ static int intel_framebuffer_init(struct intel_framebuffer *intel_fb,
 	 * gen2/3 display engine uses the fence if present,
 	 * so the tiling mode must match the fb modifier exactly.
 	 */
-	if (INTEL_INFO(dev_priv)->gen < 4 &&
+	if (INTEL_GEN(dev_priv) < 4 &&
 	    tiling != intel_fb_modifier_to_tiling(mode_cmd->modifier[0])) {
 		DRM_DEBUG_KMS("tiling_mode must match fb modifier exactly on gen2/3\n");
 		goto err;
@@ -14162,7 +14180,7 @@ void intel_init_display_hooks(struct drm_i915_private *dev_priv)
 {
 	intel_init_cdclk_hooks(dev_priv);
 
-	if (INTEL_INFO(dev_priv)->gen >= 9) {
+	if (INTEL_GEN(dev_priv) >= 9) {
 		dev_priv->display.get_pipe_config = haswell_get_pipe_config;
 		dev_priv->display.get_initial_plane_config =
 			skylake_get_initial_plane_config;

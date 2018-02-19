@@ -83,8 +83,8 @@
 
 #define DRIVER_NAME		"i915"
 #define DRIVER_DESC		"Intel Graphics"
-#define DRIVER_DATE		"20180207"
-#define DRIVER_TIMESTAMP	1517988364
+#define DRIVER_DATE		"20180214"
+#define DRIVER_TIMESTAMP	1518601107
 
 /* Use I915_STATE_WARN(x) and I915_STATE_WARN_ON() (rather than WARN() and
  * WARN_ON()) for hw state sanity checks to check for unexpected conditions
@@ -472,6 +472,7 @@ struct i915_gpu_state {
 	u32 reset_count;
 	u32 suspend_count;
 	struct intel_device_info device_info;
+	struct intel_driver_caps driver_caps;
 	struct i915_params params;
 
 	struct i915_error_uc {
@@ -722,7 +723,7 @@ struct intel_fbc {
 
 	struct intel_fbc_work {
 		bool scheduled;
-		u32 scheduled_vblank;
+		u64 scheduled_vblank;
 		struct work_struct work;
 	} work;
 
@@ -946,6 +947,8 @@ struct intel_rps {
 
 struct intel_rc6 {
 	bool enabled;
+	u64 prev_hw_residency[4];
+	u64 cur_residency[4];
 };
 
 struct intel_llc_pstate {
@@ -1816,6 +1819,7 @@ struct drm_i915_private {
 	struct kmem_cache *priorities;
 
 	const struct intel_device_info info;
+	struct intel_driver_caps caps;
 
 	/**
 	 * Data Stolen Memory - aka "i915 stolen memory" gives us the start and
@@ -2800,7 +2804,7 @@ intel_info(const struct drm_i915_private *dev_priv)
 
 #define HAS_FW_BLC(dev_priv) 	(INTEL_GEN(dev_priv) > 2)
 #define HAS_FBC(dev_priv)	((dev_priv)->info.has_fbc)
-#define HAS_CUR_FBC(dev_priv)	(!HAS_GMCH_DISPLAY(dev_priv) && INTEL_INFO(dev_priv)->gen >= 7)
+#define HAS_CUR_FBC(dev_priv)	(!HAS_GMCH_DISPLAY(dev_priv) && INTEL_GEN(dev_priv) >= 7)
 
 #define HAS_IPS(dev_priv)	(IS_HSW_ULT(dev_priv) || IS_BROADWELL(dev_priv))
 
@@ -2863,19 +2867,20 @@ intel_info(const struct drm_i915_private *dev_priv)
 #define INTEL_PCH_QEMU_DEVICE_ID_TYPE		0x2900 /* qemu q35 has 2918 */
 
 #define INTEL_PCH_TYPE(dev_priv) ((dev_priv)->pch_type)
+#define INTEL_PCH_ID(dev_priv) ((dev_priv)->pch_id)
 #define HAS_PCH_ICP(dev_priv) (INTEL_PCH_TYPE(dev_priv) == PCH_ICP)
 #define HAS_PCH_CNP(dev_priv) (INTEL_PCH_TYPE(dev_priv) == PCH_CNP)
 #define HAS_PCH_CNP_LP(dev_priv) \
-	((dev_priv)->pch_id == INTEL_PCH_CNP_LP_DEVICE_ID_TYPE)
+	(INTEL_PCH_ID(dev_priv) == INTEL_PCH_CNP_LP_DEVICE_ID_TYPE)
 #define HAS_PCH_KBP(dev_priv) (INTEL_PCH_TYPE(dev_priv) == PCH_KBP)
 #define HAS_PCH_SPT(dev_priv) (INTEL_PCH_TYPE(dev_priv) == PCH_SPT)
 #define HAS_PCH_LPT(dev_priv) (INTEL_PCH_TYPE(dev_priv) == PCH_LPT)
 #define HAS_PCH_LPT_LP(dev_priv) \
-	((dev_priv)->pch_id == INTEL_PCH_LPT_LP_DEVICE_ID_TYPE || \
-	 (dev_priv)->pch_id == INTEL_PCH_WPT_LP_DEVICE_ID_TYPE)
+	(INTEL_PCH_ID(dev_priv) == INTEL_PCH_LPT_LP_DEVICE_ID_TYPE || \
+	 INTEL_PCH_ID(dev_priv) == INTEL_PCH_WPT_LP_DEVICE_ID_TYPE)
 #define HAS_PCH_LPT_H(dev_priv) \
-	((dev_priv)->pch_id == INTEL_PCH_LPT_DEVICE_ID_TYPE || \
-	 (dev_priv)->pch_id == INTEL_PCH_WPT_DEVICE_ID_TYPE)
+	(INTEL_PCH_ID(dev_priv) == INTEL_PCH_LPT_DEVICE_ID_TYPE || \
+	 INTEL_PCH_ID(dev_priv) == INTEL_PCH_WPT_DEVICE_ID_TYPE)
 #define HAS_PCH_CPT(dev_priv) (INTEL_PCH_TYPE(dev_priv) == PCH_CPT)
 #define HAS_PCH_IBX(dev_priv) (INTEL_PCH_TYPE(dev_priv) == PCH_IBX)
 #define HAS_PCH_NOP(dev_priv) (INTEL_PCH_TYPE(dev_priv) == PCH_NOP)
@@ -3082,10 +3087,10 @@ int i915_gem_set_domain_ioctl(struct drm_device *dev, void *data,
 			      struct drm_file *file_priv);
 int i915_gem_sw_finish_ioctl(struct drm_device *dev, void *data,
 			     struct drm_file *file_priv);
-int i915_gem_execbuffer(struct drm_device *dev, void *data,
-			struct drm_file *file_priv);
-int i915_gem_execbuffer2(struct drm_device *dev, void *data,
-			 struct drm_file *file_priv);
+int i915_gem_execbuffer_ioctl(struct drm_device *dev, void *data,
+			      struct drm_file *file_priv);
+int i915_gem_execbuffer2_ioctl(struct drm_device *dev, void *data,
+			       struct drm_file *file_priv);
 int i915_gem_busy_ioctl(struct drm_device *dev, void *data,
 			struct drm_file *file_priv);
 int i915_gem_get_caching_ioctl(struct drm_device *dev, void *data,
