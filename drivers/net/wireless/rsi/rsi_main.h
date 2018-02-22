@@ -329,6 +329,7 @@ struct rsi_common {
 	bool cancel_hwscan;
 	bool eapol4_confirm;
 	bool disc_in_prog;
+	bool mac_ops_resumed;
 };
 
 struct eepromrw_info {
