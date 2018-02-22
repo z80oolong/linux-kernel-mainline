@@ -22,6 +22,20 @@ struct drm_simple_display_pipe;
  */
 struct drm_simple_display_pipe_funcs {
 	/**
+	 * @mode_valid:
+	 *
+	 * This function is called to filter out valid modes from the
+	 * suggestions suggested by the bridge or display. This optional
+	 * hook is passed in when initializing the pipeline.
+	 *
+	 * RETURNS:
+	 *
+	 * drm_mode_status Enum
+	 */
+	enum drm_mode_status (*mode_valid)(struct drm_crtc *crtc,
+					   const struct drm_display_mode *mode);
+
+	/**
 	 * @enable:
 	 *
 	 * This function should be used to enable the pipeline.
@@ -93,6 +107,24 @@ struct drm_simple_display_pipe_funcs {
 	 */
 	void (*cleanup_fb)(struct drm_simple_display_pipe *pipe,
 			   struct drm_plane_state *plane_state);
+
+	/**
+	 * @enable_vblank:
+	 *
+	 * Optional, called by &drm_crtc_funcs.enable_vblank. Please read
+	 * the documentation for the &drm_crtc_funcs.enable_vblank hook for
+	 * more details.
+	 */
+	int (*enable_vblank)(struct drm_simple_display_pipe *pipe);
+
+	/**
+	 * @disable_vblank:
+	 *
+	 * Optional, called by &drm_crtc_funcs.disable_vblank. Please read
+	 * the documentation for the &drm_crtc_funcs.disable_vblank hook for
+	 * more details.
+	 */
+	void (*disable_vblank)(struct drm_simple_display_pipe *pipe);
 };
 
 /**
