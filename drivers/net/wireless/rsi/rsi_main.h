@@ -164,6 +164,28 @@ struct transmit_q_stats {
 	u32 total_tx_pkt_freed[NUM_EDCA_QUEUES + 2];
 };
 
+#define MAX_BGSCAN_CHANNELS_DUAL_BAND	38
+#define MAX_BGSCAN_PROBE_REQ_LEN	0x05DC
+#define BG_PROBE_REQ_LEN_CHECK		0x78
+#define RSI_BGSCAN_START		0x1
+#define RSI_BGSCAN_STOP			0x0
+#define RSI_DEF_BGSCAN_THRLD		0x0
+#define RSI_DEF_ROAM_THRLD		0xa
+#define RSI_BGSCAN_PERIODICITY		0x1e
+#define RSI_ACTIVE_SCAN_TIME		0x14
+#define RSI_PASSIVE_SCAN_TIME		0x46
+#define MAX_BGSCAN_CHANNELS_2GHZ	0xe
+#define RSI_CHANNEL_SCAN_TIME		20
+struct rsi_bgscan_params {
+	u16 bgscan_threshold;
+	u16 roam_threshold;
+	u16 bgscan_periodicity;
+	u8 num_bgscan_channels;
+	u8 two_probe;
+	u16 active_scan_duration;
+	u16 passive_scan_duration;
+};
+
 struct vif_priv {
 	bool is_ht;
 	bool sgi;
@@ -294,6 +316,20 @@ struct rsi_common {
 	struct ieee80211_vif *roc_vif;
 
 	void *bt_adapter;
+
+	struct ieee80211_vif *scan_vif;
+	struct cfg80211_scan_request *hwscan;
+	struct rsi_bgscan_params bgscan;
+	struct workqueue_struct *scan_workqueue;
+	struct work_struct scan_work;
+	struct rsi_event chan_set_event;
+	struct rsi_event probe_cfm_event;
+	struct rsi_event chan_change_event;
+	struct rsi_event cancel_hw_scan_event;
+	struct timer_list scan_timer;
+	bool fgscan_in_prog;
+	bool bgscan_en;
+	bool cancel_hwscan;
 };
 
 struct eepromrw_info {
