@@ -467,14 +467,10 @@ static int rsi_mgmt_pkt_to_core(struct rsi_common *common,
  *
  * Return: status: 0 on success, corresponding negative error code on failure.
  */
-static int rsi_hal_send_sta_notify_frame(struct rsi_common *common,
-					 enum opmode opmode,
-					 u8 notify_event,
-					 const unsigned char *bssid,
-					 u8 qos_enable,
-					 u16 aid,
-					 u16 sta_id,
-					 struct ieee80211_vif *vif)
+int rsi_hal_send_sta_notify_frame(struct rsi_common *common, enum opmode opmode,
+				  u8 notify_event, const unsigned char *bssid,
+				  u8 qos_enable, u16 aid, u16 sta_id,
+				  struct ieee80211_vif *vif)
 {
 	struct sk_buff *skb = NULL;
 	struct rsi_peer_notify *peer_notify;
@@ -1342,6 +1338,7 @@ void rsi_inform_bss_status(struct rsi_common *common,
 			   u16 aid,
 			   struct ieee80211_sta *sta,
 			   u16 sta_id,
+			   u16 assoc_cap,
 			   struct ieee80211_vif *vif)
 {
 	if (status) {
@@ -1356,10 +1353,10 @@ void rsi_inform_bss_status(struct rsi_common *common,
 					      vif);
 		if (common->min_rate == 0xffff)
 			rsi_send_auto_rate_request(common, sta, sta_id, vif);
-		if (opmode == RSI_OPMODE_STA) {
-			if (!rsi_send_block_unblock_frame(common, false))
-				common->hw_data_qs_blocked = false;
-		}
+		if (opmode == RSI_OPMODE_STA &&
+		    !(assoc_cap & DOT11_ASSOC_CAP_SECURITY) &&
+		    !rsi_send_block_unblock_frame(common, false))
+			common->hw_data_qs_blocked = false;
 	} else {
 		if (opmode == RSI_OPMODE_STA)
 			common->hw_data_qs_blocked = true;
@@ -2120,11 +2117,20 @@ int rsi_mgmt_pkt_recv(struct rsi_common *common, u8 *msg)
 			__func__);
 		return rsi_handle_card_ready(common, msg);
 	case TX_STATUS_IND:
-		if (msg[15] == PROBEREQ_CONFIRM) {
+		switch (msg[RSI_TX_STATUS_TYPE]) {
+		case PROBEREQ_CONFIRM:
 			common->mgmt_q_block = false;
 			rsi_dbg(INFO_ZONE, "%s: Mgmt queue unblocked\n",
 				__func__);
 			rsi_set_event(&common->probe_cfm_event);
+			break;
+		case EAPOL4_CONFIRM:
+			if (msg[RSI_TX_STATUS]) {
+				common->eapol4_confirm = true;
+				if (!rsi_send_block_unblock_frame(common,
+								  false))
+					common->hw_data_qs_blocked = false;
+			}
 		}
 		break;
 	case BEACON_EVENT_IND:
