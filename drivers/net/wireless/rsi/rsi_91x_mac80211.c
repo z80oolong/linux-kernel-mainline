@@ -229,6 +229,79 @@ static void rsi_register_rates_channels(struct rsi_hw *adapter, int band)
 	/* sbands->ht_cap.mcs.rx_highest = 0x82; */
 }
 
+static int rsi_mac80211_hw_scan_start(struct ieee80211_hw *hw,
+				      struct ieee80211_vif *vif,
+				      struct ieee80211_scan_request *hw_req)
+{
+	struct cfg80211_scan_request *scan_req = &hw_req->req;
+	struct rsi_hw *adapter = hw->priv;
+	struct rsi_common *common = adapter->priv;
+	struct ieee80211_bss_conf *bss = &vif->bss_conf;
+
+	rsi_dbg(INFO_ZONE, "***** Hardware scan start *****\n");
+
+	if (common->fsm_state != FSM_MAC_INIT_DONE)
+		return -ENODEV;
+
+	if ((common->wow_flags & RSI_WOW_ENABLED) ||
+	    scan_req->n_channels == 0)
+		return -EINVAL;
+
+	/* Scan already in progress. So return */
+	if (common->bgscan_en || common->fgscan_in_prog)
+		return -EBUSY;
+
+	mutex_lock(&common->mutex);
+
+	common->hwscan = scan_req;
+	common->scan_vif = vif;
+	if (!bss->assoc) {
+		common->cancel_hwscan = false;
+		queue_work(common->scan_workqueue, &common->scan_work);
+	} else {
+		if (!rsi_send_bgscan_params(common, RSI_START_BGSCAN)) {
+			if (!rsi_send_bgscan_probe_req(common)) {
+				rsi_dbg(INFO_ZONE,
+					"Background scan started...\n");
+				common->bgscan_en = true;
+			}
+		}
+	}
+
+	mutex_unlock(&common->mutex);
+
+	return 0;
+}
+
+static void rsi_mac80211_cancel_hw_scan(struct ieee80211_hw *hw,
+					struct ieee80211_vif *vif)
+{
+	struct rsi_hw *adapter = hw->priv;
+	struct rsi_common *common = adapter->priv;
+	struct cfg80211_scan_info info;
+
+	rsi_dbg(INFO_ZONE, "***** Hardware scan stop *****\n");
+
+	mutex_lock(&common->mutex);
+
+	if (common->fgscan_in_prog) {
+		common->cancel_hwscan = true;
+		rsi_wait_event(&common->cancel_hw_scan_event,
+			       EVENT_WAIT_FOREVER);
+		rsi_reset_event(&common->cancel_hw_scan_event);
+	}
+	if (common->bgscan_en) {
+		if (!rsi_send_bgscan_params(common, RSI_STOP_BGSCAN))
+			common->bgscan_en = 0;
+		info.aborted = false;
+		ieee80211_scan_completed(adapter->hw, &info);
+		rsi_dbg(INFO_ZONE, "Back ground scan cancelled\b");
+	}
+	common->hwscan = NULL;
+	common->scan_vif = NULL;
+	mutex_unlock(&common->mutex);
+}
+
 /**
  * rsi_mac80211_detach() - This function is used to de-initialize the
  *			   Mac80211 stack.
@@ -239,12 +312,18 @@ static void rsi_register_rates_channels(struct rsi_hw *adapter, int band)
 void rsi_mac80211_detach(struct rsi_hw *adapter)
 {
 	struct ieee80211_hw *hw = adapter->hw;
+	struct rsi_common *common = adapter->priv;
 	enum nl80211_band band;
 
+	if (common->fgscan_in_prog)
+		common->cancel_hwscan = true;
+	flush_workqueue(common->scan_workqueue);
 	if (hw) {
 		ieee80211_stop_queues(hw);
 		ieee80211_unregister_hw(hw);
 		ieee80211_free_hw(hw);
+		adapter->hw = NULL;
+		adapter->sc_nvifs = 0;
 	}
 
 	for (band = 0; band < NUM_NL80211_BANDS; band++) {
@@ -1899,6 +1978,8 @@ static const struct ieee80211_ops mac80211_ops = {
 	.suspend = rsi_mac80211_suspend,
 	.resume  = rsi_mac80211_resume,
 #endif
+	.hw_scan = rsi_mac80211_hw_scan_start,
+	.cancel_hw_scan = rsi_mac80211_cancel_hw_scan,
 };
 
 /**
@@ -1977,6 +2058,9 @@ int rsi_mac80211_attach(struct rsi_common *common)
 	common->max_stations = wiphy->max_ap_assoc_sta;
 	rsi_dbg(ERR_ZONE, "Max Stations Allowed = %d\n", common->max_stations);
 	hw->sta_data_size = sizeof(struct rsi_sta);
+
+	wiphy->max_scan_ssids = RSI_MAX_SCAN_SSIDS;
+	wiphy->max_scan_ie_len = RSI_MAX_SCAN_IE_LEN;
 	wiphy->flags = WIPHY_FLAG_REPORTS_OBSS;
 	wiphy->flags |= WIPHY_FLAG_AP_UAPSD;
 	wiphy->features |= NL80211_FEATURE_INACTIVITY_TIMER;

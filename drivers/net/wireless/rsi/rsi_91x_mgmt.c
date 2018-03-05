@@ -15,6 +15,7 @@
  */
 
 #include <linux/etherdevice.h>
+#include <linux/timer.h>
 #include "rsi_mgmt.h"
 #include "rsi_common.h"
 #include "rsi_ps.h"
@@ -234,6 +235,18 @@ static void rsi_set_default_parameters(struct rsi_common *common)
 	common->obm_ant_sel_val = 2;
 	common->beacon_interval = RSI_BEACON_INTERVAL;
 	common->dtim_cnt = RSI_DTIM_COUNT;
+}
+
+void init_bgscan_params(struct rsi_common *common)
+{
+	memset((u8 *)&common->bgscan, 0, sizeof(struct rsi_bgscan_params));
+	common->bgscan.bgscan_threshold = RSI_DEF_BGSCAN_THRLD;
+	common->bgscan.roam_threshold = RSI_DEF_ROAM_THRLD;
+	common->bgscan.bgscan_periodicity = RSI_BGSCAN_PERIODICITY;
+	common->bgscan.num_bgscan_channels = 0;
+	common->bgscan.two_probe = 1;
+	common->bgscan.active_scan_duration = RSI_ACTIVE_SCAN_TIME;
+	common->bgscan.passive_scan_duration = RSI_PASSIVE_SCAN_TIME;
 }
 
 /**
@@ -1193,6 +1206,7 @@ static int rsi_send_auto_rate_request(struct rsi_common *common,
 			__func__);
 		return -ENOMEM;
 	}
+	memset(skb->data, 0, frame_len);
 
 	selected_rates = kzalloc(2 * RSI_TBL_SZ, GFP_KERNEL);
 	if (!selected_rates) {
@@ -1633,6 +1647,240 @@ int rsi_send_wowlan_request(struct rsi_common *common, u16 flags,
 }
 #endif
 
+static void channel_change_event(struct timer_list *t)
+{
+	struct rsi_common *common = from_timer(common, t, scan_timer);
+
+	rsi_set_event(&common->chan_change_event);
+	del_timer(&common->scan_timer);
+}
+
+static int init_channel_timer(struct rsi_common *common, u32 timeout)
+{
+	timer_setup(&common->scan_timer, channel_change_event, 0);
+	rsi_reset_event(&common->chan_change_event);
+	common->scan_timer.expires = msecs_to_jiffies(timeout) + jiffies;
+	add_timer(&common->scan_timer);
+
+	return 0;
+}
+
+int rsi_prepare_probe_request(struct rsi_common *common,
+			      struct cfg80211_scan_request *scan_req,
+			      u8 n_ssid, u8 channel, u8 *pbreq, u16 *pbreq_len)
+{
+	struct ieee80211_vif *vif = common->scan_vif;
+	struct cfg80211_ssid *ssid_info;
+	struct ieee80211_hdr *hdr = NULL;
+	u8 *pos;
+
+	if (common->priv->sc_nvifs <= 0)
+		return -ENODEV;
+	if (!scan_req)
+		return -EINVAL;
+	ssid_info = &scan_req->ssids[n_ssid];
+	if (!ssid_info)
+		return -EINVAL;
+
+	hdr = (struct ieee80211_hdr *)pbreq;
+	hdr->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+					 IEEE80211_STYPE_PROBE_REQ);
+	hdr->duration_id = 0x0;
+	memset(hdr->addr1, 0xff, ETH_ALEN);
+	memset(hdr->addr3, 0xff, ETH_ALEN);
+	ether_addr_copy(hdr->addr2, vif->addr);
+	hdr->seq_ctrl = 0x00;
+	pos = (u8 *)hdr + MIN_802_11_HDR_LEN;
+
+	*pos++ = WLAN_EID_SSID;
+	*pos++ = ssid_info->ssid_len;
+	if (ssid_info->ssid_len)
+		memcpy(pos, ssid_info->ssid, ssid_info->ssid_len);
+	pos += ssid_info->ssid_len;
+
+	if (scan_req->ie_len)
+		memcpy(pos, scan_req->ie, scan_req->ie_len);
+	pos += scan_req->ie_len;
+	*pbreq_len = pos - pbreq;
+
+	return 0;
+}
+
+int rsi_send_probe_request(struct rsi_common *common,
+			   struct cfg80211_scan_request *scan_req,
+			   u8 n_ssid, u8 channel)
+{
+	struct cfg80211_ssid *ssid_info = &scan_req->ssids[n_ssid];
+	struct sk_buff *skb = NULL;
+	u16 len;
+	u8 ssid_ie_len;
+
+	ssid_ie_len = ssid_info->ssid_len + 2;
+	len = MIN_802_11_HDR_LEN + scan_req->ie_len + ssid_ie_len;
+
+	skb = dev_alloc_skb(len + MAX_DWORD_ALIGN_BYTES);
+	if (!skb)
+		return -ENOMEM;
+	skb_reserve(skb, MAX_DWORD_ALIGN_BYTES);
+	memset(skb->data, 0, len);
+	if (rsi_prepare_probe_request(common, scan_req, n_ssid, channel,
+				      skb->data, &len)) {
+		rsi_dbg(ERR_ZONE, "Failed to prepare probe request\n");
+		dev_kfree_skb(skb);
+		return -EINVAL;
+	}
+	skb_put(skb, len);
+	rsi_core_xmit(common, skb);
+
+	return 0;
+}
+
+void rsi_fgscan_start(struct work_struct *work)
+{
+	struct rsi_common *common =
+		container_of(work, struct rsi_common, scan_work);
+	struct cfg80211_scan_request *scan_req = common->hwscan;
+	struct ieee80211_channel *cur_chan = NULL;
+	struct cfg80211_scan_info info;
+	u8 i, j;
+
+	if (!scan_req || common->fgscan_in_prog)
+		return;
+
+	common->fgscan_in_prog = true;
+	rsi_dbg(INFO_ZONE, "Foreground scan started...\n");
+
+	info.aborted = false;
+	for (i = 0; i < scan_req->n_channels ; i++) {
+		if (common->iface_down || common->cancel_hwscan) {
+			info.aborted = true;
+			break;
+		}
+
+		cur_chan = scan_req->channels[i];
+		if (cur_chan->flags & IEEE80211_CHAN_DISABLED)
+			continue;
+
+		rsi_dbg(INFO_ZONE, "Scanning chan: %d\n", cur_chan->hw_value);
+
+		rsi_reset_event(&common->chan_set_event);
+		rsi_band_check(common, cur_chan);
+		if (rsi_set_channel(common, cur_chan)) {
+			rsi_dbg(ERR_ZONE, "Failed to set the channel\n");
+			info.aborted = true;
+			break;
+		}
+		rsi_wait_event(&common->chan_set_event,
+			       msecs_to_jiffies(RSI_CHAN_SET_TIME));
+		rsi_reset_event(&common->chan_set_event);
+
+		init_channel_timer(common, RSI_CHAN_DWELL_TIME);
+		for (j = 0; j < scan_req->n_ssids; j++) {
+			rsi_send_probe_request(common, scan_req, j,
+					       cur_chan->hw_value);
+			rsi_reset_event(&common->probe_cfm_event);
+			rsi_wait_event(&common->probe_cfm_event,
+				       msecs_to_jiffies(RSI_PROBE_CFM_TIME));
+			rsi_reset_event(&common->probe_cfm_event);
+		}
+		rsi_wait_event(&common->chan_change_event, EVENT_WAIT_FOREVER);
+		rsi_reset_event(&common->chan_change_event);
+	}
+
+	del_timer(&common->scan_timer);
+	common->fgscan_in_prog = false;
+	ieee80211_scan_completed(common->priv->hw, &info);
+	rsi_dbg(INFO_ZONE, "Foreground scan completed\n");
+	rsi_set_event(&common->cancel_hw_scan_event);
+}
+
+int rsi_send_bgscan_params(struct rsi_common *common, int enable)
+{
+	struct rsi_bgscan_params *params = &common->bgscan;
+	struct cfg80211_scan_request *scan_req = common->hwscan;
+	struct rsi_bgscan_config *bgscan;
+	struct sk_buff *skb;
+	u16 frame_len = sizeof(*bgscan);
+	u8 i;
+
+	rsi_dbg(MGMT_TX_ZONE, "%s: Sending bgscan params frame\n", __func__);
+
+	skb = dev_alloc_skb(frame_len);
+	if (!skb)
+		return -ENOMEM;
+	memset(skb->data, 0, frame_len);
+
+	bgscan = (struct rsi_bgscan_config *)skb->data;
+	rsi_set_len_qno(&bgscan->desc_dword0.len_qno,
+			(frame_len - FRAME_DESC_SZ), RSI_WIFI_MGMT_Q);
+	bgscan->desc_dword0.frame_type = BG_SCAN_PARAMS;
+	bgscan->bgscan_threshold = cpu_to_le16(params->bgscan_threshold);
+	bgscan->roam_threshold = cpu_to_le16(params->roam_threshold);
+	if (enable)
+		bgscan->bgscan_periodicity =
+			cpu_to_le16(params->bgscan_periodicity);
+	bgscan->active_scan_duration =
+			cpu_to_le16(params->active_scan_duration);
+	bgscan->passive_scan_duration =
+			cpu_to_le16(params->passive_scan_duration);
+	bgscan->two_probe = params->two_probe;
+
+	bgscan->num_bgscan_channels = scan_req->n_channels;
+	for (i = 0; i < bgscan->num_bgscan_channels; i++)
+		bgscan->channels2scan[i] =
+			cpu_to_le16(scan_req->channels[i]->hw_value);
+
+	skb_put(skb, frame_len);
+
+	return rsi_send_internal_mgmt_frame(common, skb);
+}
+
+/* This function sends the probe request to be used by firmware in
+ * background scan
+ */
+int rsi_send_bgscan_probe_req(struct rsi_common *common)
+{
+	struct cfg80211_scan_request *scan_req = common->hwscan;
+	struct rsi_bgscan_probe *bgscan;
+	struct sk_buff *skb;
+	u16 frame_len = sizeof(*bgscan);
+	u16 len = MAX_BGSCAN_PROBE_REQ_LEN;
+	u16 pbreq_len = 0;
+
+	rsi_dbg(MGMT_TX_ZONE,
+		"%s: Sending bgscan probe req frame\n", __func__);
+
+	skb = dev_alloc_skb(frame_len + len);
+	if (!skb)
+		return -ENOMEM;
+	memset(skb->data, 0, frame_len + len);
+
+	bgscan = (struct rsi_bgscan_probe *)skb->data;
+	bgscan->desc_dword0.frame_type = BG_SCAN_PROBE_REQ;
+	bgscan->flags = cpu_to_le16(HOST_BG_SCAN_TRIG);
+	if (common->band == NL80211_BAND_5GHZ) {
+		bgscan->mgmt_rate = cpu_to_le16(RSI_RATE_6);
+		bgscan->def_chan = cpu_to_le16(40);
+	} else {
+		bgscan->mgmt_rate = cpu_to_le16(RSI_RATE_1);
+		bgscan->def_chan = cpu_to_le16(11);
+	}
+	bgscan->channel_scan_time = cpu_to_le16(RSI_CHANNEL_SCAN_TIME);
+
+	/* Append dot11 probe request */
+	rsi_prepare_probe_request(common, scan_req, 0, 0,
+				  &skb->data[frame_len],
+				  &pbreq_len);
+	bgscan->probe_req_length = cpu_to_le16(pbreq_len);
+
+	rsi_set_len_qno(&bgscan->desc_dword0.len_qno,
+			(frame_len - FRAME_DESC_SZ + pbreq_len),
+			RSI_WIFI_MGMT_Q);
+	skb_put(skb, frame_len + pbreq_len);
+
+	return rsi_send_internal_mgmt_frame(common, skb);
+}
+
 /**
  * rsi_handle_ta_confirm_type() - This function handles the confirm frames.
  * @common: Pointer to the driver private structure.
@@ -1776,15 +2024,37 @@ static int rsi_handle_ta_confirm_type(struct rsi_common *common,
 			return 0;
 		}
 		break;
+
+	case SCAN_REQUEST:
+		rsi_dbg(INFO_ZONE, "Set channel confirm\n");
+		rsi_set_event(&common->chan_set_event);
+		break;
+
 	case WAKEUP_SLEEP_REQUEST:
 		rsi_dbg(INFO_ZONE, "Wakeup/Sleep confirmation.\n");
 		return rsi_handle_ps_confirm(adapter, msg);
+
+	case BG_SCAN_PROBE_REQ:
+		rsi_dbg(INFO_ZONE, "BG scan complete event\n");
+		if (common->bgscan_en) {
+			struct cfg80211_scan_info info;
+
+			if (!rsi_send_bgscan_params(common, RSI_STOP_BGSCAN))
+				common->bgscan_en = 0;
+			info.aborted = false;
+			ieee80211_scan_completed(adapter->hw, &info);
+			rsi_set_event(&common->cancel_hw_scan_event);
+		}
+		rsi_dbg(INFO_ZONE, "Background scan completed\n");
+		break;
+
 	default:
 		rsi_dbg(INFO_ZONE, "%s: Invalid TA confirm pkt received\n",
 			__func__);
 		break;
 	}
 	return 0;
+
 out:
 	rsi_dbg(ERR_ZONE, "%s: Unable to send pkt/Invalid frame received\n",
 		__func__);
@@ -1852,8 +2122,9 @@ int rsi_mgmt_pkt_recv(struct rsi_common *common, u8 *msg)
 	case TX_STATUS_IND:
 		if (msg[15] == PROBEREQ_CONFIRM) {
 			common->mgmt_q_block = false;
-			rsi_dbg(FSM_ZONE, "%s: Probe confirm received\n",
+			rsi_dbg(INFO_ZONE, "%s: Mgmt queue unblocked\n",
 				__func__);
+			rsi_set_event(&common->probe_cfm_event);
 		}
 		break;
 	case BEACON_EVENT_IND:
