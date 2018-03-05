@@ -191,6 +191,9 @@ struct vif_priv {
 	bool sgi;
 	u16 seq_start;
 	int vap_id;
+	struct ieee80211_key_conf *key;
+	u8 rx_bcmc_pn[IEEE80211_CCMP_PN_LEN];
+	bool rx_pn_valid;
 };
 
 struct rsi_event {
