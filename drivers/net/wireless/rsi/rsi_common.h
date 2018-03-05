@@ -24,6 +24,9 @@
 #define QUEUE_NOT_FULL                  1
 #define QUEUE_FULL                      0
 
+#define RSI_REG_DEF			0
+#define RSI_REG_DLCAR			1
+
 static inline int rsi_init_event(struct rsi_event *pevent)
 {
 	atomic_set(&pevent->event_condition, 1);
