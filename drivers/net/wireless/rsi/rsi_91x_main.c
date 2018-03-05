@@ -324,6 +324,14 @@ struct rsi_hw *rsi_91x_init(u16 oper_mode)
 	mutex_init(&common->rx_lock);
 	mutex_init(&common->tx_bus_mutex);
 
+	rsi_init_event(&common->chan_set_event);
+	rsi_init_event(&common->probe_cfm_event);
+	rsi_init_event(&common->chan_change_event);
+	rsi_init_event(&common->cancel_hw_scan_event);
+	common->scan_workqueue =
+		create_singlethread_workqueue("rsi_scan_worker");
+	INIT_WORK(&common->scan_work, rsi_fgscan_start);
+
 	if (rsi_create_kthread(common,
 			       &common->tx_thread,
 			       rsi_tx_scheduler_thread,
@@ -333,6 +341,7 @@ struct rsi_hw *rsi_91x_init(u16 oper_mode)
 	}
 
 	rsi_default_ps_params(adapter);
+	init_bgscan_params(common);
 	spin_lock_init(&adapter->ps_lock);
 	timer_setup(&common->roc_timer, rsi_roc_timeout, 0);
 	init_completion(&common->wlan_init_completion);
@@ -395,6 +404,9 @@ void rsi_91x_deinit(struct rsi_hw *adapter)
 	u8 ii;
 
 	rsi_dbg(INFO_ZONE, "%s: Performing deinit os ops\n", __func__);
+
+	flush_workqueue(common->scan_workqueue);
+	destroy_workqueue(common->scan_workqueue);
 
 	rsi_kill_thread(&common->tx_thread);
 
