@@ -387,6 +387,7 @@ struct rsi_bb_rf_prog {
 	__le16 flags;
 } __packed;
 
+#define RSI_CHAN_FLAGS_DLCAR	BIT(2)
 struct rsi_chan_config {
 	struct rsi_cmd_desc_dword0 desc_dword0;
 	struct rsi_cmd_desc_dword1 desc_dword1;
@@ -736,4 +737,7 @@ void rsi_fgscan_start(struct work_struct *data);
 void init_bgscan_params(struct rsi_common *common);
 int rsi_send_bgscan_params(struct rsi_common *common, int enable);
 int rsi_send_bgscan_probe_req(struct rsi_common *common);
+void rsi_apply_dlcar_power_values(struct rsi_hw *adapter,
+				  struct ieee80211_channel *ch);
+void rsi_apply_dlcar_reg_rules(struct rsi_hw *adapter);
 #endif
