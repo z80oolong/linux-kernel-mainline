@@ -211,6 +211,28 @@ static struct bootup_params boot_params_40 = {
 
 static u16 mcs[] = {13, 26, 39, 52, 78, 104, 117, 130};
 
+struct reg_map {
+	char country_code[2];
+	u8 region_code;
+};
+
+#define MAX_REG_COUNTRIES	30
+static struct reg_map rsi_dlcar_reg_map[MAX_REG_COUNTRIES] = {
+	{"AU", RSI_REGION_ETSI}, {"AT", RSI_REGION_ETSI},
+	{"BE", RSI_REGION_ETSI}, {"BR", RSI_REGION_WORLD},
+	{"CA", RSI_REGION_FCC}, {"CL", RSI_REGION_WORLD},
+	{"CN", RSI_REGION_WORLD}, {"CO", RSI_REGION_FCC},
+	{"CZ", RSI_REGION_ETSI}, {"DK", RSI_REGION_ETSI},
+	{"FI", RSI_REGION_ETSI}, {"FR", RSI_REGION_ETSI},
+	{"DE", RSI_REGION_ETSI}, {"HK", RSI_REGION_WORLD},
+	{"IN", RSI_REGION_WORLD}, {"ID", RSI_REGION_WORLD},
+	{"IE", RSI_REGION_ETSI}, {"IL", RSI_REGION_ETSI},
+	{"IT", RSI_REGION_ETSI}, {"JP", RSI_REGION_TELEC},
+	{"KR", RSI_REGION_WORLD}, {"LU", RSI_REGION_ETSI},
+	{"MY", RSI_REGION_WORLD}, {"MX", RSI_REGION_FCC},
+	{"MA", RSI_REGION_WORLD}, {"NL", RSI_REGION_ETSI},
+};
+
 /**
  * rsi_set_default_parameters() - This function sets default parameters.
  * @common: Pointer to the driver private structure.
@@ -986,6 +1008,120 @@ int rsi_band_check(struct rsi_common *common,
 	return status;
 }
 
+enum rsi_chan_type {
+	RSI_CHAN_11B = 0,
+	RSI_CHAN_11G,
+	RSI_CHAN_HT_20,
+	RSI_CHAN_HT_40
+};
+
+static enum rsi_chan_type rsi_get_chan_type(struct rsi_hw *adapter)
+{
+	struct ieee80211_bss_conf *bss;
+	u16 ch_type = RSI_CHAN_11B;
+	u8 i;
+
+	for (i = 0; i < adapter->sc_nvifs; i++) {
+		bss = &adapter->vifs[i]->bss_conf;
+
+		if (ch_type < RSI_CHAN_11G && !conf_is_ht(&adapter->hw->conf)) {
+			if (bss->basic_rates & 0xfff0)
+				ch_type = RSI_CHAN_11G;
+		} else {
+			if (ch_type < RSI_CHAN_HT_20 &&
+			    conf_is_ht20(&adapter->hw->conf))
+				ch_type = RSI_CHAN_HT_20;
+			else if (conf_is_ht40(&adapter->hw->conf))
+				ch_type = RSI_CHAN_HT_40;
+		}
+	}
+	return ch_type;
+}
+
+void rsi_apply_dlcar_power_values(struct rsi_hw *adapter,
+				  struct ieee80211_channel *ch)
+{
+	enum rsi_chan_type ch_type;
+
+	ch_type = rsi_get_chan_type(adapter);
+	switch (ch_type) {
+	case RSI_CHAN_11B:
+		if (ch->hw_value == 12)
+			ch->max_power = 15;
+		else if (ch->hw_value == 13)
+			ch->max_power = 7;
+		else
+			return;
+		break;
+	case RSI_CHAN_11G:
+		if (ch->hw_value == 12)
+			ch->max_power = 8;
+		else if (ch->hw_value == 13)
+			ch->max_power = 7;
+		else
+			return;
+	case RSI_CHAN_HT_20:
+		if (ch->hw_value == 12)
+			ch->max_power = 7;
+		else if (ch->hw_value == 13)
+			ch->max_power = 5;
+		else
+			return;
+	case RSI_CHAN_HT_40:
+		if (ch->hw_value == 6)
+			ch->max_power = 9;
+		else if (ch->hw_value == 9)
+			ch->max_power = 5;
+		else if (ch->hw_value == 10)
+			ch->max_power = 4;
+		else
+			return;
+	}
+	ch->max_antenna_gain = 0;
+}
+
+void rsi_apply_dlcar_reg_rules(struct rsi_hw *adapter)
+{
+	struct ieee80211_supported_band *sband =
+			adapter->hw->wiphy->bands[NL80211_BAND_2GHZ];
+	struct ieee80211_channel *ch;
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE(rsi_dlcar_reg_map); i++) {
+		if (!memcmp(rsi_dlcar_reg_map[i].country_code,
+			    adapter->country, 2)) {
+			adapter->dfs_region = rsi_dlcar_reg_map[i].region_code;
+			break;
+		}
+	}
+	for (i = 0; i < sband->n_channels; i++) {
+		ch = &sband->channels[i];
+
+		if (ch->hw_value < 12)
+			continue;
+
+		switch (adapter->dfs_region) {
+		case RSI_REGION_FCC:
+			if (ch->hw_value == 12 || ch->hw_value == 13) {
+				ch->flags &= ~IEEE80211_CHAN_DISABLED;
+				ch->flags &= ~IEEE80211_CHAN_NO_IR;
+				rsi_apply_dlcar_power_values(adapter, ch);
+			}
+			break;
+		case RSI_REGION_WORLD:
+		case RSI_REGION_ETSI:
+			if (ch->hw_value == 12 || ch->hw_value == 13)
+				rsi_apply_dlcar_power_values(adapter, ch);
+			break;
+		case RSI_REGION_TELEC:
+			if (ch->hw_value == 12 || ch->hw_value == 13 ||
+			    ch->hw_value == 14)
+				rsi_apply_dlcar_power_values(adapter, ch);
+			break;
+		}
+	}
+}
+
 /**
  * rsi_set_channel() - This function programs the channel.
  * @common: Pointer to the driver private structure.
@@ -1024,6 +1160,10 @@ int rsi_set_channel(struct rsi_common *common,
 	chan_cfg->antenna_gain_offset_5g = channel->max_antenna_gain;
 	chan_cfg->region_rftype = (RSI_RF_TYPE & 0xf) << 4;
 
+	if (common->priv->reg_mode == RSI_REG_DLCAR) {
+		rsi_apply_dlcar_power_values(common->priv, channel);
+		chan_cfg->flags = RSI_CHAN_FLAGS_DLCAR;
+	}
 	if ((channel->flags & IEEE80211_CHAN_NO_IR) ||
 	    (channel->flags & IEEE80211_CHAN_RADAR)) {
 		chan_cfg->antenna_gain_offset_2g |= RSI_CHAN_RADAR;
