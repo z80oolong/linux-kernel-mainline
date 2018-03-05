@@ -350,6 +350,8 @@ struct rsi_hw *rsi_91x_init(u16 oper_mode)
 	timer_setup(&common->roc_timer, rsi_roc_timeout, 0);
 	init_completion(&common->wlan_init_completion);
 	common->init_done = true;
+	common->disc_in_prog = false;
+	common->bt_adapter = NULL;
 	adapter->device_model = RSI_DEV_9113;
 	common->oper_mode = oper_mode;
 	adapter->reg_mode = rsi_reg;
