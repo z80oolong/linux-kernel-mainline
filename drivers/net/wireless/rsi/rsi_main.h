@@ -325,6 +325,7 @@ struct rsi_common {
 	bool bgscan_en;
 	bool cancel_hwscan;
 	bool eapol4_confirm;
+	bool disc_in_prog;
 };
 
 struct eepromrw_info {

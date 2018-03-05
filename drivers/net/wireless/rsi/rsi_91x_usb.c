@@ -676,17 +676,26 @@ static int usb_ulp_read_write(struct rsi_hw *adapter, u16 addr, u32 data,
 	return 0;
 }
 
+#define FW_WDT_DISABLE_REQ              0x69
 static int rsi_reset_card(struct rsi_hw *adapter)
 {
 	int ret;
 
 	rsi_dbg(INFO_ZONE, "Resetting Card...\n");
+
 	rsi_usb_master_reg_write(adapter, RSI_TA_HOLD_REG, 0xE, 4);
 
 	/* This msleep will ensure Thread-Arch processor to go to hold
 	 * and any pending dma transfers to rf in device to finish.
 	 */
 	msleep(100);
+
+	if (rsi_usb_master_reg_write(adapter, SWBL_REGOUT,
+				     FW_WDT_DISABLE_REQ,
+				     RSI_COMMON_REG_SIZE) < 0) {
+		rsi_dbg(ERR_ZONE, "%s: FW WDT Disable failed...\n", __func__);
+		goto fail;
+	}
 
 	ret = usb_ulp_read_write(adapter, RSI_WATCH_DOG_TIMER_1,
 				 RSI_ULP_WRITE_2, 32);
@@ -804,6 +813,7 @@ static void rsi_disconnect(struct usb_interface *pfunction)
 
 	if (!adapter)
 		return;
+	adapter->priv->disc_in_prog = true;
 
 	rsi_mac80211_detach(adapter);
 	rsi_reset_card(adapter);
