@@ -816,7 +816,8 @@ static void rsi_mac80211_bss_info_changed(struct ieee80211_hw *hw,
 				      bss_conf->bssid,
 				      bss_conf->qos,
 				      bss_conf->aid,
-				      NULL, 0, vif);
+				      NULL, 0,
+				      bss_conf->assoc_capability, vif);
 		adapter->ps_info.dtim_interval_duration = bss->dtim_period;
 		adapter->ps_info.listen_interval = conf->listen_interval;
 
@@ -985,14 +986,20 @@ static int rsi_hal_key_config(struct ieee80211_hw *hw,
 		}
 	}
 
-	return rsi_hal_load_key(adapter->priv,
-				key->key,
-				key->keylen,
-				key_type,
-				key->keyidx,
-				key->cipher,
-				sta_id,
-				vif);
+	status = rsi_hal_load_key(adapter->priv, key->key, key->keylen,
+				  key_type, key->keyidx, key->cipher,
+				  sta_id, vif);
+	if (status)
+		return status;
+
+	if (vif->type == NL80211_IFTYPE_STATION && key->key &&
+	    (key->cipher == WLAN_CIPHER_SUITE_WEP104 ||
+	     key->cipher == WLAN_CIPHER_SUITE_WEP40)) {
+		if (!rsi_send_block_unblock_frame(adapter->priv, false))
+			adapter->priv->hw_data_qs_blocked = false;
+	}
+
+	return 0;
 }
 
 /**
@@ -1470,7 +1477,7 @@ static int rsi_mac80211_sta_add(struct ieee80211_hw *hw,
 			rsi_dbg(INFO_ZONE, "Indicate bss status to device\n");
 			rsi_inform_bss_status(common, RSI_OPMODE_AP, 1,
 					      sta->addr, sta->wme, sta->aid,
-					      sta, sta_idx, vif);
+					      sta, sta_idx, 0, vif);
 
 			if (common->key) {
 				struct ieee80211_key_conf *key = common->key;
@@ -1548,7 +1555,7 @@ static int rsi_mac80211_sta_remove(struct ieee80211_hw *hw,
 				rsi_inform_bss_status(common, RSI_OPMODE_AP, 0,
 						      sta->addr, sta->wme,
 						      sta->aid, sta, sta_idx,
-						      vif);
+						      0, vif);
 				rsta->sta = NULL;
 				rsta->sta_id = -1;
 				for (cnt = 0; cnt < IEEE80211_NUM_TIDS; cnt++)
