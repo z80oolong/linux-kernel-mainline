@@ -367,8 +367,9 @@ struct rsi_hw {
 	u32 flash_capacity;
 	struct eepromrw_info eeprom;
 	u32 interrupt_status;
-	u8 dfs_region;
+	enum rsi_dfs_regions dfs_region;
 	char country[2];
+	u16 reg_mode;
 	void *rsi_dev;
 	struct rsi_host_intf_ops *host_intf_ops;
 	int (*check_hw_queue_status)(struct rsi_hw *adapter, u8 q_num);
