@@ -428,14 +428,18 @@ static void rsi_mac80211_stop(struct ieee80211_hw *hw)
 {
 	struct rsi_hw *adapter = hw->priv;
 	struct rsi_common *common = adapter->priv;
+	u16 rx_filter_word = 0xffff;
 
 	rsi_dbg(ERR_ZONE, "===> Interface DOWN <===\n");
 	mutex_lock(&common->mutex);
 	common->iface_down = true;
 	wiphy_rfkill_stop_polling(hw->wiphy);
 
-	/* Block all rx frames */
-	rsi_send_rx_filter_frame(common, 0xffff);
+	if (!common->disc_in_prog) {
+		/* Block all rx frames */
+		rx_filter_word |= ~DISALLOW_BEACONS;
+		rsi_send_rx_filter_frame(common, rx_filter_word);
+	}
 
 	mutex_unlock(&common->mutex);
 }
