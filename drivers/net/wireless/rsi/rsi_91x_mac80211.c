@@ -1666,7 +1666,8 @@ static int rsi_mac80211_get_antenna(struct ieee80211_hw *hw,
 	return 0;	
 }
 
-static int rsi_map_region_code(enum nl80211_dfs_regions region_code)
+static enum rsi_dfs_regions rsi_map_region_code
+				(enum nl80211_dfs_regions region_code)
 {
 	switch (region_code) {
 	case NL80211_DFS_FCC:
@@ -1681,6 +1682,22 @@ static int rsi_map_region_code(enum nl80211_dfs_regions region_code)
 	return RSI_REGION_WORLD;
 }
 
+static char *dfsreg_str(enum rsi_dfs_regions reg)
+{
+	switch (reg) {
+	case RSI_REGION_FCC:
+		return "FCC";
+	case RSI_REGION_ETSI:
+		return "ETSI";
+	case RSI_REGION_TELEC:
+		return "TELEC";
+	case RSI_REGION_WORLD:
+		return "WORLD";
+	default:
+		return "INVALID";
+	}
+}
+
 static void rsi_reg_notify(struct wiphy *wiphy,
 			   struct regulatory_request *request)
 {
@@ -1693,7 +1710,8 @@ static void rsi_reg_notify(struct wiphy *wiphy,
 	
 	mutex_lock(&common->mutex);
 
-	rsi_dbg(INFO_ZONE, "country = %s dfs_region = %d\n",
+	rsi_dbg(INFO_ZONE,
+		"Regulatory notifcation: country: %s region:%d\n",
 		request->alpha2, request->dfs_region);
 
 	if (common->num_supp_bands > 1) {
@@ -1708,11 +1726,13 @@ static void rsi_reg_notify(struct wiphy *wiphy,
 				ch->flags |= IEEE80211_CHAN_NO_IR;
 		}
 	}
-	adapter->dfs_region = rsi_map_region_code(request->dfs_region);
-	rsi_dbg(INFO_ZONE, "RSI region code = %d\n", adapter->dfs_region);
-	
 	adapter->country[0] = request->alpha2[0];
 	adapter->country[1] = request->alpha2[1];
+	adapter->dfs_region = rsi_map_region_code(request->dfs_region);
+	if (adapter->reg_mode == RSI_REG_DLCAR)
+		rsi_apply_dlcar_reg_rules(adapter);
+
+	rsi_dbg(INFO_ZONE, "DFS region: %s", dfsreg_str(adapter->dfs_region));
 
 	mutex_unlock(&common->mutex);
 }
