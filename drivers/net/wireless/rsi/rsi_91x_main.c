@@ -24,6 +24,10 @@
 #include "rsi_coex.h"
 #include "rsi_hal.h"
 
+static u16 rsi_reg = RSI_REG_DEF;
+module_param(rsi_reg, ushort, 0444);
+MODULE_PARM_DESC(rsi_reg, "0 - RSI_REG_DEF, 1 - RSI_REG_DLCAR");
+
 u32 rsi_zone_enabled = /* INFO_ZONE |
 			INIT_ZONE |
 			MGMT_TX_ZONE |
