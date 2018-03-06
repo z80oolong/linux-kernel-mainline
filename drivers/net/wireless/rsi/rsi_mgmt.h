@@ -729,8 +729,7 @@ int rsi_set_antenna(struct rsi_common *common, u8 antenna);
 int rsi_send_wowlan_request(struct rsi_common *common, u16 flags,
 			    u16 sleep_status);
 #endif
-int rsi_send_ps_request(struct rsi_hw *adapter, bool enable,
-			struct ieee80211_vif *vif);
+int rsi_send_ps_request(struct rsi_hw *adapter, bool enable);
 int rsi_prepare_probe_request(struct rsi_common *common,
 			      struct cfg80211_scan_request *scan_req,
 			      u8 n_ssid, u8 channel, u8 *pbreq, u16 *pbreq_len);
