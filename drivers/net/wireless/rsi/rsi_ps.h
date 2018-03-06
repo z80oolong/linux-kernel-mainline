@@ -18,7 +18,6 @@
 #define __RSI_PS_H__
 
 #define PS_CONFIRM_INDEX	12
-#define RSI_DEF_DS_WAKEUP_PERIOD	200
 #define RSI_DEF_LISTEN_INTERVAL		200
 #define RSI_SLEEP_TYPE_LP		1
 
@@ -55,8 +54,8 @@ struct rsi_ps_info {
 } __packed;
 
 char *str_psstate(enum ps_state state);
-void rsi_enable_ps(struct rsi_hw *adapter, struct ieee80211_vif *vif);
-void rsi_disable_ps(struct rsi_hw *adapter, struct ieee80211_vif *vif);
+void rsi_enable_ps(struct rsi_hw *adapter);
+void rsi_disable_ps(struct rsi_hw *adapter);
 int rsi_handle_ps_confirm(struct rsi_hw *adapter, u8 *msg);
 void rsi_default_ps_params(struct rsi_hw *hw);
 void rsi_conf_uapsd(struct rsi_hw *adapter, struct ieee80211_vif *vif);
