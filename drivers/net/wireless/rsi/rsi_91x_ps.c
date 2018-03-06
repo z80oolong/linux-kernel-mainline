@@ -63,10 +63,10 @@ void rsi_default_ps_params(struct rsi_hw *adapter)
 	ps_info->num_bcns_per_lis_int = 0;
 	ps_info->dtim_interval_duration = 0;
 	ps_info->num_dtims_per_sleep = 0;
-	ps_info->deep_sleep_wakeup_period = RSI_DEF_DS_WAKEUP_PERIOD;
+	ps_info->deep_sleep_wakeup_period = 0;
 }
 
-void rsi_enable_ps(struct rsi_hw *adapter, struct ieee80211_vif *vif)
+void rsi_enable_ps(struct rsi_hw *adapter)
 {
 	if (adapter->ps_state != PS_NONE) {
 		rsi_dbg(ERR_ZONE,
@@ -75,7 +75,7 @@ void rsi_enable_ps(struct rsi_hw *adapter, struct ieee80211_vif *vif)
 		return;
 	}
 
-	if (rsi_send_ps_request(adapter, true, vif)) {
+	if (rsi_send_ps_request(adapter, true)) {
 		rsi_dbg(ERR_ZONE,
 			"%s: Failed to send PS request to device\n",
 			__func__);
@@ -86,7 +86,7 @@ void rsi_enable_ps(struct rsi_hw *adapter, struct ieee80211_vif *vif)
 }
 
 /* This function is used to disable power save */
-void rsi_disable_ps(struct rsi_hw *adapter, struct ieee80211_vif *vif)
+void rsi_disable_ps(struct rsi_hw *adapter)
 {
 	if (adapter->ps_state != PS_ENABLED) {
 		rsi_dbg(ERR_ZONE,
@@ -95,7 +95,7 @@ void rsi_disable_ps(struct rsi_hw *adapter, struct ieee80211_vif *vif)
 		return;
 	}
 
-	if (rsi_send_ps_request(adapter, false, vif)) {
+	if (rsi_send_ps_request(adapter, false)) {
 		rsi_dbg(ERR_ZONE,
 			"%s: Failed to send PS request to device\n",
 			__func__);
@@ -112,9 +112,9 @@ void rsi_conf_uapsd(struct rsi_hw *adapter, struct ieee80211_vif *vif)
 	if (adapter->ps_state != PS_ENABLED)
 		return;
 
-	ret = rsi_send_ps_request(adapter, false, vif);
+	ret = rsi_send_ps_request(adapter, false);
 	if (!ret)
-		ret = rsi_send_ps_request(adapter, true, vif);
+		ret = rsi_send_ps_request(adapter, true);
 	if (ret)
 		rsi_dbg(ERR_ZONE,
 			"%s: Failed to send PS request to device\n",
