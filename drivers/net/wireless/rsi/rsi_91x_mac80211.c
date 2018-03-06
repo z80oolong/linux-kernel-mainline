@@ -394,6 +394,12 @@ static void rsi_mac80211_tx(struct ieee80211_hw *hw,
 {
 	struct rsi_hw *adapter = hw->priv;
 	struct rsi_common *common = adapter->priv;
+	struct ieee80211_vif *vif = adapter->vifs[adapter->sc_nvifs - 1];
+	struct ieee80211_bss_conf *bss = &adapter->vifs[0]->bss_conf;
+
+	if (!bss->assoc && adapter->ps_state == PS_ENABLED &&
+	    vif->type == NL80211_IFTYPE_STATION)
+		rsi_disable_ps(adapter);
 
 	rsi_core_xmit(common, skb);
 }
@@ -733,9 +739,9 @@ static int rsi_mac80211_config(struct ieee80211_hw *hw,
 		if (set_ps && sta_vif) {
 			spin_lock_irqsave(&adapter->ps_lock, flags);
 			if (conf->flags & IEEE80211_CONF_PS)
-				rsi_enable_ps(adapter, sta_vif);
+				rsi_enable_ps(adapter);
 			else
-				rsi_disable_ps(adapter, sta_vif);
+				rsi_disable_ps(adapter);
 			spin_unlock_irqrestore(&adapter->ps_lock, flags);
 		}
 	}
