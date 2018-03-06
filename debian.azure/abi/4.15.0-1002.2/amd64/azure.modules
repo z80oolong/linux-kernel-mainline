@@ -246,7 +246,6 @@ hyperv-keyboard
 hyperv_fb
 i2c-algo-bit
 i2c-core
-i2c-piix4
 i40e
 ib_cm
 ib_core
