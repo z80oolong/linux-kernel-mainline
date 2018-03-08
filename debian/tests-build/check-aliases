@@ -1,4 +1,6 @@
 #!/usr/bin/perl -w
+print "SKIPPING check-aliases for $ENV{'FLAVOUR'}...\n";
+exit(0);
 
 my %map;
 
