@@ -1,0 +1,28 @@
+drm-upstream drm-fixes b0655d668fc4faf0c1985e828820f9b9ca13abe6
+	Merge branch 'drm-fixes-4.16' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+drm-misc drm-misc-fixes b0655d668fc4faf0c1985e828820f9b9ca13abe6
+	Merge branch 'drm-fixes-4.16' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+drm-intel drm-intel-fixes fc74d621a3bc72c1f6d84d4daf81c795125681c2
+	drm/i915: Kick the rps worker when changing the boost frequency
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm-upstream drm-next 128ccceaba8656573b8b0f86d3ab6e38094cc754
+	Merge branch 'drm-next-4.17' of git://people.freedesktop.org/~agd5f/linux into drm-next
+drm-misc drm-misc-next-fixes 761e05a702f5d537ffcca1ba933f9f0a968aa022
+	drm: Check for lessee in DROP_MASTER ioctl
+drm-intel drm-intel-next-fixes 6dd3104e78943685d5183efe883d83a5f2361bf1
+	drm/i915/bios: add DP max link rate to VBT child device struct
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 1d49f2e546a5a3258a88f85a1c04fd6feb6def37
+	drm/vc4: Enable background color fill when necessary
+drm-intel drm-intel-next-queued d897a111940fe2d644172466914d7c97791bda05
+	drm/i915: Move i915_gpu_error into its own header
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 099fd6ca0ad25bc19c5ade2ea4b25b8fadaa11b3
+	ALSA: hda: add dock and led support for HP ProBook 640 G2
+sound-upstream for-next 7a33a02ffb0620b01892c6c6808bb711b3f63e9c
+	ALSA: vmaster: Zero-clear ctl before calling slave get
+drm-intel topic/core-for-CI 52e7aa851c22613f9f57e01a6bdb1970e6cb3a41
+	Revert "ALSA: hda: Make use of core codec functions to sync power state"
