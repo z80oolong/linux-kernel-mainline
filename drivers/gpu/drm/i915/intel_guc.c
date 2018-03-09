@@ -364,13 +364,50 @@ int intel_guc_send_mmio(struct intel_guc *guc, const u32 *action, u32 len)
 	return ret;
 }
 
+void intel_guc_to_host_event_handler(struct intel_guc *guc)
+{
+	struct drm_i915_private *dev_priv = guc_to_i915(guc);
+	u32 msg, flush;
+
+	/*
+	 * Sample the log buffer flush related bits & clear them out now
+	 * itself from the message identity register to minimize the
+	 * probability of losing a flush interrupt, when there are back
+	 * to back flush interrupts.
+	 * There can be a new flush interrupt, for different log buffer
+	 * type (like for ISR), whilst Host is handling one (for DPC).
+	 * Since same bit is used in message register for ISR & DPC, it
+	 * could happen that GuC sets the bit for 2nd interrupt but Host
+	 * clears out the bit on handling the 1st interrupt.
+	 */
+
+	msg = I915_READ(SOFT_SCRATCH(15));
+	flush = msg & (INTEL_GUC_RECV_MSG_CRASH_DUMP_POSTED |
+		       INTEL_GUC_RECV_MSG_FLUSH_LOG_BUFFER);
+	if (flush) {
+		/* Clear the message bits that are handled */
+		I915_WRITE(SOFT_SCRATCH(15), msg & ~flush);
+
+		/* Handle flush interrupt in bottom half */
+		queue_work(guc->log.runtime.flush_wq,
+			   &guc->log.runtime.flush_work);
+
+		guc->log.flush_interrupt_count++;
+	} else {
+		/*
+		 * Not clearing of unhandled event bits won't result in
+		 * re-triggering of the interrupt.
+		 */
+	}
+}
+
 int intel_guc_sample_forcewake(struct intel_guc *guc)
 {
 	struct drm_i915_private *dev_priv = guc_to_i915(guc);
 	u32 action[2];
 
 	action[0] = INTEL_GUC_ACTION_SAMPLE_FORCEWAKE;
-	/* WaRsDisableCoarsePowerGating:skl,bxt */
+	/* WaRsDisableCoarsePowerGating:skl,cnl */
 	if (!HAS_RC6(dev_priv) || NEEDS_WaRsDisableCoarsePowerGating(dev_priv))
 		action[1] = 0;
 	else
@@ -403,22 +440,15 @@ int intel_guc_auth_huc(struct intel_guc *guc, u32 rsa_offset)
 
 /**
  * intel_guc_suspend() - notify GuC entering suspend state
- * @dev_priv:	i915 device private
+ * @guc:	the guc
  */
-int intel_guc_suspend(struct drm_i915_private *dev_priv)
+int intel_guc_suspend(struct intel_guc *guc)
 {
-	struct intel_guc *guc = &dev_priv->guc;
-	u32 data[3];
-
-	if (guc->fw.load_status != INTEL_UC_FIRMWARE_SUCCESS)
-		return 0;
-
-	gen9_disable_guc_interrupts(dev_priv);
-
-	data[0] = INTEL_GUC_ACTION_ENTER_S_STATE;
-	/* any value greater than GUC_POWER_D0 */
-	data[1] = GUC_POWER_D1;
-	data[2] = guc_ggtt_offset(guc->shared_data);
+	u32 data[] = {
+		INTEL_GUC_ACTION_ENTER_S_STATE,
+		GUC_POWER_D1, /* any value greater than GUC_POWER_D0 */
+		guc_ggtt_offset(guc->shared_data)
+	};
 
 	return intel_guc_send(guc, data, ARRAY_SIZE(data));
 }
@@ -448,22 +478,15 @@ int intel_guc_reset_engine(struct intel_guc *guc,
 
 /**
  * intel_guc_resume() - notify GuC resuming from suspend state
- * @dev_priv:	i915 device private
+ * @guc:	the guc
  */
-int intel_guc_resume(struct drm_i915_private *dev_priv)
+int intel_guc_resume(struct intel_guc *guc)
 {
-	struct intel_guc *guc = &dev_priv->guc;
-	u32 data[3];
-
-	if (guc->fw.load_status != INTEL_UC_FIRMWARE_SUCCESS)
-		return 0;
-
-	if (i915_modparams.guc_log_level)
-		gen9_enable_guc_interrupts(dev_priv);
-
-	data[0] = INTEL_GUC_ACTION_EXIT_S_STATE;
-	data[1] = GUC_POWER_D0;
-	data[2] = guc_ggtt_offset(guc->shared_data);
+	u32 data[] = {
+		INTEL_GUC_ACTION_EXIT_S_STATE,
+		GUC_POWER_D0,
+		guc_ggtt_offset(guc->shared_data)
+	};
 
 	return intel_guc_send(guc, data, ARRAY_SIZE(data));
 }
