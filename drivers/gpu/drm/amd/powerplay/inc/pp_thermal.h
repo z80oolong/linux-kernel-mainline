@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Advanced Micro Devices, Inc.
+ * Copyright 2018 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -20,7 +20,21 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  *
  */
+#ifndef PP_THERMAL_H
+#define PP_THERMAL_H
 
-bool acpi_atcs_functions_supported(void *device, uint32_t index);
-int acpi_pcie_perf_request(void *device, uint8_t perf_req, bool advertise);
-bool acpi_atcs_notify_pcie_device_ready(void *device);
+#include "power_state.h"
+
+static const struct PP_TemperatureRange SMU7ThermalWithDelayPolicy[] =
+{
+	{-273150,  99000},
+	{ 120000, 120000},
+};
+
+static const struct PP_TemperatureRange SMU7ThermalPolicy[] =
+{
+	{-273150,  99000},
+	{ 120000, 120000},
+};
+
+#endif
