@@ -49,6 +49,7 @@
 #include "i915_drv.h"
 #include "i915_trace.h"
 #include "i915_pmu.h"
+#include "i915_query.h"
 #include "i915_vgpu.h"
 #include "intel_drv.h"
 #include "intel_uc.h"
@@ -428,7 +429,7 @@ static int i915_getparam_ioctl(struct drm_device *dev, void *data,
 			return -ENODEV;
 		break;
 	case I915_PARAM_SUBSLICE_MASK:
-		value = INTEL_INFO(dev_priv)->sseu.subslice_mask;
+		value = INTEL_INFO(dev_priv)->sseu.subslice_mask[0];
 		if (!value)
 			return -ENODEV;
 		break;
@@ -808,7 +809,7 @@ static int i915_workqueues_init(struct drm_i915_private *dev_priv)
 	/*
 	 * The i915 workqueue is primarily used for batched retirement of
 	 * requests (and thus managing bo) once the task has been completed
-	 * by the GPU. i915_gem_retire_requests() is called directly when we
+	 * by the GPU. i915_retire_requests() is called directly when we
 	 * need high-priority retirement, such as waiting for an explicit
 	 * bo.
 	 *
@@ -1073,8 +1074,6 @@ static void intel_sanitize_options(struct drm_i915_private *dev_priv)
 					    i915_modparams.enable_ppgtt);
 	DRM_DEBUG_DRIVER("ppgtt mode: %i\n", i915_modparams.enable_ppgtt);
 
-	intel_uc_sanitize_options(dev_priv);
-
 	intel_gvt_sanitize_options(dev_priv);
 }
 
@@ -1237,8 +1236,10 @@ static void i915_driver_register(struct drm_i915_private *dev_priv)
 	/* Reveal our presence to userspace */
 	if (drm_dev_register(dev, 0) == 0) {
 		i915_debugfs_register(dev_priv);
-		i915_guc_log_register(dev_priv);
 		i915_setup_sysfs(dev_priv);
+
+		/* Depends on debugfs having been initialized */
+		intel_uc_register(dev_priv);
 
 		/* Depends on sysfs having been initialized */
 		i915_perf_register(dev_priv);
@@ -1297,7 +1298,7 @@ static void i915_driver_unregister(struct drm_i915_private *dev_priv)
 	i915_pmu_unregister(dev_priv);
 
 	i915_teardown_sysfs(dev_priv);
-	i915_guc_log_unregister(dev_priv);
+	intel_uc_unregister(dev_priv);
 	drm_dev_unregister(&dev_priv->drm);
 
 	i915_gem_shrinker_unregister(dev_priv);
@@ -1992,7 +1993,7 @@ taint:
 	add_taint(TAINT_WARN, LOCKDEP_STILL_OK);
 error:
 	i915_gem_set_wedged(i915);
-	i915_gem_retire_requests(i915);
+	i915_retire_requests(i915);
 	intel_gpu_reset(i915, ALL_ENGINES);
 	goto finish;
 }
@@ -2019,7 +2020,7 @@ static inline int intel_gt_reset_engine(struct drm_i915_private *dev_priv,
 int i915_reset_engine(struct intel_engine_cs *engine, unsigned int flags)
 {
 	struct i915_gpu_error *error = &engine->i915->gpu_error;
-	struct drm_i915_gem_request *active_request;
+	struct i915_request *active_request;
 	int ret;
 
 	GEM_BUG_ON(!test_bit(I915_RESET_ENGINE + engine->id, &error->flags));
@@ -2575,7 +2576,7 @@ static int intel_runtime_suspend(struct device *kdev)
 	 */
 	i915_gem_runtime_suspend(dev_priv);
 
-	intel_guc_suspend(dev_priv);
+	intel_uc_suspend(dev_priv);
 
 	intel_runtime_pm_disable_interrupts(dev_priv);
 
@@ -2597,7 +2598,7 @@ static int intel_runtime_suspend(struct device *kdev)
 
 		intel_runtime_pm_enable_interrupts(dev_priv);
 
-		intel_guc_resume(dev_priv);
+		intel_uc_resume(dev_priv);
 
 		i915_gem_init_swizzling(dev_priv);
 		i915_gem_restore_fences(dev_priv);
@@ -2683,7 +2684,7 @@ static int intel_runtime_resume(struct device *kdev)
 
 	intel_runtime_pm_enable_interrupts(dev_priv);
 
-	intel_guc_resume(dev_priv);
+	intel_uc_resume(dev_priv);
 
 	/*
 	 * No point of rolling back things in case of an error, as the best
@@ -2832,6 +2833,7 @@ static const struct drm_ioctl_desc i915_ioctls[] = {
 	DRM_IOCTL_DEF_DRV(I915_PERF_OPEN, i915_perf_open_ioctl, DRM_RENDER_ALLOW),
 	DRM_IOCTL_DEF_DRV(I915_PERF_ADD_CONFIG, i915_perf_add_config_ioctl, DRM_UNLOCKED|DRM_RENDER_ALLOW),
 	DRM_IOCTL_DEF_DRV(I915_PERF_REMOVE_CONFIG, i915_perf_remove_config_ioctl, DRM_UNLOCKED|DRM_RENDER_ALLOW),
+	DRM_IOCTL_DEF_DRV(I915_QUERY, i915_query_ioctl, DRM_UNLOCKED|DRM_RENDER_ALLOW),
 };
 
 static struct drm_driver driver = {
