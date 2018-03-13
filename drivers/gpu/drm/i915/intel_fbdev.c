@@ -215,11 +215,14 @@ static int intelfb_create(struct drm_fb_helper *helper,
 	 */
 	vma = intel_pin_and_fence_fb_obj(&ifbdev->fb->base,
 					 DRM_MODE_ROTATE_0,
-					 &flags);
+					 false, &flags);
 	if (IS_ERR(vma)) {
 		ret = PTR_ERR(vma);
 		goto out_unlock;
 	}
+
+	fb = &ifbdev->fb->base;
+	intel_fb_obj_flush(intel_fb_obj(fb), ORIGIN_DIRTYFB);
 
 	info = drm_fb_helper_alloc_fbi(helper);
 	if (IS_ERR(info)) {
@@ -229,8 +232,6 @@ static int intelfb_create(struct drm_fb_helper *helper,
 	}
 
 	info->par = helper;
-
-	fb = &ifbdev->fb->base;
 
 	ifbdev->helper.fb = fb;
 

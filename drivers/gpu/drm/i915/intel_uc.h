@@ -28,17 +28,21 @@
 #include "intel_huc.h"
 #include "i915_params.h"
 
-void intel_uc_sanitize_options(struct drm_i915_private *dev_priv);
 void intel_uc_init_early(struct drm_i915_private *dev_priv);
 void intel_uc_init_mmio(struct drm_i915_private *dev_priv);
+int intel_uc_register(struct drm_i915_private *dev_priv);
+void intel_uc_unregister(struct drm_i915_private *dev_priv);
 void intel_uc_init_fw(struct drm_i915_private *dev_priv);
 void intel_uc_fini_fw(struct drm_i915_private *dev_priv);
 int intel_uc_init_misc(struct drm_i915_private *dev_priv);
 void intel_uc_fini_misc(struct drm_i915_private *dev_priv);
+void intel_uc_sanitize(struct drm_i915_private *dev_priv);
 int intel_uc_init_hw(struct drm_i915_private *dev_priv);
 void intel_uc_fini_hw(struct drm_i915_private *dev_priv);
 int intel_uc_init(struct drm_i915_private *dev_priv);
 void intel_uc_fini(struct drm_i915_private *dev_priv);
+int intel_uc_suspend(struct drm_i915_private *dev_priv);
+int intel_uc_resume(struct drm_i915_private *dev_priv);
 
 static inline bool intel_uc_is_using_guc(void)
 {
