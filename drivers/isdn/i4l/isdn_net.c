@@ -2644,8 +2644,9 @@ isdn_net_newslave(char *parm)
 
 	if (p) {
 		/* Slave-Name MUST not be empty or overflow 'newname' */
-		if (strscpy(newname, p + 1, sizeof(newname)) <= 0)
+		if (!strlen(p + 1) || strlen(p + 1) >= sizeof(newname))
 			return NULL;
+		strcpy(newname, p + 1);
 		*p = 0;
 		/* Master must already exist */
 		if (!(n = isdn_net_findif(parm)))
