@@ -574,7 +574,7 @@ static int rsi_sdio_load_data_master_write(struct rsi_hw *adapter,
 {
 	u32 num_blocks, offset, i;
 	u16 msb_address, lsb_address;
-	u8 temp_buf[block_size];
+	u8 *temp_buf;
 	int status;
 
 	num_blocks = instructions_sz / block_size;
@@ -583,11 +583,15 @@ static int rsi_sdio_load_data_master_write(struct rsi_hw *adapter,
 	rsi_dbg(INFO_ZONE, "ins_size: %d, num_blocks: %d\n",
 		instructions_sz, num_blocks);
 
+	temp_buf = kmalloc(block_size, GFP_KERNEL);
+	if (!temp_buf)
+		return -ENOMEM;
+
 	/* Loading DM ms word in the sdio slave */
 	status = rsi_sdio_master_access_msword(adapter, msb_address);
 	if (status < 0) {
 		rsi_dbg(ERR_ZONE, "%s: Unable to set ms word reg\n", __func__);
-		return status;
+		goto out_free;
 	}
 
 	for (offset = 0, i = 0; i < num_blocks; i++, offset += block_size) {
@@ -599,7 +603,7 @@ static int rsi_sdio_load_data_master_write(struct rsi_hw *adapter,
 					 temp_buf, block_size);
 		if (status < 0) {
 			rsi_dbg(ERR_ZONE, "%s: failed to write\n", __func__);
-			return status;
+			goto out_free;
 		}
 		rsi_dbg(INFO_ZONE, "%s: loading block: %d\n", __func__, i);
 		base_address += block_size;
@@ -614,7 +618,7 @@ static int rsi_sdio_load_data_master_write(struct rsi_hw *adapter,
 				rsi_dbg(ERR_ZONE,
 					"%s: Unable to set ms word reg\n",
 					__func__);
-				return status;
+				goto out_free;
 			}
 		}
 	}
@@ -630,12 +634,16 @@ static int rsi_sdio_load_data_master_write(struct rsi_hw *adapter,
 					 temp_buf,
 					 instructions_sz % block_size);
 		if (status < 0)
-			return status;
+			goto out_free;
 		rsi_dbg(INFO_ZONE,
 			"Written Last Block in Address 0x%x Successfully\n",
 			offset | RSI_SD_REQUEST_MASTER);
 	}
-	return 0;
+
+	status = 0;
+out_free:
+	kfree(temp_buf);
+	return status;
 }
 
 #define FLASH_SIZE_ADDR                 0x04000016
