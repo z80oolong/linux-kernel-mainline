@@ -1899,6 +1899,8 @@ void rsi_fgscan_start(struct work_struct *work)
 
 	common->fgscan_in_prog = true;
 	rsi_disable_ps(adapter);
+	rsi_reset_event(&common->mgmt_cfm_event);
+	rsi_wait_event(&common->mgmt_cfm_event, msecs_to_jiffies(2000));
 
 	rsi_dbg(INFO_ZONE, "Foreground scan started...\n");
 
@@ -1942,6 +1944,8 @@ void rsi_fgscan_start(struct work_struct *work)
 	del_timer(&common->scan_timer);
 	common->fgscan_in_prog = false;
 	rsi_enable_ps(adapter);
+	rsi_reset_event(&common->mgmt_cfm_event);
+	rsi_wait_event(&common->mgmt_cfm_event, msecs_to_jiffies(2000));
 	ieee80211_scan_completed(common->priv->hw, &info);
 	rsi_dbg(INFO_ZONE, "Foreground scan completed\n");
 	rsi_set_event(&common->cancel_hw_scan_event);
@@ -2189,6 +2193,7 @@ static int rsi_handle_ta_confirm_type(struct rsi_common *common,
 
 	case WAKEUP_SLEEP_REQUEST:
 		rsi_dbg(INFO_ZONE, "Wakeup/Sleep confirmation.\n");
+		rsi_set_event(&common->mgmt_cfm_event);
 		return rsi_handle_ps_confirm(adapter, msg);
 
 	case BG_SCAN_PROBE_REQ:
