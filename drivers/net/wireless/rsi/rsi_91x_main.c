@@ -330,6 +330,7 @@ struct rsi_hw *rsi_91x_init(u16 oper_mode)
 
 	rsi_init_event(&common->chan_set_event);
 	rsi_init_event(&common->probe_cfm_event);
+	rsi_init_event(&common->mgmt_cfm_event);
 	rsi_init_event(&common->chan_change_event);
 	rsi_init_event(&common->cancel_hw_scan_event);
 	common->scan_workqueue =
