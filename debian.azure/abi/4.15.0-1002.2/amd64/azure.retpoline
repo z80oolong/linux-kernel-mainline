@@ -2,7 +2,6 @@ aesni-intel.ko .altinstr_replacement callq  *%r11
 aesni-intel.ko .altinstr_replacement callq  *%r11
 aesni-intel.ko aesni_xts_crypt8 callq  *%r11
 aesni-intel.ko aesni_xts_crypt8 callq  *%r11
-amdgpu.ko core_link_enable_stream callq  *%rax
 camellia-aesni-avx-x86_64.ko .altinstr_replacement callq  *%r9
 camellia-aesni-avx-x86_64.ko camellia_xts_crypt_16way callq  *%r9
 camellia-aesni-avx2.ko .altinstr_replacement callq  *%r9
@@ -49,6 +48,7 @@ vmlinux __gunzip callq  *%r15
 vmlinux __gunzip callq  *%rax
 vmlinux __gunzip callq  *%rax
 vmlinux __gunzip callq  *%rax
+vmlinux __softirqentry_text_end callq  *0x6335e0(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
 vmlinux __x86_indirect_thunk_r10 jmpq   *%r10
 vmlinux __x86_indirect_thunk_r11 jmpq   *%r11
 vmlinux __x86_indirect_thunk_r12 jmpq   *%r12
@@ -80,14 +80,16 @@ vmlinux apic_intr_mode_init callq  *%rax
 vmlinux apic_intr_mode_init callq  *%rax
 vmlinux apic_intr_mode_init callq  *%rax
 vmlinux apic_intr_mode_init callq  *%rax
+vmlinux apic_timer_interrupt callq  *0x831b62(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
 vmlinux arch_probe_nr_irqs callq  *%rax
-vmlinux bpf_prog_load jmpq   *%rsp
 vmlinux bunzip2 callq  *%r13
 vmlinux bunzip2 callq  *%rax
 vmlinux bunzip2 callq  *%rax
 vmlinux bunzip2 callq  *%rax
 vmlinux bunzip2 callq  *%rax
 vmlinux calgary_iommu_init callq  *%rax
+vmlinux call_function_interrupt callq  *0x831802(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
+vmlinux call_function_single_interrupt callq  *0x831892(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
 vmlinux cgroup_init callq  *%rax
 vmlinux cgroup_init_subsys callq  *%rdx
 vmlinux check_bugs jmpq   *%rax
@@ -103,6 +105,7 @@ vmlinux check_timer callq  *%rax
 vmlinux check_timer callq  *%rax
 vmlinux check_timer callq  *%rax
 vmlinux check_timer callq  *%rax
+vmlinux common_interrupt callq  *0x833002(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
 vmlinux con_init callq  *%rax
 vmlinux console_init callq  *%rax
 vmlinux continue_block jmpq   *%rdi
@@ -114,6 +117,7 @@ vmlinux default_get_smp_config callq  *%rax
 vmlinux default_get_smp_config jmpq   *%rax
 vmlinux default_setup_apic_routing callq  *%rax
 vmlinux default_setup_apic_routing callq  *%rax
+vmlinux deferred_error_interrupt callq  *0x8319b2(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
 vmlinux dm_init callq  *%rax
 vmlinux dm_init callq  *%rax
 vmlinux do_early_param callq  *%rax
@@ -146,11 +150,19 @@ vmlinux enable_IR_x2apic callq  *%rax
 vmlinux enable_IR_x2apic callq  *%rax
 vmlinux enable_IR_x2apic callq  *%rax
 vmlinux enable_IR_x2apic callq  *%rax
+vmlinux entry_INT80_compat callq  *0x831edf(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
 vmlinux entry_SYSCALL_64_trampoline jmpq   *%rdi
+vmlinux entry_SYSENTER_compat callq  *0x832062(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
+vmlinux error_entry callq  *0x832290(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
+vmlinux error_entry callq  *0x8322b3(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
+vmlinux error_entry callq  *0x832311(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
+vmlinux error_exit callq  *0x83229a(%rip)        # ffffffff822338d0 <pv_irq_ops+0x10>
+vmlinux error_interrupt callq  *0x8316e2(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
 vmlinux get_bits callq  *%rax
 vmlinux get_cert_list callq  *%rax
 vmlinux get_cert_list callq  *%rax
 vmlinux hv_post_message callq  *%rsi
+vmlinux hyperv_callback_vector callq  *0x832702(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
 vmlinux hyperv_flush_tlb_others callq  *%r14
 vmlinux hyperv_flush_tlb_others callq  *%rax
 vmlinux hyperv_flush_tlb_others_ex callq  *%r15
@@ -191,20 +203,32 @@ vmlinux intel_uncore_init callq  *%rax
 vmlinux intel_uncore_init callq  *%rax
 vmlinux io_apic_init_mappings callq  *%rax
 vmlinux iommu_go_to_state jmpq   *%rdi
+vmlinux irq_move_cleanup_interrupt callq  *0x832dd5(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
 vmlinux irq_remap_enable_fault_handling callq  *%rdx
 vmlinux irq_remapping_enable callq  *%rdx
 vmlinux irq_remapping_prepare callq  *%rax
 vmlinux irq_remapping_prepare callq  *%rax
+vmlinux irq_work_interrupt callq  *0x8315c2(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
 vmlinux kernel_init_freeable callq  *%rax
+vmlinux kvm_posted_intr_ipi callq  *0x832cb2(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
+vmlinux kvm_posted_intr_nested_ipi callq  *0x832b92(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
+vmlinux kvm_posted_intr_wakeup_ipi callq  *0x832c22(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
 vmlinux lapic_cal_handler callq  *%rax
 vmlinux load_uefi_certs callq  *%rax
+vmlinux machine_real_restart ljmp   *0x20(%rax)
 vmlinux map_vsyscall callq  *%rax
+vmlinux mce_amd_init jmpq   *%rax
 vmlinux mcheck_intel_therm_init callq  *%rax
 vmlinux msr_init callq  *%rax
 vmlinux mtrr_bp_init callq  *%rax
 vmlinux mtrr_cleanup callq  *%r8
 vmlinux mtrr_trim_uncached_memory callq  *%r8
 vmlinux native_init_IRQ callq  *%rax
+vmlinux native_irq_return_ldt callq  *0x832e00(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
+vmlinux native_irq_return_ldt callq  *0x832ea8(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
+vmlinux native_load_gs_index callq  *0x83275c(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
+vmlinux native_load_gs_index callq  *0x832767(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
+vmlinux native_load_gs_index callq  *0x8327a5(%rip)        # ffffffff822338d0 <pv_irq_ops+0x10>
 vmlinux native_smp_prepare_cpus callq  *%rax
 vmlinux native_smp_prepare_cpus callq  *%rax
 vmlinux native_smp_prepare_cpus callq  *%rax
@@ -212,6 +236,8 @@ vmlinux native_smp_prepare_cpus callq  *%rax
 vmlinux native_smp_prepare_cpus callq  *%rax
 vmlinux numa_init callq  *%rbx
 vmlinux p4_pmu_init callq  *%rdx
+vmlinux paranoid_entry callq  *0x83240b(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
+vmlinux paranoid_exit callq  *0x83241a(%rip)        # ffffffff822338d0 <pv_irq_ops+0x10>
 vmlinux parse_efi_signature_list callq  *%rax
 vmlinux parse_efi_signature_list callq  *%rax
 vmlinux pci_arch_init callq  *%rax
@@ -277,14 +303,18 @@ vmlinux print_local_APIC callq  *%rax
 vmlinux probe_list2 callq  *%rax
 vmlinux rc_read callq  *%rax
 vmlinux rc_read callq  *%rax
+vmlinux reboot_interrupt callq  *0x832d42(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
 vmlinux reboot_setup jmpq   *%rdx
 vmlinux register_lapic_address callq  *%rax
 vmlinux register_lapic_address callq  *%rax
 vmlinux register_lapic_address callq  *%rax
 vmlinux register_lapic_address callq  *%rax
 vmlinux regulator_late_cleanup callq  *%rax
+vmlinux reschedule_interrupt callq  *0x831772(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
 vmlinux restore_image jmpq   *%rcx
+vmlinux restore_regs_and_return_to_kernel jmpq   *0x832ebf(%rip)        # ffffffff82233890 <pv_cpu_ops+0xf0>
 vmlinux ret_from_fork callq  *%rbx
+vmlinux ret_from_intr callq  *0x832fc6(%rip)        # ffffffff822338d0 <pv_irq_ops+0x10>
 vmlinux return_to_handler jmpq   *%rdi
 vmlinux secondary_startup_64 jmpq   *%rax
 vmlinux security_init callq  *%rax
@@ -306,12 +336,18 @@ vmlinux setup_earlycon jmpq   *%rax
 vmlinux sfi_parse_cpus callq  *%rax
 vmlinux sme_encrypt_execute callq  *%rax
 vmlinux smp_init callq  *%rax
+vmlinux spurious_interrupt callq  *0x831652(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
 vmlinux start_kernel callq  *%rax
 vmlinux start_kernel callq  *%rax
+vmlinux swapgs_restore_regs_and_return_to_usermode callq  *0x832eee(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
+vmlinux swapgs_restore_regs_and_return_to_usermode jmpq   *0x832ee0(%rip)        # ffffffff82233890 <pv_cpu_ops+0xf0>
 vmlinux sync_Arb_IDs callq  *%rax
 vmlinux sync_Arb_IDs callq  *%rax
 vmlinux sync_Arb_IDs callq  *%rax
+vmlinux syscall_return_via_sysret jmpq   *0x83372d(%rip)        # ffffffff82233888 <pv_cpu_ops+0xe8>
 vmlinux tboot_probe callq  *%rax
+vmlinux thermal_interrupt callq  *0x831922(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
+vmlinux threshold_interrupt callq  *0x831a42(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
 vmlinux timekeeping_init callq  *%rax
 vmlinux trap_init callq  *%rax
 vmlinux tsc_early_delay_calibrate callq  *%rax
@@ -367,3 +403,4 @@ vmlinux write_byte callq  *%rcx
 vmlinux x86_early_init_platform_quirks callq  *%rax
 vmlinux x86_late_time_init callq  *%rax
 vmlinux x86_late_time_init callq  *%rax
+vmlinux x86_platform_ipi callq  *0x831ad2(%rip)        # ffffffff82233898 <pv_cpu_ops+0xf8>
