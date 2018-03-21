@@ -10946,6 +10946,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	__blocking_notifier_call_chain
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__bpf_call_base
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__class_create
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__class_register
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	__clear_rsb
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__clk_determine_rate
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__clk_get_flags
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__clk_get_hw
@@ -10982,6 +10983,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	__efivar_entry_get
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__efivar_entry_iter
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__fat_fs_error
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__fib_lookup
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	__fill_rsb
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__fput_sync
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__free_iova
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__fscrypt_prepare_link
@@ -11003,6 +11005,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	__hwspin_unlock
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__i2c_board_list
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__i2c_board_lock
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__i2c_first_dynamic_bus_num
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	__ibp_barrier
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__inet_inherit_port
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__inet_lookup_established
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__inet_lookup_listener
@@ -14663,6 +14666,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	skb_copy_ubufs
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	skb_cow_data
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	skb_gro_receive
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	skb_gso_transport_seglen
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	skb_gso_validate_mac_len
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	skb_gso_validate_mtu
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	skb_morph
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	skb_partial_csum_set
