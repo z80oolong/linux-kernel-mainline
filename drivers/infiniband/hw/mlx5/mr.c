@@ -1020,6 +1020,10 @@ int mlx5_ib_update_xlt(struct mlx5_ib_mr *mr, u64 idx, int npages,
 	    !umr_can_use_indirect_mkey(dev))
 		return -EPERM;
 
+	if ((flags & MLX5_IB_UPD_XLT_INDIRECT) &&
+	    !umr_can_use_indirect_mkey(dev))
+		return -EPERM;
+
 	/* UMR copies MTTs in units of MLX5_UMR_MTT_ALIGNMENT bytes,
 	 * so we need to align the offset and length accordingly
 	 */
