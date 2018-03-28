@@ -258,6 +258,9 @@
 /* kernel has large stacks */
 #undef HAVE_LARGE_STACKS
 
+/* Define if you have libaio */
+#undef HAVE_LIBAIO
+
 /* Define if you have libblkid */
 #undef HAVE_LIBBLKID
 
