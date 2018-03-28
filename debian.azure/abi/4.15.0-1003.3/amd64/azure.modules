@@ -143,7 +143,6 @@ deflate
 defxx
 des3_ede-x86_64
 des_generic
-devlink
 dlm
 dm-bio-prison
 dm-bufio
@@ -247,8 +246,6 @@ hyperv_fb
 i2c-algo-bit
 i2c-core
 i40e
-ib_cm
-ib_core
 ib_iser
 ib_isert
 ib_uverbs
@@ -352,7 +349,6 @@ iscsi_ibft
 iscsi_target_mod
 iscsi_tcp
 isofs
-iw_cm
 ixgbe
 ixgbevf
 joydev
@@ -399,9 +395,7 @@ memory-notifier-error-inject
 michael_mic
 mii
 mip6
-mlx4_core
 mlx4_en
-mlx5_core
 mlxfw
 mlxsw_core
 mlxsw_i2c
@@ -582,11 +576,9 @@ ppp_synctty
 pppoatm
 pppoe
 pppox
-pps_core
 pptp
 psample
 psnap
-ptp
 pvpanic
 qla1280
 qla2xxx
@@ -601,7 +593,6 @@ raw
 raw_diag
 rbd
 rbtree_test
-rdma_cm
 rdma_ucm
 reed_solomon
 rmd128
