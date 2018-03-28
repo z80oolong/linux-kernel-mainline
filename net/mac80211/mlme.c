@@ -1852,6 +1852,7 @@ static bool ieee80211_sta_wmm_params(struct ieee80211_local *local,
 				   params[ac].cw_min, params[ac].cw_max, aci);
 			return false;
 		}
+		ieee80211_regulatory_limit_wmm_params(sdata, &params[ac], ac);
 	}
 
 	/* WMM specification requires all 4 ACIs. */
