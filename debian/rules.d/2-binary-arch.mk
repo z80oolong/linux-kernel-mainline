@@ -331,6 +331,8 @@ ifeq ($(build_arch),arm64)
 	mkdir -p $(hdrdir)/arch/arm64/lib
 	cp $(builddir)/build-$*/arch/arm64/kernel/ftrace-mod.o $(hdrdir)/arch/arm64/kernel
 endif
+	# Copy over the new retpoline extractor.
+	cp scripts/ubuntu-retpoline-extract-one $(hdrdir)/scripts
 	# Script to symlink everything up
 	$(SHELL) $(DROOT)/scripts/link-headers "$(hdrdir)" "$(indeppkg)" "$*"
 	# The build symlink
