@@ -187,6 +187,7 @@ binary-indep: install-indep
 	dh_installdocs -i
 	dh_compress -i
 	dh_fixperms -i
+ifeq ($(do_tools_common),true)
 ifneq ($(DEBIAN),debian.master)
 	echo "non-master branch building linux-cloud-tools-common, aborting"
 	exit 1
@@ -201,6 +202,7 @@ ifeq ($(do_tools_hyperv),true)
 	dh_installinit -p$(cloudpkg) -o --name hv-vss-daemon
 	dh_installinit -p$(cloudpkg) -o --name hv-fcopy-daemon
 	dh_systemd_start -p$(cloudpkg)
+endif
 endif
 endif
 	dh_installdeb -i
