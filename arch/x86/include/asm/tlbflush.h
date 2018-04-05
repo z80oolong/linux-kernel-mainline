@@ -331,6 +331,8 @@ static inline void invalidate_user_asid(u16 asid)
 		  (unsigned long *)this_cpu_ptr(&cpu_tlbstate.user_pcid_flush_mask));
 }
 
+extern void initialize_tlbstate_and_flush(void);
+
 /*
  * flush the entire current user mapping
  */
