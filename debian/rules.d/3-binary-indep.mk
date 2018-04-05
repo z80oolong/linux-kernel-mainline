@@ -86,6 +86,9 @@ install-tools: toolspkg = $(tools_common_pkg_name)
 install-tools: toolsbin = $(CURDIR)/debian/$(toolspkg)/usr/bin
 install-tools: toolssbin = $(CURDIR)/debian/$(toolspkg)/usr/sbin
 install-tools: toolsman = $(CURDIR)/debian/$(toolspkg)/usr/share/man
+install-tools: hosttoolspkg = $(hosttools_pkg_name)
+install-tools: hosttoolsbin = $(CURDIR)/debian/$(hosttoolspkg)/usr/bin
+install-tools: hosttoolsman = $(CURDIR)/debian/$(hosttoolspkg)/usr/share/man
 install-tools: cloudpkg = $(cloud_common_pkg_name)
 install-tools: cloudbin = $(CURDIR)/debian/$(cloudpkg)/usr/bin
 install-tools: cloudsbin = $(CURDIR)/debian/$(cloudpkg)/usr/sbin
@@ -139,6 +142,17 @@ endif
 	install -d $(cloudman)/man8
 	install -m644 $(CURDIR)/tools/hv/*.8 $(cloudman)/man8
 
+endif
+
+ifeq ($(do_tools_host),true)
+	install -d $(hosttoolsbin)
+	install -d $(hosttoolsman)/man1
+
+	install -m 755 $(CURDIR)/tools/kvm/kvm_stat/kvm_stat $(hosttoolsbin)/
+
+	cd $(builddir)/tools/tools/kvm/kvm_stat && make man
+	install -m644 $(builddir)/tools/tools/kvm/kvm_stat/*.1 \
+		$(hosttoolsman)/man1
 endif
 
 install-indep: install-tools
