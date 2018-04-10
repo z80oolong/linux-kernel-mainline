@@ -4135,6 +4135,7 @@ snd-soc-rt5631
 snd-soc-rt5640
 snd-soc-rt5645
 snd-soc-rt5651
+snd-soc-rt5660
 snd-soc-rt5663
 snd-soc-rt5670
 snd-soc-rt5677
@@ -4167,6 +4168,7 @@ snd-soc-sst-byt-cht-da7213
 snd-soc-sst-byt-cht-es8316
 snd-soc-sst-bytcr-rt5640
 snd-soc-sst-bytcr-rt5651
+snd-soc-sst-bytcr-rt5660
 snd-soc-sst-cht-bsw-max98090_ti
 snd-soc-sst-cht-bsw-rt5645
 snd-soc-sst-cht-bsw-rt5672
