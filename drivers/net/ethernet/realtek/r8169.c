@@ -7976,7 +7976,6 @@ static const struct net_device_ops rtl_netdev_ops = {
 
 static const struct rtl_cfg_info {
 	void (*hw_start)(struct rtl8169_private *tp);
-	unsigned int region;
 	u16 event_slow;
 	unsigned int has_gmii:1;
 	const struct rtl_coalesce_info *coalesce_info;
@@ -7984,7 +7983,6 @@ static const struct rtl_cfg_info {
 } rtl_cfg_infos [] = {
 	[RTL_CFG_0] = {
 		.hw_start	= rtl_hw_start_8169,
-		.region		= 1,
 		.event_slow	= SYSErr | LinkChg | RxOverflow | RxFIFOOver,
 		.has_gmii	= 1,
 		.coalesce_info	= rtl_coalesce_info_8169,
@@ -7992,7 +7990,6 @@ static const struct rtl_cfg_info {
 	},
 	[RTL_CFG_1] = {
 		.hw_start	= rtl_hw_start_8168,
-		.region		= 2,
 		.event_slow	= SYSErr | LinkChg | RxOverflow,
 		.has_gmii	= 1,
 		.coalesce_info	= rtl_coalesce_info_8168_8136,
@@ -8000,7 +7997,6 @@ static const struct rtl_cfg_info {
 	},
 	[RTL_CFG_2] = {
 		.hw_start	= rtl_hw_start_8101,
-		.region		= 2,
 		.event_slow	= SYSErr | LinkChg | RxOverflow | RxFIFOOver |
 				  PCSTimeout,
 		.coalesce_info	= rtl_coalesce_info_8168_8136,
@@ -8100,11 +8096,10 @@ static void rtl_hw_initialize(struct rtl8169_private *tp)
 static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
 {
 	const struct rtl_cfg_info *cfg = rtl_cfg_infos + ent->driver_data;
-	const unsigned int region = cfg->region;
 	struct rtl8169_private *tp;
 	struct mii_if_info *mii;
 	struct net_device *dev;
-	int chipset, i;
+	int chipset, region, i;
 	int rc;
 
 	if (netif_msg_drv(&debug)) {
@@ -8146,11 +8141,10 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
 	if (pcim_set_mwi(pdev) < 0)
 		netif_info(tp, probe, dev, "Mem-Wr-Inval unavailable\n");
 
-	/* make sure PCI base addr 1 is MMIO */
-	if (!(pci_resource_flags(pdev, region) & IORESOURCE_MEM)) {
-		netif_err(tp, probe, dev,
-			  "region #%d not an MMIO resource, aborting\n",
-			  region);
+	/* use first MMIO region */
+	region = ffs(pci_select_bars(pdev, IORESOURCE_MEM)) - 1;
+	if (region < 0) {
+		netif_err(tp, probe, dev, "no MMIO resource found\n");
 		return -ENODEV;
 	}
 
