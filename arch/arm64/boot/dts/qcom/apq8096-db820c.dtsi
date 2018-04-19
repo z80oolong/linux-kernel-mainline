@@ -466,6 +466,10 @@
 			};
 		};
 
+		remoteproc@2080000 {
+			status = "okay";
+		};
+
 		slim_msm: slim@91c0000 {
 			ngd@1 {
 				wcd9335: codec@1{
