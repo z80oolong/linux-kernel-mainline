@@ -276,7 +276,6 @@ EXPORT_SYMBOL drivers/gpu/drm/drm 0x00000000	drm_legacy_idlelock_take
 EXPORT_SYMBOL drivers/gpu/drm/drm 0x00000000	drm_legacy_ioremap
 EXPORT_SYMBOL drivers/gpu/drm/drm 0x00000000	drm_legacy_ioremap_wc
 EXPORT_SYMBOL drivers/gpu/drm/drm 0x00000000	drm_legacy_ioremapfree
-EXPORT_SYMBOL drivers/gpu/drm/drm 0x00000000	drm_legacy_mmap
 EXPORT_SYMBOL drivers/gpu/drm/drm 0x00000000	drm_legacy_pci_exit
 EXPORT_SYMBOL drivers/gpu/drm/drm 0x00000000	drm_legacy_pci_init
 EXPORT_SYMBOL drivers/gpu/drm/drm 0x00000000	drm_legacy_rmmap
@@ -12464,7 +12463,6 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	fat_search_long
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	fat_setattr
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	fat_sync_inode
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	fat_time_unix2fat
-EXPORT_SYMBOL_GPL vmlinux 0x00000000	fb_bl_default_curve
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	fb_deferred_io_cleanup
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	fb_deferred_io_fsync
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	fb_deferred_io_init
