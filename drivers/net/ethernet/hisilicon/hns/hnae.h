@@ -87,7 +87,7 @@ do { \
 
 #define HNAE_AE_REGISTER 0x1
 
-#define RCB_RING_NAME_LEN 16
+#define RCB_RING_NAME_LEN (IFNAMSIZ + 4)
 
 enum hnae_led_state {
 	HNAE_LED_INACTIVE,
