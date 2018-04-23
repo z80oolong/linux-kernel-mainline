@@ -1,0 +1,28 @@
+drm-upstream drm-fixes 221bda4b5f1abfd74159d7bf3703affa62468030
+	Merge branch 'drm-next-4.17' of git://people.freedesktop.org/~agd5f/linux into drm-next
+drm-misc drm-misc-fixes a5a4fd4d135bfc1d9d42026c257ed5d98052c537
+	drm/virtio: fix vq wait_event condition
+drm-intel drm-intel-fixes 6d08b06e67cd117f6992c46611dfb4ce267cd71e
+	Linux 4.17-rc2
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm-upstream drm-next a10beabba213924d876f2d10ca9351aeab93f58a
+	Merge branch 'drm-next-4.17' of git://people.freedesktop.org/~agd5f/linux into drm-next
+drm-misc drm-misc-next-fixes 3131f209468d1514af378dd46eb34123d0af84ff
+	drm/vc4: Fix leak of the file_priv that stored the perfmon.
+drm-intel drm-intel-next-fixes 6d08b06e67cd117f6992c46611dfb4ce267cd71e
+	Linux 4.17-rc2
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next c5dc6cf7f91f9e965a528910cf3ab96710d82dcf
+	drm/vc4: Add CTM registers to debugfs
+drm-intel drm-intel-next-queued 672e314b21dc614894e69bb56a2b55cc7d256810
+	drm/i915/kbl: Add KBL GT2 sku
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus c40937e5de059d7c9d2d8a2e08602600a33f407c
+	ALSA: usb-audio: Fix missing endian conversion
+sound-upstream for-next f656891c66193345ee90b212b280d726792dc16c
+	ALSA: usb-audio: add more quirks for DSD interfaces
+drm-intel topic/core-for-CI 1bb5f7fce1fe95fb9a9a9a23845b286ca47c9ed6
+	RFC: debugobjects: capture stack traces at _init() time
