@@ -1,0 +1,28 @@
+drm-upstream drm-fixes 221bda4b5f1abfd74159d7bf3703affa62468030
+	Merge branch 'drm-next-4.17' of git://people.freedesktop.org/~agd5f/linux into drm-next
+drm-misc drm-misc-fixes 1f6b8eef11c3d097bc8a6b2bbb868eb47ec6f7d8
+	drm/edid: Reset more of the display info
+drm-intel drm-intel-fixes 0b551f1e0fc50ee4e3cde2dd639cb010dae5b997
+	drm/i915/fbdev: Enable late fbdev initial configuration
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm-upstream drm-next a10beabba213924d876f2d10ca9351aeab93f58a
+	Merge branch 'drm-next-4.17' of git://people.freedesktop.org/~agd5f/linux into drm-next
+drm-misc drm-misc-next-fixes 3131f209468d1514af378dd46eb34123d0af84ff
+	drm/vc4: Fix leak of the file_priv that stored the perfmon.
+drm-intel drm-intel-next-fixes 6d08b06e67cd117f6992c46611dfb4ce267cd71e
+	Linux 4.17-rc2
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 664991010ff34ce2a51cea95dfdfb711be8c780f
+	drm/todo: Fallout from v3d review
+drm-intel drm-intel-next-queued ff047a87cfacf0a530960171a0779f5b19a3b1b8
+	drm/i915/icl: Correctly clear lost ctx-switch interrupts across reset for Gen11
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 8a7d6003df41cb16f6b3b620da044fbd92d2f5ee
+	ALSA: hda - Skip jack and others for non-existing PCM streams
+sound-upstream for-next 4d31c6e41ed2f95f97a19766812797dabd82a5ee
+	Merge branch 'for-linus' into for-next
+drm-intel topic/core-for-CI 153328a3eb70e885212ac6ce84f6fcee5097e16c
+	Documentation: typec.rst: Use literal-block element with ascii art
