@@ -1,0 +1,28 @@
+drm-upstream drm-fixes bb1278e891662616ccf4584523318d5f7ddb3a7c
+	Merge tag 'drm-misc-fixes-2018-04-25' of git://anongit.freedesktop.org/drm/drm-misc into drm-fixes
+drm-misc drm-misc-fixes 1f6b8eef11c3d097bc8a6b2bbb868eb47ec6f7d8
+	drm/edid: Reset more of the display info
+drm-intel drm-intel-fixes 0b551f1e0fc50ee4e3cde2dd639cb010dae5b997
+	drm/i915/fbdev: Enable late fbdev initial configuration
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm-upstream drm-next 6d08b06e67cd117f6992c46611dfb4ce267cd71e
+	Linux 4.17-rc2
+drm-misc drm-misc-next-fixes 3131f209468d1514af378dd46eb34123d0af84ff
+	drm/vc4: Fix leak of the file_priv that stored the perfmon.
+drm-intel drm-intel-next-fixes 6d08b06e67cd117f6992c46611dfb4ce267cd71e
+	Linux 4.17-rc2
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 741c3aeb82c78e173aa7155aaffb971e5c73ab3c
+	drm/bridge/synopsys: dsi: use adjusted_mode in mode_set
+drm-intel drm-intel-next-queued 2a34b0054bf4a5224347e4135019b63d91cfb5d4
+	drm/i915/psr/cnl: Set y-coordinate as valid in SDP
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 0f925660a7bc49b269c163249a5d06da3a0c7b0a
+	ALSA: dice: fix error path to destroy initialized stream data
+sound-upstream for-next 4d31c6e41ed2f95f97a19766812797dabd82a5ee
+	Merge branch 'for-linus' into for-next
+drm-intel topic/core-for-CI 153328a3eb70e885212ac6ce84f6fcee5097e16c
+	Documentation: typec.rst: Use literal-block element with ascii art
