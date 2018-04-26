@@ -240,6 +240,7 @@ struct rsi_common {
 	/* Mutex used for rx thread */
 	struct mutex rx_lock;
 	u8 endpoint;
+	u8 ssid_ie_len;
 
 	/* Channel/band related */
 	u8 band;
