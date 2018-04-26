@@ -1842,10 +1842,11 @@ int rsi_prepare_probe_request(struct rsi_common *common,
 	pos = (u8 *)hdr + MIN_802_11_HDR_LEN;
 
 	*pos++ = WLAN_EID_SSID;
-	*pos++ = ssid_info->ssid_len;
-	if (ssid_info->ssid_len)
-		memcpy(pos, ssid_info->ssid, ssid_info->ssid_len);
-	pos += ssid_info->ssid_len;
+	*pos++ = common->ssid_ie_len ? common->ssid_ie_len -2 : 0;
+	if (ssid_info && common->ssid_ie_len) {
+		memcpy(pos, ssid_info->ssid, common->ssid_ie_len);
+		pos += common->ssid_ie_len;
+	}
 
 	if (scan_req->ie_len)
 		memcpy(pos, scan_req->ie, scan_req->ie_len);
@@ -1862,10 +1863,15 @@ int rsi_send_probe_request(struct rsi_common *common,
 	struct cfg80211_ssid *ssid_info = &scan_req->ssids[n_ssid];
 	struct sk_buff *skb = NULL;
 	u16 len;
-	u8 ssid_ie_len;
 
-	ssid_ie_len = ssid_info->ssid_len + 2;
-	len = MIN_802_11_HDR_LEN + scan_req->ie_len + ssid_ie_len;
+	if(!ssid_info)
+		return -ENOMEM;
+
+	common->ssid_ie_len = (ssid_info && ssid_info->ssid_len) ?
+		ssid_info->ssid_len + 2 : 0;
+
+	len = (MIN_802_11_HDR_LEN + scan_req->ie_len + common->ssid_ie_len);
+
 
 	skb = dev_alloc_skb(len + MAX_DWORD_ALIGN_BYTES);
 	if (!skb)
