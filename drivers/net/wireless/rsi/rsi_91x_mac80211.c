@@ -229,14 +229,17 @@ static void rsi_register_rates_channels(struct rsi_hw *adapter, int band)
 	/* sbands->ht_cap.mcs.rx_highest = 0x82; */
 }
 
+#define MAX_HW_SCAN_SSID 1
 static int rsi_mac80211_hw_scan_start(struct ieee80211_hw *hw,
 				      struct ieee80211_vif *vif,
 				      struct ieee80211_scan_request *hw_req)
 {
 	struct cfg80211_scan_request *scan_req = &hw_req->req;
+	struct cfg80211_ssid *cfg_ssid;
 	struct rsi_hw *adapter = hw->priv;
 	struct rsi_common *common = adapter->priv;
 	struct ieee80211_bss_conf *bss = &vif->bss_conf;
+	int n;
 
 	rsi_dbg(INFO_ZONE, "***** Hardware scan start *****\n");
 	common->mac_ops_resumed = false;
@@ -269,6 +272,13 @@ static int rsi_mac80211_hw_scan_start(struct ieee80211_hw *hw,
 		queue_work(common->scan_workqueue, &common->scan_work);
 	} else {
 		if (!rsi_send_bgscan_params(common, RSI_START_BGSCAN)) {
+			if(scan_req > MAX_HW_SCAN_SSID) {
+				n = 0;
+				cfg_ssid = &scan_req->ssids[n];
+				rsi_dbg(INFO_ZONE, "handling only '%s'ssid of %d "
+						"hw scan ssid's\n", cfg_ssid->ssid,
+						scan_req->n_ssids);
+			}
 			if (!rsi_send_bgscan_probe_req(common)) {
 				rsi_dbg(INFO_ZONE,
 					"Background scan started...\n");
