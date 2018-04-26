@@ -3367,6 +3367,9 @@ static int vmx_set_msr(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
 		kvm_write_tsc(vcpu, msr_info);
 		break;
 	case MSR_IA32_SPEC_CTRL:
+		if (data & ~(SPEC_CTRL_IBRS | SPEC_CTRL_RDS))
+			return 1;
+
 		vcpu->arch.spec_ctrl = msr_info->data;
 		break;
 	case MSR_IA32_CR_PAT:
