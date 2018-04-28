@@ -213,6 +213,7 @@
 #define X86_FEATURE_RSB_CTXSW		( 7*32+19) /* Fill RSB on context switches */
 #define X86_FEATURE_SPEC_CTRL		( 7*32+20) /* Control Speculation Control */
 #define X86_FEATURE_ARCH_CAPABILITIES	( 7*32+21) /* IA32_ARCH_CAPABILITIES MSR (Intel) */
+#define X86_FEATURE_RDS			( 7*32+22) /* Reduced Data Speculation */
 
 /* Virtualization flags: Linux defined, word 8 */
 #define X86_FEATURE_TPR_SHADOW		( 8*32+ 0) /* Intel TPR Shadow */
