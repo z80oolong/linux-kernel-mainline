@@ -14,35 +14,18 @@ static int __init disable_alternative_instructions(char *str)
 
 early_param("noaltinstr", disable_alternative_instructions);
 
-static int __init nobp_setup_early(char *str)
+extern struct alt_instr __alt_nobp[], __alt_nobp_end[];
+static int __init nobp_setup(char *str)
 {
 	bool enabled;
 	int rc;
 
 	rc = strtobool(str, &enabled);
-	if (rc)
-		return rc;
-	if (enabled && test_facility(82))
-		__set_facility(82, S390_lowcore.alt_stfle_fac_list);
-	else
-		__clear_facility(82, S390_lowcore.alt_stfle_fac_list);
-	return 0;
+	if (!rc && enabled)
+		apply_alternatives(__alt_nobp, __alt_nobp_end);
+	return rc;
 }
-early_param("nobp", nobp_setup_early);
-
-static int __init nospec_setup_early(char *str)
-{
-	__clear_facility(82, S390_lowcore.alt_stfle_fac_list);
-	return 0;
-}
-early_param("nospec", nospec_setup_early);
-
-static int __init nogmb_setup_early(char *str)
-{
-	__clear_facility(81, S390_lowcore.alt_stfle_fac_list);
-	return 0;
-}
-early_param("nogmb", nogmb_setup_early);
+__setup("nobp=", nobp_setup);
 
 struct brcl_insn {
 	u16 opc;
@@ -104,8 +87,7 @@ static void __init_or_module __apply_alternatives(struct alt_instr *start,
 		instr = (u8 *)&a->instr_offset + a->instr_offset;
 		replacement = (u8 *)&a->repl_offset + a->repl_offset;
 
-		if (!__test_facility(a->facility,
-				     S390_lowcore.alt_stfle_fac_list))
+		if (!test_facility(a->facility))
 			continue;
 
 		if (unlikely(a->instrlen % 2 || a->replacementlen % 2)) {
