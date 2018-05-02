@@ -308,6 +308,7 @@ void rsi_mac80211_cancel_hw_scan(struct ieee80211_hw *hw,
 		rsi_wait_event(&common->cancel_hw_scan_event,
 			       EVENT_WAIT_FOREVER);
 		rsi_reset_event(&common->cancel_hw_scan_event);
+		cancel_work_sync(&common->scan_work);
 	}
 	if (common->bgscan_en) {
 		if (!rsi_send_bgscan_params(common, RSI_STOP_BGSCAN))
