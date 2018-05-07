@@ -6,6 +6,7 @@
 
 #include <asm/cpufeature.h>
 #include <asm/spec_ctrl.h>
+#include <asm/spec-ctrl.h>
 #include <asm/microcode.h>
 
 #define MWAIT_SUBSTATE_MASK		0xf
@@ -108,14 +109,14 @@ static inline void mwait_idle_with_hints(unsigned long eax, unsigned long ecx)
 		}
 
 		if (ibrs_inuse)
-			native_wrmsrl(MSR_IA32_SPEC_CTRL, 0);
+			native_wrmsrl(MSR_IA32_SPEC_CTRL, x86_spec_ctrl_get_default());
 
 		__monitor((void *)&current_thread_info()->flags, 0, 0);
 		if (!need_resched())
 			__mwait(eax, ecx);
 
 		if (ibrs_inuse)
-			native_wrmsrl(MSR_IA32_SPEC_CTRL, FEATURE_ENABLE_IBRS);
+			native_wrmsrl(MSR_IA32_SPEC_CTRL, x86_spec_ctrl_get_default() | SPEC_CTRL_IBRS);
 	}
 	current_clr_polling();
 }
