@@ -455,7 +455,7 @@ static void __init find_and_init_phbs(void)
 	of_pci_check_probe_only();
 }
 
-static void pSeries_setup_rfi_flush(void)
+static void pseries_setup_rfi_flush(void)
 {
 	struct h_cpu_char_result result;
 	enum l1d_flush_type types;
@@ -505,7 +505,7 @@ static void __init pSeries_setup_arch(void)
 
 	fwnmi_init();
 
-	pSeries_setup_rfi_flush();
+	pseries_setup_rfi_flush();
 
 	/* By default, only probe PCI (can be overridden by rtas_pci) */
 	pci_add_flags(PCI_PROBE_ONLY);
