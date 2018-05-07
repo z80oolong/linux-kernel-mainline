@@ -436,6 +436,11 @@ static inline unsigned int get_longbusy_msecs(int longbusy_rc)
 	}
 }
 
+struct h_cpu_char_result {
+	u64 character;
+	u64 behaviour;
+};
+
 #endif /* __ASSEMBLY__ */
 #endif /* __KERNEL__ */
 #endif /* _ASM_POWERPC_HVCALL_H */
