@@ -837,6 +837,7 @@ static void intel_lrc_irq_handler(unsigned long data)
 
 			head = execlists->csb_head;
 			tail = READ_ONCE(buf[write_idx]);
+			rmb(); /* Hopefully paired with a wmb() in HW */
 		}
 
 		while (head != tail) {
