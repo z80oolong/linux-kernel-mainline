@@ -216,6 +216,7 @@
 #define X86_FEATURE_SPEC_STORE_BYPASS_DISABLE ( 7*32+23 ) /* Disable Speculative Store Bypass. */
 #define X86_FEATURE_AMD_SSBD		( 7*32+24) /* AMD SSBD implementation */
 #define X86_FEATURE_IBPB		( 7*32+25) /* Indirect Branch Prediction Barrier */
+#define X86_FEATURE_MSR_SPEC_CTRL	( 7*32+26) /* "" MSR SPEC_CTRL is implemented */
 
 /* Virtualization flags: Linux defined, word 8 */
 #define X86_FEATURE_TPR_SHADOW		( 8*32+ 0) /* Intel TPR Shadow */
