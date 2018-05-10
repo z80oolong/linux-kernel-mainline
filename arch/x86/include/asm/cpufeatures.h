@@ -214,9 +214,10 @@
 #define X86_FEATURE_ARCH_CAPABILITIES	( 7*32+21) /* IA32_ARCH_CAPABILITIES MSR (Intel) */
 #define X86_FEATURE_SSBD		( 7*32+22) /* Speculative Store Bypass Disable */
 #define X86_FEATURE_SPEC_STORE_BYPASS_DISABLE ( 7*32+23 ) /* Disable Speculative Store Bypass. */
-#define X86_FEATURE_AMD_SSBD		( 7*32+24) /* AMD SSBD implementation */
+#define X86_FEATURE_LS_CFG_SSBD		( 7*32+24) /* AMD SSBD implementation via LS_CFG MSR */
 #define X86_FEATURE_IBPB		( 7*32+25) /* Indirect Branch Prediction Barrier */
 #define X86_FEATURE_MSR_SPEC_CTRL	( 7*32+26) /* "" MSR SPEC_CTRL is implemented */
+#define X86_FEATURE_SPEC_CTRL_SSBD	( 7*32+27) /* "" Speculative Store Bypass Disable */
 
 /* Virtualization flags: Linux defined, word 8 */
 #define X86_FEATURE_TPR_SHADOW		( 8*32+ 0) /* Intel TPR Shadow */
