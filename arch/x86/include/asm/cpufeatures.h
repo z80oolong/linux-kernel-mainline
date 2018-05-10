@@ -218,6 +218,7 @@
 #define X86_FEATURE_IBPB		( 7*32+25) /* Indirect Branch Prediction Barrier */
 #define X86_FEATURE_MSR_SPEC_CTRL	( 7*32+26) /* "" MSR SPEC_CTRL is implemented */
 #define X86_FEATURE_SPEC_CTRL_SSBD	( 7*32+27) /* "" Speculative Store Bypass Disable */
+#define X86_FEATURE_ZEN			( 7*32+28) /* "" CPU is AMD family 0x17 (Zen) */
 
 /* Virtualization flags: Linux defined, word 8 */
 #define X86_FEATURE_TPR_SHADOW		( 8*32+ 0) /* Intel TPR Shadow */
