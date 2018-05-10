@@ -1,12 +1,7 @@
-linux-oem (4.15.0-1005.7) bionic; urgency=medium
+linux-oem (4.15.0-1005.8) bionic; urgency=medium
 
-  * New upload with clean tree.
-
- -- Timo Aaltonen <timo.aaltonen@canonical.com>  Thu, 10 May 2018 11:53:22 +0300
-
-linux-oem (4.15.0-1005.6) bionic; urgency=medium
-
-  * linux-oem: 4.15.0-1005.6 -proposed tracker (LP: #1767398)
+  * linux-oem: 4.15.0-1005.8 -proposed tracker (LP: #1767398)
+    - source built with a clean tree
 
   * [i915 CNL-Y] system hangs soon after bootup (LP: #1769843)
     - SAUCE: drm/i915/execlists: Use rmb() to order CSB reads
@@ -92,7 +87,7 @@ linux-oem (4.15.0-1005.6) bionic; urgency=medium
     (LP: #1766629)
     - linux-image-* breaks on flash-kernel (<< 3.90ubuntu2)
 
- -- Chia-Lin Kao (AceLan) <acelan.kao@canonical.com>  Wed, 09 May 2018 15:14:30 +0800
+ -- Timo Aaltonen <timo.aaltonen@canonical.com>  Thu, 10 May 2018 11:53:22 +0300
 
 linux-oem (4.15.0-1004.5) bionic; urgency=medium
 
