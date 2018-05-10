@@ -1,3 +1,9 @@
+linux-oem (4.15.0-1005.7) bionic; urgency=medium
+
+  * New upload with clean tree.
+
+ -- Timo Aaltonen <timo.aaltonen@canonical.com>  Thu, 10 May 2018 11:53:22 +0300
+
 linux-oem (4.15.0-1005.6) bionic; urgency=medium
 
   * linux-oem: 4.15.0-1005.6 -proposed tracker (LP: #1767398)
