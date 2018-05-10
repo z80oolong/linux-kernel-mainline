@@ -180,6 +180,14 @@ static inline bool guest_cpuid_has_nrips(struct kvm_vcpu *vcpu)
 }
 #undef BIT_NRIPS
 
+static inline int guest_cpuid_has_virt_ssbd(struct kvm_vcpu *vcpu)
+{
+	struct kvm_cpuid_entry2 *best;
+
+	best = kvm_find_cpuid_entry(vcpu, 0x80000008, 0);
+	return best && (best->ebx & bit(X86_FEATURE_VIRT_SSBD));
+}
+
 static inline int guest_cpuid_family(struct kvm_vcpu *vcpu)
 {
 	struct kvm_cpuid_entry2 *best;
