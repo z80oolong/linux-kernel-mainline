@@ -108,7 +108,7 @@ static void delay_mwaitx(unsigned long __loops)
 		delay = min_t(u64, MWAITX_MAX_LOOPS, loops);
 
 		if (ibrs_inuse && (delay > IBRS_DISABLE_THRESHOLD))
-			native_wrmsrl(MSR_IA32_SPEC_CTRL, x86_spec_ctrl_get_default());
+			native_wrmsrl(MSR_IA32_SPEC_CTRL, x86_spec_ctrl_base);
 
 		/*
 		 * Use cpu_tss_rw as a cacheline-aligned, seldomly
@@ -124,7 +124,7 @@ static void delay_mwaitx(unsigned long __loops)
 		__mwaitx(MWAITX_DISABLE_CSTATES, delay, MWAITX_ECX_TIMER_ENABLE);
 
 		if (ibrs_inuse && (delay > IBRS_DISABLE_THRESHOLD))
-			native_wrmsrl(MSR_IA32_SPEC_CTRL, x86_spec_ctrl_get_default() | SPEC_CTRL_IBRS);
+			native_wrmsrl(MSR_IA32_SPEC_CTRL, x86_spec_ctrl_base | SPEC_CTRL_IBRS);
 
 		end = rdtsc_ordered();
 

@@ -594,16 +594,16 @@ static __cpuidle void mwait_idle(void)
 		}
 
 		if (ibrs_inuse)
-                        native_wrmsrl(MSR_IA32_SPEC_CTRL, x86_spec_ctrl_get_default());
+                        native_wrmsrl(MSR_IA32_SPEC_CTRL, x86_spec_ctrl_base);
 
 		__monitor((void *)&current_thread_info()->flags, 0, 0);
 		if (!need_resched()) {
 			__sti_mwait(0, 0);
 			if (ibrs_inuse)
-				native_wrmsrl(MSR_IA32_SPEC_CTRL, x86_spec_ctrl_get_default() | SPEC_CTRL_IBRS);
+				native_wrmsrl(MSR_IA32_SPEC_CTRL, x86_spec_ctrl_base | SPEC_CTRL_IBRS);
 		} else {
 			if (ibrs_inuse)
-				native_wrmsrl(MSR_IA32_SPEC_CTRL, x86_spec_ctrl_get_default() | SPEC_CTRL_IBRS);
+				native_wrmsrl(MSR_IA32_SPEC_CTRL, x86_spec_ctrl_base | SPEC_CTRL_IBRS);
 			local_irq_enable();
 		}
 		trace_cpu_idle_rcuidle(PWR_EVENT_EXIT, smp_processor_id());
