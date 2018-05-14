@@ -1,0 +1,30 @@
+drm-upstream drm-fixes 72777fe79768ec30ac2163d26de68a89edc9849f
+	Merge branch 'drm-fixes-4.17' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+drm-misc drm-misc-fixes 7f6df440b8623c441c42d070bf592e2d2c1fa9bb
+	drm: Match sysfs name in link removal to link creation
+drm-intel drm-intel-fixes cd078bf95df29d827daca0274a9a13821c11eedb
+	drm/i915/execlists: Use rmb() to order CSB reads
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 2989b3ced370aa8e23e572c9ecaa7404d96e1c7a
+	Merge tag 'tilcdc-4.18' of https://github.com/jsarha/linux into drm-next
+drm-misc drm-misc-next-fixes 3131f209468d1514af378dd46eb34123d0af84ff
+	drm/vc4: Fix leak of the file_priv that stored the perfmon.
+drm-intel drm-intel-next-fixes 6d08b06e67cd117f6992c46611dfb4ce267cd71e
+	Linux 4.17-rc2
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 68266f1c08db731fa7c3a0903bf890fc76ce9345
+	gpu: drm: qxl: Adding new typedef vm_fault_t
+drm-intel drm-intel-next-queued 01f83786f9ab9c8883ce634cb9a0de51086ad7ea
+	drm/i915: Update DRIVER_DATE to 20180514
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 2f0d520a1a73555ac51c19cd494493f60b4c1cea
+	ALSA: hda/realtek - Clevo P950ER ALC1220 Fixup
+sound-upstream for-next 4844f51282b60f8a96b05d422f452a785df308b9
+	ALSA: isight: use position offset macro of TLV data
+drm-intel topic/core-for-CI 153328a3eb70e885212ac6ce84f6fcee5097e16c
+	Documentation: typec.rst: Use literal-block element with ascii art
+drm-misc topic/vkms 68266f1c08db731fa7c3a0903bf890fc76ce9345
+	gpu: drm: qxl: Adding new typedef vm_fault_t
