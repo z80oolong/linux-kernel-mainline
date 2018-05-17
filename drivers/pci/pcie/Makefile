@@ -6,7 +6,7 @@
 # Build PCI Express ASPM if needed
 obj-$(CONFIG_PCIEASPM)		+= aspm.o
 
-pcieportdrv-y			:= portdrv_core.o portdrv_pci.o
+pcieportdrv-y			:= portdrv_core.o portdrv_pci.o err.o
 
 obj-$(CONFIG_PCIEPORTBUS)	+= pcieportdrv.o
 
