@@ -34,6 +34,7 @@ EXPORT_SYMBOL drivers/block/paride/paride 0x00000000	pi_unregister_driver
 EXPORT_SYMBOL drivers/block/paride/paride 0x00000000	pi_write_block
 EXPORT_SYMBOL drivers/block/paride/paride 0x00000000	pi_write_regr
 EXPORT_SYMBOL drivers/bluetooth/btbcm 0x00000000	btbcm_patchram
+EXPORT_SYMBOL drivers/bluetooth/btrsi 0x00000000	rsi_bt_ops
 EXPORT_SYMBOL drivers/char/ipmi/ipmi_msghandler 0x00000000	ipmi_addr_length
 EXPORT_SYMBOL drivers/char/ipmi/ipmi_msghandler 0x00000000	ipmi_addr_src_to_str
 EXPORT_SYMBOL drivers/char/ipmi/ipmi_msghandler 0x00000000	ipmi_alloc_smi_msg
@@ -14361,6 +14362,7 @@ EXPORT_SYMBOL_GPL drivers/net/wireless/rsi/rsi_91x 0x00000000	rsi_91x_deinit
 EXPORT_SYMBOL_GPL drivers/net/wireless/rsi/rsi_91x 0x00000000	rsi_91x_init
 EXPORT_SYMBOL_GPL drivers/net/wireless/rsi/rsi_91x 0x00000000	rsi_dbg
 EXPORT_SYMBOL_GPL drivers/net/wireless/rsi/rsi_91x 0x00000000	rsi_hal_device_init
+EXPORT_SYMBOL_GPL drivers/net/wireless/rsi/rsi_91x 0x00000000	rsi_mac80211_cancel_hw_scan
 EXPORT_SYMBOL_GPL drivers/net/wireless/rsi/rsi_91x 0x00000000	rsi_mac80211_detach
 EXPORT_SYMBOL_GPL drivers/net/wireless/rsi/rsi_91x 0x00000000	rsi_read_pkt
 EXPORT_SYMBOL_GPL drivers/net/wireless/rsi/rsi_91x 0x00000000	rsi_zone_enabled
@@ -19331,6 +19333,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	devm_reset_controller_register
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	devm_rtc_allocate_device
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	devm_rtc_device_register
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	devm_rtc_device_unregister
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	devm_serdev_device_open
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	devm_spi_register_controller
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	devm_usb_get_phy
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	devm_usb_get_phy_by_node
@@ -21714,6 +21717,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	serdev_device_open
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	serdev_device_remove
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	serdev_device_set_baudrate
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	serdev_device_set_flow_control
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	serdev_device_set_parity
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	serdev_device_set_tiocm
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	serdev_device_wait_until_sent
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	serdev_device_write
