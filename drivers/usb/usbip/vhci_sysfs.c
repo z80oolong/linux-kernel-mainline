@@ -21,6 +21,9 @@
 #include <linux/file.h>
 #include <linux/net.h>
 
+/* Hardening for Spectre-v1 */
+#include <linux/nospec.h>
+
 #include "usbip_common.h"
 #include "vhci.h"
 
@@ -127,6 +130,7 @@ static ssize_t store_detach(struct device *dev, struct device_attribute *attr,
 		dev_err(dev, "invalid port %u\n", rhport);
 		return -EINVAL;
 	}
+	rhport = array_index_nospec(rhport, VHCI_NPORTS);
 
 	err = vhci_port_disconnect(rhport);
 	if (err < 0)
@@ -139,13 +143,14 @@ static ssize_t store_detach(struct device *dev, struct device_attribute *attr,
 static DEVICE_ATTR(detach, S_IWUSR, NULL, store_detach);
 
 /* Sysfs entry to establish a virtual connection */
-static int valid_args(__u32 rhport, enum usb_device_speed speed)
+static int valid_args(__u32 *rhport, enum usb_device_speed speed)
 {
 	/* check rhport */
-	if (rhport >= VHCI_NPORTS) {
-		pr_err("port %u\n", rhport);
+	if (*rhport >= VHCI_NPORTS) {
+		pr_err("port %u\n", *rhport);
 		return -EINVAL;
 	}
+	*rhport = array_index_nospec(*rhport, VHCI_NPORTS);
 
 	/* check speed */
 	switch (speed) {
@@ -197,7 +202,7 @@ static ssize_t store_attach(struct device *dev, struct device_attribute *attr,
 			     rhport, sockfd, devid, speed);
 
 	/* check received parameters */
-	if (valid_args(rhport, speed) < 0)
+	if (valid_args(&rhport, speed) < 0)
 		return -EINVAL;
 
 	/* Extract socket from fd. */
