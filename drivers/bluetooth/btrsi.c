@@ -51,6 +51,9 @@ static int rsi_hci_send_pkt(struct hci_dev *hdev, struct sk_buff *skb)
 	struct rsi_hci_adapter *h_adapter = hci_get_drvdata(hdev);
 	struct sk_buff *new_skb = NULL;
 
+	if (!h_adapter->hdev)
+		return -ENODEV;
+
 	switch (hci_skb_pkt_type(skb)) {
 	case HCI_COMMAND_PKT:
 		hdev->stat.cmd_tx++;
@@ -83,6 +86,9 @@ static int rsi_hci_recv_pkt(void *priv, const u8 *pkt)
 	struct hci_dev *hdev = h_adapter->hdev;
 	struct sk_buff *skb;
 	int pkt_len = get_unaligned_le16(pkt) & 0x0fff;
+
+	if (!h_adapter->hdev)
+		return -ENODEV;
 
 	skb = dev_alloc_skb(pkt_len);
 	if (!skb)
