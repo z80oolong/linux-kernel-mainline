@@ -564,8 +564,7 @@ static void rsi_mac80211_tx(struct ieee80211_hw *hw,
 		return;
 	}
 	if ((!bss->assoc) &&
-	    (adapter->ps_state == PS_ENABLED) &&
-	    (vif->type == NL80211_IFTYPE_STATION))
+	    (adapter->ps_state == PS_ENABLED))
 		rsi_disable_ps(adapter);
 	if (ieee80211_is_auth(wlh->frame_control))
 		common->mac_ops_resumed = false;
@@ -859,6 +858,7 @@ static int rsi_mac80211_change_interface(struct ieee80211_hw *hw,
 
 	switch (newtype) {
 		case NL80211_IFTYPE_AP:
+			rsi_disable_ps(adapter);
 			ven_rsi_dbg(INFO_ZONE, "Change to AP Mode\n");
 			intf_mode = AP_OPMODE;
 			break;
