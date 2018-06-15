@@ -59,6 +59,15 @@ assert_hdmi_port_disabled(struct intel_hdmi *intel_hdmi)
 	     "HDMI port enabled, expecting disabled\n");
 }
 
+static void
+assert_hdmi_transcoder_func_disabled(struct drm_i915_private *dev_priv,
+				     enum transcoder cpu_transcoder)
+{
+	WARN(I915_READ(TRANS_DDI_FUNC_CTL(cpu_transcoder)) &
+	     TRANS_DDI_FUNC_ENABLE,
+	     "HDMI transcoder function enabled, expecting disabled\n");
+}
+
 struct intel_hdmi *enc_to_intel_hdmi(struct drm_encoder *encoder)
 {
 	struct intel_digital_port *intel_dig_port =
@@ -381,13 +390,10 @@ static void hsw_write_infoframe(struct drm_encoder *encoder,
 	struct drm_i915_private *dev_priv = to_i915(dev);
 	enum transcoder cpu_transcoder = crtc_state->cpu_transcoder;
 	i915_reg_t ctl_reg = HSW_TVIDEO_DIP_CTL(cpu_transcoder);
-	i915_reg_t data_reg;
 	int data_size = type == DP_SDP_VSC ?
 		VIDEO_DIP_VSC_DATA_SIZE : VIDEO_DIP_DATA_SIZE;
 	int i;
 	u32 val = I915_READ(ctl_reg);
-
-	data_reg = hsw_dip_data_reg(dev_priv, cpu_transcoder, type, 0);
 
 	val &= ~hsw_infoframe_enable(type);
 	I915_WRITE(ctl_reg, val);
@@ -838,11 +844,11 @@ static void hsw_set_infoframes(struct drm_encoder *encoder,
 			       const struct drm_connector_state *conn_state)
 {
 	struct drm_i915_private *dev_priv = to_i915(encoder->dev);
-	struct intel_hdmi *intel_hdmi = enc_to_intel_hdmi(encoder);
 	i915_reg_t reg = HSW_TVIDEO_DIP_CTL(crtc_state->cpu_transcoder);
 	u32 val = I915_READ(reg);
 
-	assert_hdmi_port_disabled(intel_hdmi);
+	assert_hdmi_transcoder_func_disabled(dev_priv,
+					     crtc_state->cpu_transcoder);
 
 	val &= ~(VIDEO_DIP_ENABLE_VSC_HSW | VIDEO_DIP_ENABLE_AVI_HSW |
 		 VIDEO_DIP_ENABLE_GCP_HSW | VIDEO_DIP_ENABLE_VS_HSW |
@@ -1165,33 +1171,16 @@ static void intel_hdmi_prepare(struct intel_encoder *encoder,
 static bool intel_hdmi_get_hw_state(struct intel_encoder *encoder,
 				    enum pipe *pipe)
 {
-	struct drm_device *dev = encoder->base.dev;
-	struct drm_i915_private *dev_priv = to_i915(dev);
+	struct drm_i915_private *dev_priv = to_i915(encoder->base.dev);
 	struct intel_hdmi *intel_hdmi = enc_to_intel_hdmi(&encoder->base);
-	u32 tmp;
 	bool ret;
 
 	if (!intel_display_power_get_if_enabled(dev_priv,
 						encoder->power_domain))
 		return false;
 
-	ret = false;
+	ret = intel_sdvo_port_enabled(dev_priv, intel_hdmi->hdmi_reg, pipe);
 
-	tmp = I915_READ(intel_hdmi->hdmi_reg);
-
-	if (!(tmp & SDVO_ENABLE))
-		goto out;
-
-	if (HAS_PCH_CPT(dev_priv))
-		*pipe = PORT_TO_PIPE_CPT(tmp);
-	else if (IS_CHERRYVIEW(dev_priv))
-		*pipe = SDVO_PORT_TO_PIPE_CHV(tmp);
-	else
-		*pipe = PORT_TO_PIPE(tmp);
-
-	ret = true;
-
-out:
 	intel_display_power_put(dev_priv, encoder->power_domain);
 
 	return ret;
@@ -1425,8 +1414,8 @@ static void intel_disable_hdmi(struct intel_encoder *encoder,
 		intel_set_cpu_fifo_underrun_reporting(dev_priv, PIPE_A, false);
 		intel_set_pch_fifo_underrun_reporting(dev_priv, PIPE_A, false);
 
-		temp &= ~SDVO_PIPE_B_SELECT;
-		temp |= SDVO_ENABLE;
+		temp &= ~SDVO_PIPE_SEL_MASK;
+		temp |= SDVO_ENABLE | SDVO_PIPE_SEL(PIPE_A);
 		/*
 		 * HW workaround, need to write this twice for issue
 		 * that may result in first write getting masked.
@@ -1561,6 +1550,9 @@ intel_hdmi_mode_valid(struct drm_connector *connector,
 	bool force_dvi =
 		READ_ONCE(to_intel_digital_connector_state(connector->state)->force_audio) == HDMI_AUDIO_OFF_DVI;
 
+	if (mode->flags & DRM_MODE_FLAG_DBLSCAN)
+		return MODE_NO_DBLESCAN;
+
 	clock = mode->clock;
 
 	if ((mode->flags & DRM_MODE_FLAG_3D_MASK) == DRM_MODE_FLAG_3D_FRAME_PACKING)
@@ -1680,6 +1672,9 @@ bool intel_hdmi_compute_config(struct intel_encoder *encoder,
 	int clock_12bpc = clock_8bpc * 3 / 2;
 	int desired_bpp;
 	bool force_dvi = intel_conn_state->force_audio == HDMI_AUDIO_OFF_DVI;
+
+	if (adjusted_mode->flags & DRM_MODE_FLAG_DBLSCAN)
+		return false;
 
 	pipe_config->has_hdmi_sink = !force_dvi && intel_hdmi->has_hdmi_sink;
 
@@ -2256,7 +2251,7 @@ static u8 intel_hdmi_ddc_pin(struct drm_i915_private *dev_priv,
 		ddc_pin = bxt_port_to_ddc_pin(dev_priv, port);
 	else if (HAS_PCH_CNP(dev_priv))
 		ddc_pin = cnp_port_to_ddc_pin(dev_priv, port);
-	else if (IS_ICELAKE(dev_priv))
+	else if (HAS_PCH_ICP(dev_priv))
 		ddc_pin = icl_port_to_ddc_pin(dev_priv, port);
 	else
 		ddc_pin = g4x_port_to_ddc_pin(dev_priv, port);
