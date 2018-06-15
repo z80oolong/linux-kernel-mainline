@@ -1893,9 +1893,17 @@ static void i9xx_pipestat_irq_ack(struct drm_i915_private *dev_priv,
 
 		/*
 		 * Clear the PIPE*STAT regs before the IIR
+		 *
+		 * Toggle the enable bits to make sure we get an
+		 * edge in the ISR pipe event bit if we don't clear
+		 * all the enabled status bits. Otherwise the edge
+		 * triggered IIR on i965/g4x wouldn't notice that
+		 * an interrupt is still pending.
 		 */
-		if (pipe_stats[pipe])
-			I915_WRITE(reg, enable_mask | pipe_stats[pipe]);
+		if (pipe_stats[pipe]) {
+			I915_WRITE(reg, pipe_stats[pipe]);
+			I915_WRITE(reg, enable_mask);
+		}
 	}
 	spin_unlock(&dev_priv->irq_lock);
 }
@@ -2640,7 +2648,11 @@ gen8_de_irq_handler(struct drm_i915_private *dev_priv, u32 master_ctl)
 					    GEN9_AUX_CHANNEL_C |
 					    GEN9_AUX_CHANNEL_D;
 
-			if (IS_CNL_WITH_PORT_F(dev_priv))
+			if (INTEL_GEN(dev_priv) >= 11)
+				tmp_mask |= ICL_AUX_CHANNEL_E;
+
+			if (IS_CNL_WITH_PORT_F(dev_priv) ||
+			    INTEL_GEN(dev_priv) >= 11)
 				tmp_mask |= CNL_AUX_CHANNEL_F;
 
 			if (iir & tmp_mask) {
@@ -3920,7 +3932,10 @@ static void gen8_de_irq_postinstall(struct drm_i915_private *dev_priv)
 		de_pipe_masked |= GEN8_DE_PIPE_IRQ_FAULT_ERRORS;
 	}
 
-	if (IS_CNL_WITH_PORT_F(dev_priv))
+	if (INTEL_GEN(dev_priv) >= 11)
+		de_port_masked |= ICL_AUX_CHANNEL_E;
+
+	if (IS_CNL_WITH_PORT_F(dev_priv) || INTEL_GEN(dev_priv) >= 11)
 		de_port_masked |= CNL_AUX_CHANNEL_F;
 
 	de_pipe_enables = de_pipe_masked | GEN8_PIPE_VBLANK |
