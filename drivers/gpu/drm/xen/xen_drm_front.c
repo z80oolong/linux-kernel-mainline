@@ -737,9 +737,8 @@ static int xen_drv_probe(struct xenbus_device *xb_dev,
 	 * is not correct: to fix this call of_dma_configure() with a NULL
 	 * node to set default DMA ops.
 	 */
-	dev->bus->force_dma = true;
 	dev->coherent_dma_mask = DMA_BIT_MASK(32);
-	ret = of_dma_configure(dev, NULL);
+	ret = of_dma_configure(dev, NULL, true);
 	if (ret < 0) {
 		DRM_ERROR("Cannot setup DMA ops, ret %d", ret);
 		return ret;
