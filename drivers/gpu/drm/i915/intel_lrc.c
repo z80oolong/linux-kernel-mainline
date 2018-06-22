@@ -970,21 +970,18 @@ static void process_csb(struct intel_engine_cs *engine)
 			&engine->status_page.page_addr[I915_HWS_CSB_BUF0_INDEX];
 		unsigned int head, tail;
 
-		if (unlikely(execlists->csb_use_mmio)) {
-			buf = (u32 * __force)
-				(i915->regs + i915_mmio_reg_offset(RING_CONTEXT_STATUS_BUF_LO(engine, 0)));
-			execlists->csb_head = -1; /* force mmio read of CSB */
-		}
-
 		/* Clear before reading to catch new interrupts */
 		clear_bit(ENGINE_IRQ_EXECLIST, &engine->irq_posted);
 		smp_mb__after_atomic();
 
-		if (unlikely(execlists->csb_head == -1)) { /* after a reset */
+		if (unlikely(execlists->csb_use_mmio)) {
 			if (!fw) {
 				intel_uncore_forcewake_get(i915, execlists->fw_domains);
 				fw = true;
 			}
+
+			buf = (u32 * __force)
+				(i915->regs + i915_mmio_reg_offset(RING_CONTEXT_STATUS_BUF_LO(engine, 0)));
 
 			head = readl(i915->regs + i915_mmio_reg_offset(RING_CONTEXT_STATUS_PTR(engine)));
 			tail = GEN8_CSB_WRITE_PTR(head);
@@ -1413,6 +1410,7 @@ __execlists_context_pin(struct intel_engine_cs *engine,
 	ce->lrc_reg_state = vaddr + LRC_STATE_PN * PAGE_SIZE;
 	ce->lrc_reg_state[CTX_RING_BUFFER_START+1] =
 		i915_ggtt_offset(ce->ring->vma);
+	GEM_BUG_ON(!intel_ring_offset_valid(ce->ring, ce->ring->head));
 	ce->lrc_reg_state[CTX_RING_HEAD+1] = ce->ring->head;
 
 	ce->state->obj->pin_global++;
@@ -1567,29 +1565,56 @@ static u32 *gen8_init_indirectctx_bb(struct intel_engine_cs *engine, u32 *batch)
 	return batch;
 }
 
+struct lri {
+	i915_reg_t reg;
+	u32 value;
+};
+
+static u32 *emit_lri(u32 *batch, const struct lri *lri, unsigned int count)
+{
+	GEM_BUG_ON(!count || count > 63);
+
+	*batch++ = MI_LOAD_REGISTER_IMM(count);
+	do {
+		*batch++ = i915_mmio_reg_offset(lri->reg);
+		*batch++ = lri->value;
+	} while (lri++, --count);
+	*batch++ = MI_NOOP;
+
+	return batch;
+}
+
 static u32 *gen9_init_indirectctx_bb(struct intel_engine_cs *engine, u32 *batch)
 {
+	static const struct lri lri[] = {
+		/* WaDisableGatherAtSetShaderCommonSlice:skl,bxt,kbl,glk */
+		{
+			COMMON_SLICE_CHICKEN2,
+			__MASKED_FIELD(GEN9_DISABLE_GATHER_AT_SET_SHADER_COMMON_SLICE,
+				       0),
+		},
+
+		/* BSpec: 11391 */
+		{
+			FF_SLICE_CHICKEN,
+			__MASKED_FIELD(FF_SLICE_CHICKEN_CL_PROVOKING_VERTEX_FIX,
+				       FF_SLICE_CHICKEN_CL_PROVOKING_VERTEX_FIX),
+		},
+
+		/* BSpec: 11299 */
+		{
+			_3D_CHICKEN3,
+			__MASKED_FIELD(_3D_CHICKEN_SF_PROVOKING_VERTEX_FIX,
+				       _3D_CHICKEN_SF_PROVOKING_VERTEX_FIX),
+		}
+	};
+
 	*batch++ = MI_ARB_ON_OFF | MI_ARB_DISABLE;
 
 	/* WaFlushCoherentL3CacheLinesAtContextSwitch:skl,bxt,glk */
 	batch = gen8_emit_flush_coherentl3_wa(engine, batch);
 
-	*batch++ = MI_LOAD_REGISTER_IMM(3);
-
-	/* WaDisableGatherAtSetShaderCommonSlice:skl,bxt,kbl,glk */
-	*batch++ = i915_mmio_reg_offset(COMMON_SLICE_CHICKEN2);
-	*batch++ = _MASKED_BIT_DISABLE(
-			GEN9_DISABLE_GATHER_AT_SET_SHADER_COMMON_SLICE);
-
-	/* BSpec: 11391 */
-	*batch++ = i915_mmio_reg_offset(FF_SLICE_CHICKEN);
-	*batch++ = _MASKED_BIT_ENABLE(FF_SLICE_CHICKEN_CL_PROVOKING_VERTEX_FIX);
-
-	/* BSpec: 11299 */
-	*batch++ = i915_mmio_reg_offset(_3D_CHICKEN3);
-	*batch++ = _MASKED_BIT_ENABLE(_3D_CHICKEN_SF_PROVOKING_VERTEX_FIX);
-
-	*batch++ = MI_NOOP;
+	batch = emit_lri(batch, lri, ARRAY_SIZE(lri));
 
 	/* WaClearSlmSpaceAtContextSwitch:kbl */
 	/* Actual scratch location is at 128 bytes offset */
@@ -1819,7 +1844,6 @@ static bool unexpected_starting_state(struct intel_engine_cs *engine)
 
 static int gen8_init_common_ring(struct intel_engine_cs *engine)
 {
-	struct intel_engine_execlists * const execlists = &engine->execlists;
 	int ret;
 
 	ret = intel_mocs_init_engine(engine);
@@ -1836,10 +1860,6 @@ static int gen8_init_common_ring(struct intel_engine_cs *engine)
 	}
 
 	enable_execlists(engine);
-
-	/* After a GPU reset, we may have requests to replay */
-	if (execlists->first)
-		tasklet_schedule(&execlists->tasklet);
 
 	return 0;
 }
@@ -1974,7 +1994,7 @@ static void execlists_reset(struct intel_engine_cs *engine,
 	spin_unlock(&engine->timeline.lock);
 
 	/* Following the reset, we need to reload the CSB read/write pointers */
-	engine->execlists.csb_head = -1;
+	engine->execlists.csb_head = GEN8_CSB_ENTRIES - 1;
 
 	local_irq_restore(flags);
 
@@ -2011,9 +2031,10 @@ static void execlists_reset(struct intel_engine_cs *engine,
 
 	/* Move the RING_HEAD onto the breadcrumb, past the hanging batch */
 	regs[CTX_RING_BUFFER_START + 1] = i915_ggtt_offset(request->ring->vma);
-	regs[CTX_RING_HEAD + 1] = request->postfix;
 
-	request->ring->head = request->postfix;
+	request->ring->head = intel_ring_wrap(request->ring, request->postfix);
+	regs[CTX_RING_HEAD + 1] = request->ring->head;
+
 	intel_ring_update_space(request->ring);
 
 	/* Reset WaIdleLiteRestore:bdw,skl as well */
@@ -2022,6 +2043,12 @@ static void execlists_reset(struct intel_engine_cs *engine,
 
 static void execlists_reset_finish(struct intel_engine_cs *engine)
 {
+	struct intel_engine_execlists * const execlists = &engine->execlists;
+
+	/* After a GPU reset, we may have requests to replay */
+	if (execlists->first)
+		tasklet_schedule(&execlists->tasklet);
+
 	/*
 	 * Flush the tasklet while we still have the forcewake to be sure
 	 * that it is not allowed to sleep before we restart and reload a
@@ -2031,7 +2058,7 @@ static void execlists_reset_finish(struct intel_engine_cs *engine)
 	 * serialising multiple attempts to reset so that we know that we
 	 * are the only one manipulating tasklet state.
 	 */
-	__tasklet_enable_sync_once(&engine->execlists.tasklet);
+	__tasklet_enable_sync_once(&execlists->tasklet);
 
 	GEM_TRACE("%s\n", engine->name);
 }
@@ -2475,7 +2502,7 @@ static int logical_ring_init(struct intel_engine_cs *engine)
 			upper_32_bits(ce->lrc_desc);
 	}
 
-	engine->execlists.csb_head = -1;
+	engine->execlists.csb_head = GEN8_CSB_ENTRIES - 1;
 
 	return 0;
 
