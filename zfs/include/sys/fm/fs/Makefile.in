@@ -130,6 +130,7 @@ am__aclocal_m4_deps = $(top_srcdir)/config/always-no-bool-compare.m4 \
 	$(top_srcdir)/config/kernel-file-inode.m4 \
 	$(top_srcdir)/config/kernel-fmode-t.m4 \
 	$(top_srcdir)/config/kernel-follow-down-one.m4 \
+	$(top_srcdir)/config/kernel-fst-mount.m4 \
 	$(top_srcdir)/config/kernel-fsync.m4 \
 	$(top_srcdir)/config/kernel-generic_io_acct.m4 \
 	$(top_srcdir)/config/kernel-get-disk-ro.m4 \
@@ -145,7 +146,6 @@ am__aclocal_m4_deps = $(top_srcdir)/config/always-no-bool-compare.m4 \
 	$(top_srcdir)/config/kernel-lseek-execute.m4 \
 	$(top_srcdir)/config/kernel-mk-request-fn.m4 \
 	$(top_srcdir)/config/kernel-mkdir-umode-t.m4 \
-	$(top_srcdir)/config/kernel-mount-nodev.m4 \
 	$(top_srcdir)/config/kernel-open-bdev-exclusive.m4 \
 	$(top_srcdir)/config/kernel-put-link.m4 \
 	$(top_srcdir)/config/kernel-security-inode-init.m4 \
