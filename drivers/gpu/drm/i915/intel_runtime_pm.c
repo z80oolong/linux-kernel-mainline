@@ -128,6 +128,8 @@ intel_display_power_domain_str(enum intel_display_power_domain domain)
 		return "AUX_C";
 	case POWER_DOMAIN_AUX_D:
 		return "AUX_D";
+	case POWER_DOMAIN_AUX_E:
+		return "AUX_E";
 	case POWER_DOMAIN_AUX_F:
 		return "AUX_F";
 	case POWER_DOMAIN_AUX_IO_A:
@@ -1822,6 +1824,7 @@ void intel_display_power_put(struct drm_i915_private *dev_priv,
 	BIT_ULL(POWER_DOMAIN_INIT))
 #define GLK_DISPLAY_AUX_A_POWER_DOMAINS (		\
 	BIT_ULL(POWER_DOMAIN_AUX_A) |		\
+	BIT_ULL(POWER_DOMAIN_AUX_IO_A) |		\
 	BIT_ULL(POWER_DOMAIN_INIT))
 #define GLK_DISPLAY_AUX_B_POWER_DOMAINS (		\
 	BIT_ULL(POWER_DOMAIN_AUX_B) |		\

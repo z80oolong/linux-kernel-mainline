@@ -256,6 +256,17 @@ static int cnl_max_source_rate(struct intel_dp *intel_dp)
 	return 810000;
 }
 
+static int icl_max_source_rate(struct intel_dp *intel_dp)
+{
+	struct intel_digital_port *dig_port = dp_to_dig_port(intel_dp);
+	enum port port = dig_port->base.port;
+
+	if (port == PORT_B)
+		return 540000;
+
+	return 810000;
+}
+
 static void
 intel_dp_set_source_rates(struct intel_dp *intel_dp)
 {
@@ -285,10 +296,13 @@ intel_dp_set_source_rates(struct intel_dp *intel_dp)
 	/* This should only be done once */
 	WARN_ON(intel_dp->source_rates || intel_dp->num_source_rates);
 
-	if (IS_CANNONLAKE(dev_priv)) {
+	if (INTEL_GEN(dev_priv) >= 10) {
 		source_rates = cnl_rates;
 		size = ARRAY_SIZE(cnl_rates);
-		max_rate = cnl_max_source_rate(intel_dp);
+		if (INTEL_GEN(dev_priv) == 10)
+			max_rate = cnl_max_source_rate(intel_dp);
+		else
+			max_rate = icl_max_source_rate(intel_dp);
 	} else if (IS_GEN9_LP(dev_priv)) {
 		source_rates = bxt_rates;
 		size = ARRAY_SIZE(bxt_rates);
@@ -939,7 +953,7 @@ intel_dp_check_edp(struct intel_dp *intel_dp)
 }
 
 static uint32_t
-intel_dp_aux_wait_done(struct intel_dp *intel_dp, bool has_aux_irq)
+intel_dp_aux_wait_done(struct intel_dp *intel_dp)
 {
 	struct drm_i915_private *dev_priv = to_i915(intel_dp_to_dev(intel_dp));
 	i915_reg_t ch_ctl = intel_dp->aux_ch_ctl_reg(intel_dp);
@@ -947,14 +961,10 @@ intel_dp_aux_wait_done(struct intel_dp *intel_dp, bool has_aux_irq)
 	bool done;
 
 #define C (((status = I915_READ_NOTRACE(ch_ctl)) & DP_AUX_CH_CTL_SEND_BUSY) == 0)
-	if (has_aux_irq)
-		done = wait_event_timeout(dev_priv->gmbus_wait_queue, C,
-					  msecs_to_jiffies_timeout(10));
-	else
-		done = wait_for(C, 10) == 0;
+	done = wait_event_timeout(dev_priv->gmbus_wait_queue, C,
+				  msecs_to_jiffies_timeout(10));
 	if (!done)
-		DRM_ERROR("dp aux hw did not signal timeout (has irq: %i)!\n",
-			  has_aux_irq);
+		DRM_ERROR("dp aux hw did not signal timeout!\n");
 #undef C
 
 	return status;
@@ -1019,7 +1029,6 @@ static uint32_t skl_get_aux_clock_divider(struct intel_dp *intel_dp, int index)
 }
 
 static uint32_t g4x_get_aux_send_ctl(struct intel_dp *intel_dp,
-				     bool has_aux_irq,
 				     int send_bytes,
 				     uint32_t aux_clock_divider)
 {
@@ -1040,7 +1049,7 @@ static uint32_t g4x_get_aux_send_ctl(struct intel_dp *intel_dp,
 
 	return DP_AUX_CH_CTL_SEND_BUSY |
 	       DP_AUX_CH_CTL_DONE |
-	       (has_aux_irq ? DP_AUX_CH_CTL_INTERRUPT : 0) |
+	       DP_AUX_CH_CTL_INTERRUPT |
 	       DP_AUX_CH_CTL_TIME_OUT_ERROR |
 	       timeout |
 	       DP_AUX_CH_CTL_RECEIVE_ERROR |
@@ -1050,13 +1059,12 @@ static uint32_t g4x_get_aux_send_ctl(struct intel_dp *intel_dp,
 }
 
 static uint32_t skl_get_aux_send_ctl(struct intel_dp *intel_dp,
-				      bool has_aux_irq,
 				      int send_bytes,
 				      uint32_t unused)
 {
 	return DP_AUX_CH_CTL_SEND_BUSY |
 	       DP_AUX_CH_CTL_DONE |
-	       (has_aux_irq ? DP_AUX_CH_CTL_INTERRUPT : 0) |
+	       DP_AUX_CH_CTL_INTERRUPT |
 	       DP_AUX_CH_CTL_TIME_OUT_ERROR |
 	       DP_AUX_CH_CTL_TIME_OUT_MAX |
 	       DP_AUX_CH_CTL_RECEIVE_ERROR |
@@ -1079,7 +1087,6 @@ intel_dp_aux_xfer(struct intel_dp *intel_dp,
 	int i, ret, recv_bytes;
 	uint32_t status;
 	int try, clock = 0;
-	bool has_aux_irq = HAS_AUX_IRQ(dev_priv);
 	bool vdd;
 
 	ch_ctl = intel_dp->aux_ch_ctl_reg(intel_dp);
@@ -1134,7 +1141,6 @@ intel_dp_aux_xfer(struct intel_dp *intel_dp,
 
 	while ((aux_clock_divider = intel_dp->get_aux_clock_divider(intel_dp, clock++))) {
 		u32 send_ctl = intel_dp->get_aux_send_ctl(intel_dp,
-							  has_aux_irq,
 							  send_bytes,
 							  aux_clock_divider);
 
@@ -1151,7 +1157,7 @@ intel_dp_aux_xfer(struct intel_dp *intel_dp,
 			/* Send the command and wait for it to complete */
 			I915_WRITE(ch_ctl, send_ctl);
 
-			status = intel_dp_aux_wait_done(intel_dp, has_aux_irq);
+			status = intel_dp_aux_wait_done(intel_dp);
 
 			/* Clear done status and any errors */
 			I915_WRITE(ch_ctl,
@@ -1350,6 +1356,9 @@ static enum aux_ch intel_aux_ch(struct intel_dp *intel_dp)
 	case DP_AUX_D:
 		aux_ch = AUX_CH_D;
 		break;
+	case DP_AUX_E:
+		aux_ch = AUX_CH_E;
+		break;
 	case DP_AUX_F:
 		aux_ch = AUX_CH_F;
 		break;
@@ -1377,6 +1386,8 @@ intel_aux_power_domain(struct intel_dp *intel_dp)
 		return POWER_DOMAIN_AUX_C;
 	case AUX_CH_D:
 		return POWER_DOMAIN_AUX_D;
+	case AUX_CH_E:
+		return POWER_DOMAIN_AUX_E;
 	case AUX_CH_F:
 		return POWER_DOMAIN_AUX_F;
 	default:
@@ -1463,6 +1474,7 @@ static i915_reg_t skl_aux_ctl_reg(struct intel_dp *intel_dp)
 	case AUX_CH_B:
 	case AUX_CH_C:
 	case AUX_CH_D:
+	case AUX_CH_E:
 	case AUX_CH_F:
 		return DP_AUX_CH_CTL(aux_ch);
 	default:
@@ -1481,6 +1493,7 @@ static i915_reg_t skl_aux_data_reg(struct intel_dp *intel_dp, int index)
 	case AUX_CH_B:
 	case AUX_CH_C:
 	case AUX_CH_D:
+	case AUX_CH_E:
 	case AUX_CH_F:
 		return DP_AUX_CH_DATA(aux_ch, index);
 	default:
@@ -1542,6 +1555,13 @@ bool intel_dp_source_supports_hbr2(struct intel_dp *intel_dp)
 	int max_rate = intel_dp->source_rates[intel_dp->num_source_rates - 1];
 
 	return max_rate >= 540000;
+}
+
+bool intel_dp_source_supports_hbr3(struct intel_dp *intel_dp)
+{
+	int max_rate = intel_dp->source_rates[intel_dp->num_source_rates - 1];
+
+	return max_rate >= 810000;
 }
 
 static void
@@ -2868,10 +2888,11 @@ _intel_dp_set_link_train(struct intel_dp *intel_dp,
 	struct drm_i915_private *dev_priv = to_i915(intel_dp_to_dev(intel_dp));
 	struct intel_digital_port *intel_dig_port = dp_to_dig_port(intel_dp);
 	enum port port = intel_dig_port->base.port;
+	uint8_t train_pat_mask = drm_dp_training_pattern_mask(intel_dp->dpcd);
 
-	if (dp_train_pat & DP_TRAINING_PATTERN_MASK)
+	if (dp_train_pat & train_pat_mask)
 		DRM_DEBUG_KMS("Using DP training pattern TPS%d\n",
-			      dp_train_pat & DP_TRAINING_PATTERN_MASK);
+			      dp_train_pat & train_pat_mask);
 
 	if (HAS_DDI(dev_priv)) {
 		uint32_t temp = I915_READ(DP_TP_CTL(port));
@@ -2882,7 +2903,7 @@ _intel_dp_set_link_train(struct intel_dp *intel_dp,
 			temp &= ~DP_TP_CTL_SCRAMBLE_DISABLE;
 
 		temp &= ~DP_TP_CTL_LINK_TRAIN_MASK;
-		switch (dp_train_pat & DP_TRAINING_PATTERN_MASK) {
+		switch (dp_train_pat & train_pat_mask) {
 		case DP_TRAINING_PATTERN_DISABLE:
 			temp |= DP_TP_CTL_LINK_TRAIN_NORMAL;
 
@@ -2895,6 +2916,9 @@ _intel_dp_set_link_train(struct intel_dp *intel_dp,
 			break;
 		case DP_TRAINING_PATTERN_3:
 			temp |= DP_TP_CTL_LINK_TRAIN_PAT3;
+			break;
+		case DP_TRAINING_PATTERN_4:
+			temp |= DP_TP_CTL_LINK_TRAIN_PAT4;
 			break;
 		}
 		I915_WRITE(DP_TP_CTL(port), temp);
@@ -6389,7 +6413,7 @@ intel_dp_init_connector(struct intel_digital_port *intel_dig_port,
 	 * 0xd.  Failure to do so will result in spurious interrupts being
 	 * generated on the port when a cable is not attached.
 	 */
-	if (IS_G4X(dev_priv) && !IS_GM45(dev_priv)) {
+	if (IS_G45(dev_priv)) {
 		u32 temp = I915_READ(PEG_BAND_GAP_DATA);
 		I915_WRITE(PEG_BAND_GAP_DATA, (temp & ~0xf) | 0xd);
 	}
