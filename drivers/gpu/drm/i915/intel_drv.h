@@ -158,12 +158,6 @@
 #define MAX_OUTPUTS 6
 /* maximum connectors per crtcs in the mode set */
 
-/* Maximum cursor sizes */
-#define GEN2_CURSOR_WIDTH 64
-#define GEN2_CURSOR_HEIGHT 64
-#define MAX_CURSOR_WIDTH 256
-#define MAX_CURSOR_HEIGHT 256
-
 #define INTEL_I2C_BUS_DVO 1
 #define INTEL_I2C_BUS_SDVO 2
 
@@ -260,7 +254,8 @@ struct intel_encoder {
 			   struct intel_crtc_state *pipe_config);
 	/* Returns a mask of power domains that need to be referenced as part
 	 * of the hardware state readout code. */
-	u64 (*get_power_domains)(struct intel_encoder *encoder);
+	u64 (*get_power_domains)(struct intel_encoder *encoder,
+				 struct intel_crtc_state *crtc_state);
 	/*
 	 * Called during system suspend after all pending requests for the
 	 * encoder are flushed (for example for DP AUX transactions) and
@@ -1139,7 +1134,6 @@ struct intel_dp {
 	 * register with to kick off an AUX transaction.
 	 */
 	uint32_t (*get_aux_send_ctl)(struct intel_dp *dp,
-				     bool has_aux_irq,
 				     int send_bytes,
 				     uint32_t aux_clock_divider);
 
@@ -1716,6 +1710,7 @@ intel_dp_pre_emphasis_max(struct intel_dp *intel_dp, uint8_t voltage_swing);
 void intel_dp_compute_rate(struct intel_dp *intel_dp, int port_clock,
 			   uint8_t *link_bw, uint8_t *rate_select);
 bool intel_dp_source_supports_hbr2(struct intel_dp *intel_dp);
+bool intel_dp_source_supports_hbr3(struct intel_dp *intel_dp);
 bool
 intel_dp_get_link_status(struct intel_dp *intel_dp, uint8_t link_status[DP_LINK_STATUS_SIZE]);
 
@@ -1926,6 +1921,7 @@ void intel_psr_compute_config(struct intel_dp *intel_dp,
 			      struct intel_crtc_state *crtc_state);
 void intel_psr_irq_control(struct drm_i915_private *dev_priv, bool debug);
 void intel_psr_irq_handler(struct drm_i915_private *dev_priv, u32 psr_iir);
+void intel_psr_short_pulse(struct intel_dp *intel_dp);
 
 /* intel_runtime_pm.c */
 int intel_power_domains_init(struct drm_i915_private *);

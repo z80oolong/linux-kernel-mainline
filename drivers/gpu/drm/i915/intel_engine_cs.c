@@ -499,7 +499,8 @@ void intel_engine_setup_common(struct intel_engine_cs *engine)
 	intel_engine_init_cmd_parser(engine);
 }
 
-int intel_engine_create_scratch(struct intel_engine_cs *engine, int size)
+int intel_engine_create_scratch(struct intel_engine_cs *engine,
+				unsigned int size)
 {
 	struct drm_i915_gem_object *obj;
 	struct i915_vma *vma;
@@ -533,7 +534,7 @@ err_unref:
 	return ret;
 }
 
-static void intel_engine_cleanup_scratch(struct intel_engine_cs *engine)
+void intel_engine_cleanup_scratch(struct intel_engine_cs *engine)
 {
 	i915_vma_unpin_and_release(&engine->scratch);
 }
@@ -999,10 +1000,12 @@ bool intel_engine_is_idle(struct intel_engine_cs *engine)
 	if (READ_ONCE(engine->execlists.active)) {
 		struct intel_engine_execlists *execlists = &engine->execlists;
 
+		local_bh_disable();
 		if (tasklet_trylock(&execlists->tasklet)) {
 			execlists->tasklet.func(execlists->tasklet.data);
 			tasklet_unlock(&execlists->tasklet);
 		}
+		local_bh_enable();
 
 		if (READ_ONCE(execlists->active))
 			return false;
@@ -1074,6 +1077,28 @@ void intel_engines_reset_default_submission(struct drm_i915_private *i915)
 
 	for_each_engine(engine, i915, id)
 		engine->set_default_submission(engine);
+}
+
+/**
+ * intel_engines_sanitize: called after the GPU has lost power
+ * @i915: the i915 device
+ *
+ * Anytime we reset the GPU, either with an explicit GPU reset or through a
+ * PCI power cycle, the GPU loses state and we must reset our state tracking
+ * to match. Note that calling intel_engines_sanitize() if the GPU has not
+ * been reset results in much confusion!
+ */
+void intel_engines_sanitize(struct drm_i915_private *i915)
+{
+	struct intel_engine_cs *engine;
+	enum intel_engine_id id;
+
+	GEM_TRACE("\n");
+
+	for_each_engine(engine, i915, id) {
+		if (engine->reset.reset)
+			engine->reset.reset(engine, NULL);
+	}
 }
 
 /**
@@ -1168,9 +1193,6 @@ void intel_engine_lost_context(struct intel_engine_cs *engine)
 
 	lockdep_assert_held(&engine->i915->drm.struct_mutex);
 
-	engine->legacy_active_context = NULL;
-	engine->legacy_active_ppgtt = NULL;
-
 	ce = fetch_and_zero(&engine->last_retired_context);
 	if (ce)
 		intel_context_unpin(ce);
@@ -1260,7 +1282,7 @@ static void hexdump(struct drm_printer *m, const void *buf, size_t len)
 						rowsize, sizeof(u32),
 						line, sizeof(line),
 						false) >= sizeof(line));
-		drm_printf(m, "%08zx %s\n", pos, line);
+		drm_printf(m, "[%04zx] %s\n", pos, line);
 
 		prev = buf + pos;
 		skip = false;
@@ -1275,6 +1297,8 @@ static void intel_engine_print_registers(const struct intel_engine_cs *engine,
 		&engine->execlists;
 	u64 addr;
 
+	if (engine->id == RCS && IS_GEN(dev_priv, 4, 7))
+		drm_printf(m, "\tCCID: 0x%08x\n", I915_READ(CCID));
 	drm_printf(m, "\tRING_START: 0x%08x\n",
 		   I915_READ(RING_START(engine->mmio_base)));
 	drm_printf(m, "\tRING_HEAD:  0x%08x\n",
@@ -1396,6 +1420,39 @@ static void intel_engine_print_registers(const struct intel_engine_cs *engine,
 	}
 }
 
+static void print_request_ring(struct drm_printer *m, struct i915_request *rq)
+{
+	void *ring;
+	int size;
+
+	drm_printf(m,
+		   "[head %04x, postfix %04x, tail %04x, batch 0x%08x_%08x]:\n",
+		   rq->head, rq->postfix, rq->tail,
+		   rq->batch ? upper_32_bits(rq->batch->node.start) : ~0u,
+		   rq->batch ? lower_32_bits(rq->batch->node.start) : ~0u);
+
+	size = rq->tail - rq->head;
+	if (rq->tail < rq->head)
+		size += rq->ring->size;
+
+	ring = kmalloc(size, GFP_ATOMIC);
+	if (ring) {
+		const void *vaddr = rq->ring->vaddr;
+		unsigned int head = rq->head;
+		unsigned int len = 0;
+
+		if (rq->tail < head) {
+			len = rq->ring->size - head;
+			memcpy(ring, vaddr + head, len);
+			head = 0;
+		}
+		memcpy(ring + len, vaddr + head, size - len);
+
+		hexdump(m, ring, size);
+		kfree(ring);
+	}
+}
+
 void intel_engine_dump(struct intel_engine_cs *engine,
 		       struct drm_printer *m,
 		       const char *header, ...)
@@ -1446,11 +1503,7 @@ void intel_engine_dump(struct intel_engine_cs *engine,
 	rq = i915_gem_find_active_request(engine);
 	if (rq) {
 		print_request(m, rq, "\t\tactive ");
-		drm_printf(m,
-			   "\t\t[head %04x, postfix %04x, tail %04x, batch 0x%08x_%08x]\n",
-			   rq->head, rq->postfix, rq->tail,
-			   rq->batch ? upper_32_bits(rq->batch->node.start) : ~0u,
-			   rq->batch ? lower_32_bits(rq->batch->node.start) : ~0u);
+
 		drm_printf(m, "\t\tring->start:  0x%08x\n",
 			   i915_ggtt_offset(rq->ring->vma));
 		drm_printf(m, "\t\tring->head:   0x%08x\n",
@@ -1461,6 +1514,8 @@ void intel_engine_dump(struct intel_engine_cs *engine,
 			   rq->ring->emit);
 		drm_printf(m, "\t\tring->space:  0x%08x\n",
 			   rq->ring->space);
+
+		print_request_ring(m, rq);
 	}
 
 	rcu_read_unlock();
