@@ -461,7 +461,8 @@ static void intel_write_infoframe(struct drm_encoder *encoder,
 }
 
 static void intel_hdmi_set_avi_infoframe(struct drm_encoder *encoder,
-					 const struct intel_crtc_state *crtc_state)
+					 const struct intel_crtc_state *crtc_state,
+					 const struct drm_connector_state *conn_state)
 {
 	struct intel_hdmi *intel_hdmi = enc_to_intel_hdmi(encoder);
 	const struct drm_display_mode *adjusted_mode =
@@ -490,6 +491,9 @@ static void intel_hdmi_set_avi_infoframe(struct drm_encoder *encoder,
 					   HDMI_QUANTIZATION_RANGE_FULL,
 					   intel_hdmi->rgb_quant_range_selectable,
 					   is_hdmi2_sink);
+
+	drm_hdmi_avi_infoframe_content_type(&frame.avi,
+					    conn_state);
 
 	/* TODO: handle pixel repetition for YCBCR420 outputs */
 	intel_write_infoframe(encoder, crtc_state, &frame);
@@ -586,7 +590,7 @@ static void g4x_set_infoframes(struct drm_encoder *encoder,
 	I915_WRITE(reg, val);
 	POSTING_READ(reg);
 
-	intel_hdmi_set_avi_infoframe(encoder, crtc_state);
+	intel_hdmi_set_avi_infoframe(encoder, crtc_state, conn_state);
 	intel_hdmi_set_spd_infoframe(encoder, crtc_state);
 	intel_hdmi_set_hdmi_infoframe(encoder, crtc_state, conn_state);
 }
@@ -727,7 +731,7 @@ static void ibx_set_infoframes(struct drm_encoder *encoder,
 	I915_WRITE(reg, val);
 	POSTING_READ(reg);
 
-	intel_hdmi_set_avi_infoframe(encoder, crtc_state);
+	intel_hdmi_set_avi_infoframe(encoder, crtc_state, conn_state);
 	intel_hdmi_set_spd_infoframe(encoder, crtc_state);
 	intel_hdmi_set_hdmi_infoframe(encoder, crtc_state, conn_state);
 }
@@ -770,7 +774,7 @@ static void cpt_set_infoframes(struct drm_encoder *encoder,
 	I915_WRITE(reg, val);
 	POSTING_READ(reg);
 
-	intel_hdmi_set_avi_infoframe(encoder, crtc_state);
+	intel_hdmi_set_avi_infoframe(encoder, crtc_state, conn_state);
 	intel_hdmi_set_spd_infoframe(encoder, crtc_state);
 	intel_hdmi_set_hdmi_infoframe(encoder, crtc_state, conn_state);
 }
@@ -823,7 +827,7 @@ static void vlv_set_infoframes(struct drm_encoder *encoder,
 	I915_WRITE(reg, val);
 	POSTING_READ(reg);
 
-	intel_hdmi_set_avi_infoframe(encoder, crtc_state);
+	intel_hdmi_set_avi_infoframe(encoder, crtc_state, conn_state);
 	intel_hdmi_set_spd_infoframe(encoder, crtc_state);
 	intel_hdmi_set_hdmi_infoframe(encoder, crtc_state, conn_state);
 }
@@ -856,7 +860,7 @@ static void hsw_set_infoframes(struct drm_encoder *encoder,
 	I915_WRITE(reg, val);
 	POSTING_READ(reg);
 
-	intel_hdmi_set_avi_infoframe(encoder, crtc_state);
+	intel_hdmi_set_avi_infoframe(encoder, crtc_state, conn_state);
 	intel_hdmi_set_spd_infoframe(encoder, crtc_state);
 	intel_hdmi_set_hdmi_infoframe(encoder, crtc_state, conn_state);
 }
@@ -1161,33 +1165,16 @@ static void intel_hdmi_prepare(struct intel_encoder *encoder,
 static bool intel_hdmi_get_hw_state(struct intel_encoder *encoder,
 				    enum pipe *pipe)
 {
-	struct drm_device *dev = encoder->base.dev;
-	struct drm_i915_private *dev_priv = to_i915(dev);
+	struct drm_i915_private *dev_priv = to_i915(encoder->base.dev);
 	struct intel_hdmi *intel_hdmi = enc_to_intel_hdmi(&encoder->base);
-	u32 tmp;
 	bool ret;
 
 	if (!intel_display_power_get_if_enabled(dev_priv,
 						encoder->power_domain))
 		return false;
 
-	ret = false;
+	ret = intel_sdvo_port_enabled(dev_priv, intel_hdmi->hdmi_reg, pipe);
 
-	tmp = I915_READ(intel_hdmi->hdmi_reg);
-
-	if (!(tmp & SDVO_ENABLE))
-		goto out;
-
-	if (HAS_PCH_CPT(dev_priv))
-		*pipe = PORT_TO_PIPE_CPT(tmp);
-	else if (IS_CHERRYVIEW(dev_priv))
-		*pipe = SDVO_PORT_TO_PIPE_CHV(tmp);
-	else
-		*pipe = PORT_TO_PIPE(tmp);
-
-	ret = true;
-
-out:
 	intel_display_power_put(dev_priv, encoder->power_domain);
 
 	return ret;
@@ -1421,8 +1408,8 @@ static void intel_disable_hdmi(struct intel_encoder *encoder,
 		intel_set_cpu_fifo_underrun_reporting(dev_priv, PIPE_A, false);
 		intel_set_pch_fifo_underrun_reporting(dev_priv, PIPE_A, false);
 
-		temp &= ~SDVO_PIPE_B_SELECT;
-		temp |= SDVO_ENABLE;
+		temp &= ~SDVO_PIPE_SEL_MASK;
+		temp |= SDVO_ENABLE | SDVO_PIPE_SEL(PIPE_A);
 		/*
 		 * HW workaround, need to write this twice for issue
 		 * that may result in first write getting masked.
@@ -2071,6 +2058,7 @@ intel_hdmi_add_properties(struct intel_hdmi *intel_hdmi, struct drm_connector *c
 	intel_attach_force_audio_property(connector);
 	intel_attach_broadcast_rgb_property(connector);
 	intel_attach_aspect_ratio_property(connector);
+	drm_connector_attach_content_type_property(connector);
 	connector->state->picture_aspect_ratio = HDMI_PICTURE_ASPECT_NONE;
 }
 
