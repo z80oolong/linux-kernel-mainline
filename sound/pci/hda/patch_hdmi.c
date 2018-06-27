@@ -1632,8 +1632,8 @@ static bool hdmi_present_sense(struct hdmi_spec_per_pin *per_pin, int repoll)
 	int ret;
 
 	/* no temporary power up/down needed for component notifier */
-	if (!codec_has_acomp(codec))
-		snd_hda_power_up_pm(codec);
+	if (!codec_has_acomp(codec) && snd_hda_power_up_pm(codec))
+		return false;
 
 	mutex_lock(&spec->pcm_lock);
 	if (codec_has_acomp(codec)) {
@@ -3740,6 +3740,11 @@ static int patch_atihdmi(struct hda_codec *codec)
 	}
 
 	spec->chmap.channels_max = max(spec->chmap.channels_max, 8u);
+
+	/* AMD GPUs have neither EPSS nor CLKSTOP bits, hence preventing
+	 * the link-down as is.  Tell the core to allow it.
+	 */
+	codec->link_down_at_suspend = 1;
 
 	return 0;
 }
