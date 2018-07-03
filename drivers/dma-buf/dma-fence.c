@@ -158,7 +158,10 @@ dma_fence_wait_timeout(struct dma_fence *fence, bool intr, signed long timeout)
 		return -EINVAL;
 
 	trace_dma_fence_wait_start(fence);
-	ret = fence->ops->wait(fence, intr, timeout);
+	if (fence->ops->wait)
+		ret = fence->ops->wait(fence, intr, timeout);
+	else
+		ret = dma_fence_default_wait(fence, intr, timeout);
 	trace_dma_fence_wait_end(fence);
 	return ret;
 }
@@ -200,7 +203,8 @@ void dma_fence_enable_sw_signaling(struct dma_fence *fence)
 
 	if (!test_and_set_bit(DMA_FENCE_FLAG_ENABLE_SIGNAL_BIT,
 			      &fence->flags) &&
-	    !test_bit(DMA_FENCE_FLAG_SIGNALED_BIT, &fence->flags)) {
+	    !test_bit(DMA_FENCE_FLAG_SIGNALED_BIT, &fence->flags) &&
+	    fence->ops->enable_signaling) {
 		trace_dma_fence_enable_signal(fence);
 
 		spin_lock_irqsave(fence->lock, flags);
@@ -260,7 +264,7 @@ int dma_fence_add_callback(struct dma_fence *fence, struct dma_fence_cb *cb,
 
 	if (test_bit(DMA_FENCE_FLAG_SIGNALED_BIT, &fence->flags))
 		ret = -ENOENT;
-	else if (!was_set) {
+	else if (!was_set && fence->ops->enable_signaling) {
 		trace_dma_fence_enable_signal(fence);
 
 		if (!fence->ops->enable_signaling(fence)) {
@@ -388,7 +392,7 @@ dma_fence_default_wait(struct dma_fence *fence, bool intr, signed long timeout)
 	if (test_bit(DMA_FENCE_FLAG_SIGNALED_BIT, &fence->flags))
 		goto out;
 
-	if (!was_set) {
+	if (!was_set && fence->ops->enable_signaling) {
 		trace_dma_fence_enable_signal(fence);
 
 		if (!fence->ops->enable_signaling(fence)) {
@@ -496,11 +500,6 @@ dma_fence_wait_any_timeout(struct dma_fence **fences, uint32_t count,
 	for (i = 0; i < count; ++i) {
 		struct dma_fence *fence = fences[i];
 
-		if (fence->ops->wait != dma_fence_default_wait) {
-			ret = -EINVAL;
-			goto fence_rm_cb;
-		}
-
 		cb[i].task = current;
 		if (dma_fence_add_callback(fence, &cb[i].base,
 					   dma_fence_default_wait_cb)) {
@@ -560,8 +559,7 @@ dma_fence_init(struct dma_fence *fence, const struct dma_fence_ops *ops,
 	       spinlock_t *lock, u64 context, unsigned seqno)
 {
 	BUG_ON(!lock);
-	BUG_ON(!ops || !ops->wait || !ops->enable_signaling ||
-	       !ops->get_driver_name || !ops->get_timeline_name);
+	BUG_ON(!ops || !ops->get_driver_name || !ops->get_timeline_name);
 
 	kref_init(&fence->refcount);
 	fence->ops = ops;
