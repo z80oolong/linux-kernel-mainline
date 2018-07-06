@@ -18,6 +18,7 @@ drivers/ata/libahci_platform.ko
 drivers/ata/pata_acpi.ko
 drivers/block/brd.ko
 drivers/block/cryptoloop.ko
+drivers/block/drbd/drbd.ko
 drivers/block/floppy.ko
 drivers/block/loop.ko
 drivers/block/nbd.ko
