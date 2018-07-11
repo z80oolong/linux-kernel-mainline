@@ -31,6 +31,7 @@ EXPORT_SYMBOL drivers/infiniband/core/ib_cm 0x00000000	ibcm_reject_msg
 EXPORT_SYMBOL drivers/infiniband/core/ib_core 0x00000000	__ib_alloc_cq
 EXPORT_SYMBOL drivers/infiniband/core/ib_core 0x00000000	__ib_alloc_pd
 EXPORT_SYMBOL drivers/infiniband/core/ib_core 0x00000000	__ib_alloc_xrcd
+EXPORT_SYMBOL drivers/infiniband/core/ib_core 0x00000000	__ib_create_cq
 EXPORT_SYMBOL drivers/infiniband/core/ib_core 0x00000000	ib_alloc_device
 EXPORT_SYMBOL drivers/infiniband/core/ib_core 0x00000000	ib_alloc_fmr
 EXPORT_SYMBOL drivers/infiniband/core/ib_core 0x00000000	ib_alloc_mr
@@ -42,7 +43,6 @@ EXPORT_SYMBOL drivers/infiniband/core/ib_core 0x00000000	ib_cancel_mad
 EXPORT_SYMBOL drivers/infiniband/core/ib_core 0x00000000	ib_check_mr_status
 EXPORT_SYMBOL drivers/infiniband/core/ib_core 0x00000000	ib_close_qp
 EXPORT_SYMBOL drivers/infiniband/core/ib_core 0x00000000	ib_create_ah_from_wc
-EXPORT_SYMBOL drivers/infiniband/core/ib_core 0x00000000	ib_create_cq
 EXPORT_SYMBOL drivers/infiniband/core/ib_core 0x00000000	ib_create_flow
 EXPORT_SYMBOL drivers/infiniband/core/ib_core 0x00000000	ib_create_fmr_pool
 EXPORT_SYMBOL drivers/infiniband/core/ib_core 0x00000000	ib_create_qp
