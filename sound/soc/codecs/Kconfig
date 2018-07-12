@@ -1100,6 +1100,12 @@ config SND_SOC_UDA1380
         tristate
 	depends on I2C
 
+config SND_SOC_WCD9335
+	tristate "WCD9335 Codec"
+	depends on SLIMBUS
+	select REGMAP_SLIMBUS
+        tristate
+
 config SND_SOC_WL1273
 	tristate
 
