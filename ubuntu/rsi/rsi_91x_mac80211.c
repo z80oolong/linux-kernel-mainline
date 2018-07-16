@@ -376,6 +376,7 @@ static int rsi_mac80211_hw_scan_start(struct ieee80211_hw *hw,
 	if (common->bgscan_en || common->scan_in_prog)
 		return -EBUSY;
 
+	cancel_work_sync(&common->scan_work);
 	mutex_lock(&common->mutex);
 
 	if (!bss->assoc) {
@@ -629,6 +630,7 @@ static void rsi_mac80211_stop(struct ieee80211_hw *hw)
 
 	ven_rsi_dbg(ERR_ZONE, "===> Interface DOWN <===\n");
 
+	cancel_work_sync(&common->scan_work);
 	mutex_lock(&common->mutex);
 	
 	common->iface_down = true;
@@ -2347,14 +2349,10 @@ void rsi_mac80211_rfkill_poll(struct ieee80211_hw *hw)
 	struct rsi_hw *adapter = hw->priv;
 	struct rsi_common *common = adapter->priv;
 	
-	mutex_lock(&common->mutex);
-
 	if (common->fsm_state != FSM_MAC_INIT_DONE)
 		wiphy_rfkill_set_hw_state(hw->wiphy, true);
 	else
 		wiphy_rfkill_set_hw_state(hw->wiphy, false);
-
-	mutex_unlock(&common->mutex);
 }
 
 #ifdef CONFIG_VEN_RSI_WOW
