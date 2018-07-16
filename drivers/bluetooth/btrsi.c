@@ -83,6 +83,7 @@ static int rsi_hci_send_pkt(struct hci_dev *hdev, struct sk_buff *skb)
 			skb_pull(skb, PTR_ALIGN(skb->data,
 				RSI_SDIO_DMA_ALIGN) - skb->data);
 			memmove(skb->data, skb_data, skb_len);
+			skb_trim(skb, skb_len);
 		}
 	}
 
