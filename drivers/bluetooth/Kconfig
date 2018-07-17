@@ -387,9 +387,7 @@ config BT_QCOMSMD_HACK
 	  assigned to hcidev during qcomsmd_probe().
 
 config BT_HCIRSI
-	tristate "Redpine HCI support"
-	default n
-	select RSI_COEX
+	tristate
 	help
 	  Redpine BT driver.
 	  This driver handles BT traffic from upper layers and pass
