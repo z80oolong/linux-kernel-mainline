@@ -272,7 +272,7 @@ static int rsi_mac80211_hw_scan_start(struct ieee80211_hw *hw,
 		queue_work(common->scan_workqueue, &common->scan_work);
 	} else {
 		if (!rsi_send_bgscan_params(common, RSI_START_BGSCAN)) {
-			if(scan_req > MAX_HW_SCAN_SSID) {
+			if(scan_req->n_ssids > MAX_HW_SCAN_SSID) {
 				n = 0;
 				cfg_ssid = &scan_req->ssids[n];
 				rsi_dbg(INFO_ZONE, "handling only '%s'ssid of %d "
