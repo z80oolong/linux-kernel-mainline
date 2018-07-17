@@ -7185,10 +7185,8 @@ static int rtl8169_runtime_suspend(struct device *device)
 	struct net_device *dev = pci_get_drvdata(pdev);
 	struct rtl8169_private *tp = netdev_priv(dev);
 
-	if (!tp->TxDescArray) {
-		rtl_pll_power_down(tp);
+	if (!tp->TxDescArray)
 		return 0;
-	}
 
 	rtl_lock_work(tp);
 	__rtl8169_set_wol(tp, WAKE_ANY);
@@ -7650,6 +7648,9 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
 	rc = register_netdev(dev);
 	if (rc < 0)
 		return rc;
+
+	/* chip gets powered up in rtl_open() */
+	rtl_pll_power_down(tp);
 
 	netif_info(tp, probe, dev, "%s, %pM, XID %08x, IRQ %d\n",
 		   rtl_chip_infos[chipset].name, dev->dev_addr,
