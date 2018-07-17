@@ -250,6 +250,8 @@ static struct drm_driver pl111_drm_driver = {
 	.gem_prime_import_sg_table = pl111_gem_import_sg_table,
 	.gem_prime_export = drm_gem_prime_export,
 	.gem_prime_get_sg_table	= drm_gem_cma_prime_get_sg_table,
+	.gem_prime_mmap = drm_gem_cma_prime_mmap,
+	.gem_prime_vmap = drm_gem_cma_prime_vmap,
 
 #if defined(CONFIG_DEBUG_FS)
 	.debugfs_init = pl111_debugfs_init,
@@ -302,13 +304,14 @@ static int pl111_amba_probe(struct amba_device *amba_dev,
 	if (IS_ERR(priv->regs)) {
 		dev_err(dev, "%s failed mmio\n", __func__);
 		ret = PTR_ERR(priv->regs);
-		goto dev_unref;
+		goto dev_put;
 	}
 
 	/* This may override some variant settings */
 	ret = pl111_versatile_init(dev, priv);
 	if (ret)
-		goto dev_unref;
+		goto dev_put;
+
 	pl111_nomadik_init(dev);
 
 	/* turn off interrupts before requesting the irq */
@@ -323,16 +326,16 @@ static int pl111_amba_probe(struct amba_device *amba_dev,
 
 	ret = pl111_modeset_init(drm);
 	if (ret != 0)
-		goto dev_unref;
+		goto dev_put;
 
 	ret = drm_dev_register(drm, 0);
 	if (ret < 0)
-		goto dev_unref;
+		goto dev_put;
 
 	return 0;
 
-dev_unref:
-	drm_dev_unref(drm);
+dev_put:
+	drm_dev_put(drm);
 	of_reserved_mem_device_release(dev);
 
 	return ret;
@@ -349,7 +352,7 @@ static int pl111_amba_remove(struct amba_device *amba_dev)
 	if (priv->panel)
 		drm_panel_bridge_remove(priv->bridge);
 	drm_mode_config_cleanup(drm);
-	drm_dev_unref(drm);
+	drm_dev_put(drm);
 	of_reserved_mem_device_release(dev);
 
 	return 0;
