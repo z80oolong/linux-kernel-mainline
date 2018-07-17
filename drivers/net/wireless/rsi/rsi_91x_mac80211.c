@@ -529,6 +529,10 @@ static int rsi_mac80211_add_interface(struct ieee80211_hw *hw,
 		if (!adapter->vifs[i]) {
 			vap_idx = i;
 			break;
+		} else if (!memcmp(vif->addr, adapter->vifs[i]->addr,
+				   ETH_ALEN)) {
+			vap_idx = i;
+			break;
 		}
 	}
 	if (vap_idx < 0) {
