@@ -2348,7 +2348,7 @@ static const struct dmi_system_id bridge_d3_blacklist[] = {
  * @bridge: Bridge to check
  *
  * This function checks if it is possible to move the bridge to D3.
- * Currently we only allow D3 for recent enough PCIe ports.
+ * Currently we only allow D3 for recent enough PCIe ports and Thunderbolt.
  */
 bool pci_bridge_d3_possible(struct pci_dev *bridge)
 {
@@ -2376,6 +2376,10 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
 
 		if (dmi_check_system(bridge_d3_blacklist))
 			return false;
+
+		/* Even the oldest 2010 Thunderbolt controller supports D3. */
+		if (bridge->is_thunderbolt)
+			return true;
 
 		/*
 		 * Hotplug ports handled natively by the OS were not validated
