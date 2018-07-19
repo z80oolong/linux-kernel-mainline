@@ -172,6 +172,7 @@ dm-zero
 dm-zoned
 dn_rtmsg
 dptf_power
+drbd
 drm
 drm_kms_helper
 drop_monitor
@@ -375,6 +376,7 @@ llc2
 lockd
 lp
 lpfc
+lru_cache
 lrw
 lz4
 lz4_compress
