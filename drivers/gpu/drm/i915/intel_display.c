@@ -5837,7 +5837,7 @@ static void haswell_crtc_disable(struct intel_crtc_state *old_crtc_state,
 		intel_ddi_set_vc_payload_alloc(old_crtc_state, false);
 
 	if (!transcoder_is_dsi(cpu_transcoder))
-		intel_ddi_disable_transcoder_func(dev_priv, cpu_transcoder);
+		intel_ddi_disable_transcoder_func(old_crtc_state);
 
 	if (INTEL_GEN(dev_priv) >= 9)
 		skylake_scaler_disable(intel_crtc);
@@ -14849,6 +14849,18 @@ static void quirk_increase_t12_delay(struct drm_device *dev)
 	DRM_INFO("Applying T12 delay quirk\n");
 }
 
+/*
+ * GeminiLake NUC HDMI outputs require additional off time
+ * this allows the onboard retimer to correctly sync to signal
+ */
+static void quirk_increase_ddi_disabled_time(struct drm_device *dev)
+{
+	struct drm_i915_private *dev_priv = to_i915(dev);
+
+	dev_priv->quirks |= QUIRK_INCREASE_DDI_DISABLED_TIME;
+	DRM_INFO("Applying Increase DDI Disabled quirk\n");
+}
+
 struct intel_quirk {
 	int device;
 	int subsystem_vendor;
@@ -14935,6 +14947,13 @@ static struct intel_quirk intel_quirks[] = {
 
 	/* Toshiba Satellite P50-C-18C */
 	{ 0x191B, 0x1179, 0xF840, quirk_increase_t12_delay },
+
+	/* GeminiLake NUC */
+	{ 0x3185, 0x8086, 0x2072, quirk_increase_ddi_disabled_time },
+	{ 0x3184, 0x8086, 0x2072, quirk_increase_ddi_disabled_time },
+	/* ASRock ITX*/
+	{ 0x3185, 0x1849, 0x2212, quirk_increase_ddi_disabled_time },
+	{ 0x3184, 0x1849, 0x2212, quirk_increase_ddi_disabled_time },
 };
 
 static void intel_init_quirks(struct drm_device *dev)
@@ -15089,12 +15108,61 @@ static void intel_update_fdi_pll_freq(struct drm_i915_private *dev_priv)
 	DRM_DEBUG_DRIVER("FDI PLL freq=%d\n", dev_priv->fdi_pll_freq);
 }
 
+static int intel_initial_commit(struct drm_device *dev)
+{
+	struct drm_atomic_state *state = NULL;
+	struct drm_modeset_acquire_ctx ctx;
+	struct drm_crtc *crtc;
+	struct drm_crtc_state *crtc_state;
+	int ret = 0;
+
+	state = drm_atomic_state_alloc(dev);
+	if (!state)
+		return -ENOMEM;
+
+	drm_modeset_acquire_init(&ctx, 0);
+
+retry:
+	state->acquire_ctx = &ctx;
+
+	drm_for_each_crtc(crtc, dev) {
+		crtc_state = drm_atomic_get_crtc_state(state, crtc);
+		if (IS_ERR(crtc_state)) {
+			ret = PTR_ERR(crtc_state);
+			goto out;
+		}
+
+		if (crtc_state->active) {
+			ret = drm_atomic_add_affected_planes(state, crtc);
+			if (ret)
+				goto out;
+		}
+	}
+
+	ret = drm_atomic_commit(state);
+
+out:
+	if (ret == -EDEADLK) {
+		drm_atomic_state_clear(state);
+		drm_modeset_backoff(&ctx);
+		goto retry;
+	}
+
+	drm_atomic_state_put(state);
+
+	drm_modeset_drop_locks(&ctx);
+	drm_modeset_acquire_fini(&ctx);
+
+	return ret;
+}
+
 int intel_modeset_init(struct drm_device *dev)
 {
 	struct drm_i915_private *dev_priv = to_i915(dev);
 	struct i915_ggtt *ggtt = &dev_priv->ggtt;
 	enum pipe pipe;
 	struct intel_crtc *crtc;
+	int ret;
 
 	dev_priv->modeset_wq = alloc_ordered_workqueue("i915_modeset", 0);
 
@@ -15169,8 +15237,6 @@ int intel_modeset_init(struct drm_device *dev)
 		      INTEL_INFO(dev_priv)->num_pipes > 1 ? "s" : "");
 
 	for_each_pipe(dev_priv, pipe) {
-		int ret;
-
 		ret = intel_crtc_init(dev_priv, pipe);
 		if (ret) {
 			drm_mode_config_cleanup(dev);
@@ -15225,6 +15291,16 @@ int intel_modeset_init(struct drm_device *dev)
 	 */
 	if (!HAS_GMCH_DISPLAY(dev_priv))
 		sanitize_watermarks(dev);
+
+	/*
+	 * Force all active planes to recompute their states. So that on
+	 * mode_setcrtc after probe, all the intel_plane_state variables
+	 * are already calculated and there is no assert_plane warnings
+	 * during bootup.
+	 */
+	ret = intel_initial_commit(dev);
+	if (ret)
+		DRM_DEBUG_KMS("Initial commit in probe failed.\n");
 
 	return 0;
 }
@@ -15889,6 +15965,8 @@ static void intel_hpd_poll_fini(struct drm_device *dev)
 void intel_modeset_cleanup(struct drm_device *dev)
 {
 	struct drm_i915_private *dev_priv = to_i915(dev);
+
+	flush_workqueue(dev_priv->modeset_wq);
 
 	flush_work(&dev_priv->atomic_helper.free_work);
 	WARN_ON(!llist_empty(&dev_priv->atomic_helper.free_list));
