@@ -50,7 +50,6 @@ rmd160 ?
 rmd256 ?
 rmd320 ?
 salsa20_generic ?
-salsa20-x86_64 ?
 seed ?
 seqiv ?
 serpent_generic ?
