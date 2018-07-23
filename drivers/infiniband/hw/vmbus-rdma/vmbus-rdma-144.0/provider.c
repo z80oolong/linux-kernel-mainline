@@ -2944,14 +2944,12 @@ static int __init init_hvnd_drv(void)
 {
 
 	pr_info("Registered HyperV networkDirect Driver\n");
-	hvnd_addr_init();
 	return vmbus_driver_register(&hvnd_drv);
 }
 
 static void exit_hvnd_drv(void)
 {
 	pr_info("De-Registered HyperV networkDirect Driver\n");
-	hvnd_addr_deinit();
 	vmbus_driver_unregister(&hvnd_drv);
 }
 

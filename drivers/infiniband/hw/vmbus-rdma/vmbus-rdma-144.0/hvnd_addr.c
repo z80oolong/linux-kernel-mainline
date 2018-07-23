@@ -85,22 +85,10 @@ int hvnd_get_outgoing_rdma_addr(struct hvnd_dev *nd_dev,
 
 }
 
-static struct rdma_addr_client self;
-
 struct resolve_cb_context {
 	struct rdma_dev_addr *addr;
 	struct completion comp;
 };
-
-void hvnd_addr_init(void)
-{
-	rdma_addr_register_client(&self);
-}
-
-void hvnd_addr_deinit(void)
-{
-	rdma_addr_unregister_client(&self);
-}
 
 static void resolve_cb(int status, struct sockaddr *src_addr,
 	     struct rdma_dev_addr *addr, void *context)
@@ -122,7 +110,7 @@ int hvnd_get_neigh_mac_addr(struct sockaddr *local, struct sockaddr *remote,
 	ctx.addr = &dev_addr;
 	init_completion(&ctx.comp);
 
-	ret = rdma_resolve_ip(&self, local, remote, &dev_addr, 1000,
+	ret = rdma_resolve_ip(local, remote, &dev_addr, 1000,
 			      resolve_cb, &ctx);
 
 	if (ret) {

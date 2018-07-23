@@ -2153,10 +2153,6 @@ int hvnd_get_outgoing_rdma_addr(struct hvnd_dev *nd_dev, struct hvnd_ucontext *u
 
 int hvnd_get_neigh_mac_addr(struct sockaddr *local, struct sockaddr *remote, char *mac_addr);
 
-void hvnd_addr_init(void);
-
-void hvnd_addr_deinit(void);
-
 bool ep_add_work_pending(struct hvnd_ep_obj *ep_object);
 void ep_del_work_pending(struct hvnd_ep_obj *ep_object);
 void ep_stop(struct hvnd_ep_obj *ep_object);
