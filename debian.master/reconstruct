@@ -1,5 +1,8 @@
 # Recreate any symlinks created since the orig.
 # Remove any files deleted from the orig.
+rm -f 'arch/x86/crypto/salsa20-i586-asm_32.S'
+rm -f 'arch/x86/crypto/salsa20-x86_64-asm_64.S'
+rm -f 'arch/x86/crypto/salsa20_glue.c'
 chmod +x 'scripts/kmsg-doc'
 chmod +x 'spl/autogen.sh'
 chmod +x 'spl/cmd/splslab/splslab.py'
