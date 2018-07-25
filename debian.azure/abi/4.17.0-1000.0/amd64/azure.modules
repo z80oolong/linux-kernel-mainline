@@ -591,7 +591,6 @@ rmd320
 rose
 rpcsec_gss_krb5
 rxrpc
-salsa20-x86_64
 salsa20_generic
 sch_atm
 sch_cbq
