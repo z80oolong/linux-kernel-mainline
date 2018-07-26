@@ -128,13 +128,15 @@ static int guc_init_wq(struct intel_guc *guc)
 
 static void guc_fini_wq(struct intel_guc *guc)
 {
-	struct drm_i915_private *dev_priv = guc_to_i915(guc);
+	struct workqueue_struct *wq;
 
-	if (HAS_LOGICAL_RING_PREEMPTION(dev_priv) &&
-	    USES_GUC_SUBMISSION(dev_priv))
-		destroy_workqueue(guc->preempt_wq);
+	wq = fetch_and_zero(&guc->preempt_wq);
+	if (wq)
+		destroy_workqueue(wq);
 
-	destroy_workqueue(guc->log.relay.flush_wq);
+	wq = fetch_and_zero(&guc->log.relay.flush_wq);
+	if (wq)
+		destroy_workqueue(wq);
 }
 
 int intel_guc_init_misc(struct intel_guc *guc)
@@ -170,7 +172,7 @@ static int guc_shared_data_create(struct intel_guc *guc)
 
 	vaddr = i915_gem_object_pin_map(vma->obj, I915_MAP_WB);
 	if (IS_ERR(vaddr)) {
-		i915_vma_unpin_and_release(&vma);
+		i915_vma_unpin_and_release(&vma, 0);
 		return PTR_ERR(vaddr);
 	}
 
@@ -182,8 +184,7 @@ static int guc_shared_data_create(struct intel_guc *guc)
 
 static void guc_shared_data_destroy(struct intel_guc *guc)
 {
-	i915_gem_object_unpin_map(guc->shared_data->obj);
-	i915_vma_unpin_and_release(&guc->shared_data);
+	i915_vma_unpin_and_release(&guc->shared_data, I915_VMA_RELEASE_MAP);
 }
 
 int intel_guc_init(struct intel_guc *guc)
