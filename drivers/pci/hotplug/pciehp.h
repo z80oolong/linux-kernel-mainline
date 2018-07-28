@@ -22,6 +22,7 @@
 #include <linux/sched/signal.h>		/* signal_pending() */
 #include <linux/pcieport_if.h>
 #include <linux/mutex.h>
+#include <linux/rwsem.h>
 #include <linux/workqueue.h>
 
 #define MY_NAME	"pciehp"
@@ -79,6 +80,9 @@ struct slot {
  * struct controller - PCIe hotplug controller
  * @ctrl_lock: serializes writes to the Slot Control register
  * @pcie: pointer to the controller's PCIe port service device
+ * @reset_lock: prevents access to the Data Link Layer Link Active bit in the
+ *	Link Status register and to the Presence Detect State bit in the Slot
+ *	Status register during a slot reset which may cause them to flap
  * @slot: pointer to the controller's slot structure
  * @queue: wait queue to wake up on reception of a Command Completed event,
  *	used for synchronous writes to the Slot Control register
@@ -108,6 +112,7 @@ struct slot {
 struct controller {
 	struct mutex ctrl_lock;
 	struct pcie_device *pcie;
+	struct rw_semaphore reset_lock;
 	struct slot *slot;
 	wait_queue_head_t queue;
 	u32 slot_cap;
