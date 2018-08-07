@@ -3070,8 +3070,8 @@ CONFIG_INFINIBAND_CXGB3                         policy<{'amd64': 'm', 'arm64': '
 CONFIG_INFINIBAND_CXGB3_DEBUG                   policy<{'amd64': 'n', 'arm64': 'n', 'armhf': 'n', 'i386': 'n', 'ppc64el': 'n'}>
 CONFIG_INFINIBAND_CXGB4                         policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'ppc64el': 'm'}>
 CONFIG_INFINIBAND_I40IW                         policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'ppc64el': 'm'}>
-CONFIG_MLX4_INFINIBAND                          policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'ppc64el': 'm', 's390x': 'm'}>
-CONFIG_MLX5_INFINIBAND                          policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'ppc64el': 'm', 's390x': 'm'}>
+CONFIG_MLX4_INFINIBAND                          policy<{'amd64': 'y'}>
+CONFIG_MLX5_INFINIBAND                          policy<{'amd64': 'y'}>
 CONFIG_INFINIBAND_NES                           policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'ppc64el': 'm', 's390x': 'n'}>
 CONFIG_INFINIBAND_NES_DEBUG                     policy<{'amd64': 'n', 'arm64': 'n', 'armhf': 'n', 'i386': 'n', 'ppc64el': 'n'}>
 CONFIG_INFINIBAND_OCRDMA                        policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'ppc64el': 'm', 's390x': 'n'}>
@@ -3095,6 +3095,9 @@ CONFIG_HFI1_DEBUG_SDMA_ORDER                    policy<{'amd64': 'n'}>
 CONFIG_SDMA_VERBOSITY                           policy<{'amd64': 'n'}>
 CONFIG_INFINIBAND_QEDR                          policy<{'amd64': 'm', 'arm64': 'm', 'ppc64el': 'm'}>
 CONFIG_INFINIBAND_BNXT_RE                       policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'ppc64el': 'm', 's390x': 'n'}>
+#
+CONFIG_MLX4_INFINIBAND                          mark<ENFORCED> note<LP:1759656>
+CONFIG_MLX5_INFINIBAND                          mark<ENFORCED> note<LP:1759656>
 
 # Menu: Device Drivers >> Input device support
 
