@@ -318,8 +318,9 @@ int pciehp_get_raw_indicator_status(struct hotplug_slot *hotplug_slot,
 	return 0;
 }
 
-void pciehp_get_attention_status(struct slot *slot, u8 *status)
+int pciehp_get_attention_status(struct hotplug_slot *hotplug_slot, u8 *status)
 {
+	struct slot *slot = hotplug_slot->private;
 	struct controller *ctrl = slot->ctrl;
 	struct pci_dev *pdev = ctrl_dev(ctrl);
 	u16 slot_ctrl;
@@ -344,6 +345,8 @@ void pciehp_get_attention_status(struct slot *slot, u8 *status)
 		*status = 0xFF;
 		break;
 	}
+
+	return 0;
 }
 
 void pciehp_get_power_status(struct slot *slot, u8 *status)
@@ -771,8 +774,9 @@ void pcie_disable_interrupt(struct controller *ctrl)
  * momentarily, if we see that they could interfere. Also, clear any spurious
  * events after.
  */
-int pciehp_reset_slot(struct slot *slot, int probe)
+int pciehp_reset_slot(struct hotplug_slot *hotplug_slot, int probe)
 {
+	struct slot *slot = hotplug_slot->private;
 	struct controller *ctrl = slot->ctrl;
 	struct pci_dev *pdev = ctrl_dev(ctrl);
 	u16 stat_mask = 0, ctrl_mask = 0;
