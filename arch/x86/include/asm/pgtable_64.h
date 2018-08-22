@@ -186,7 +186,12 @@ static inline int pgd_large(pgd_t pgd) { return 0; }
  * physical bits set.
  */
 #define SWP_TYPE_BITS		(_PAGE_BIT_FILE - _PAGE_BIT_PRESENT - 1)
+#ifdef CONFIG_NUMA_BALANCING
+/* Automatic NUMA balancing needs to be distinguishable from swap entries */
+#define SWP_OFFSET_FIRST_BIT	(_PAGE_BIT_PROTNONE + 2)
+#else
 #define SWP_OFFSET_FIRST_BIT	(_PAGE_BIT_PROTNONE + 1)
+#endif
 
 /* We always extract/encode the offset by shifting it all the way up, and then down again */
 #define SWP_OFFSET_SHIFT	(SWP_OFFSET_FIRST_BIT+SWP_TYPE_BITS)
