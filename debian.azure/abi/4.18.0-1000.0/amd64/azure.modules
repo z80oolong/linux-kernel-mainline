@@ -94,7 +94,9 @@ cast6-avx-x86_64
 cast6_generic
 cast_common
 ccm
+ccp
 ceph
+cfb
 cfbcopyarea
 cfbfillrect
 cfbimgblt
@@ -140,6 +142,7 @@ decnet
 defxx
 des3_ede-x86_64
 des_generic
+diag
 dlm
 dm-bio-prison
 dm-bufio
@@ -164,6 +167,7 @@ dm-service-time
 dm-snapshot
 dm-switch
 dm-thin-pool
+dm-unstripe
 dm-verity
 dm-zero
 dm-zoned
@@ -172,6 +176,7 @@ dptf_power
 drbd
 drm
 drm_kms_helper
+drm_panel_orientation_quirks
 drop_monitor
 dummy
 e1000
@@ -206,6 +211,7 @@ efibc
 em_canid
 em_cmp
 em_ipset
+em_ipt
 em_meta
 em_nbyte
 em_text
@@ -274,6 +280,7 @@ ip6t_ipv6header
 ip6t_mh
 ip6t_rpfilter
 ip6t_rt
+ip6t_srh
 ip6table_filter
 ip6table_mangle
 ip6table_nat
@@ -339,7 +346,6 @@ iptable_raw
 iptable_security
 ipvlan
 ipvtap
-ipx
 irqbypass
 iscsi_boot_sysfs
 iscsi_ibft
@@ -418,6 +424,7 @@ nbd
 netconsole
 netlink_diag
 netrom
+nf_conncount
 nf_conntrack
 nf_conntrack_amanda
 nf_conntrack_broadcast
@@ -439,6 +446,10 @@ nf_defrag_ipv6
 nf_dup_ipv4
 nf_dup_ipv6
 nf_dup_netdev
+nf_flow_table
+nf_flow_table_inet
+nf_flow_table_ipv4
+nf_flow_table_ipv6
 nf_log_arp
 nf_log_bridge
 nf_log_common
@@ -496,6 +507,7 @@ nft_fib_inet
 nft_fib_ipv4
 nft_fib_ipv6
 nft_fib_netdev
+nft_flow_offload
 nft_fwd_netdev
 nft_hash
 nft_limit
@@ -584,6 +596,7 @@ raw_diag
 rbd
 rdma_ucm
 reed_solomon
+regmap-i2c
 rmd128
 rmd160
 rmd256
@@ -645,9 +658,11 @@ sit
 skfp
 slip
 sm3_generic
+sm4_generic
 sm501
 sm501fb
 softdog
+speck
 spl
 splat
 stp
@@ -701,7 +716,6 @@ uio
 uio_hv_generic
 uio_pdrv_genirq
 unix_diag
-vboxguest
 veth
 vfio
 vfio-pci
