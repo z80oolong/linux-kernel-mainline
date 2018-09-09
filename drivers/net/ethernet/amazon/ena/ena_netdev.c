@@ -2543,6 +2543,9 @@ static void ena_destroy_device(struct ena_adapter *adapter, bool graceful)
 	struct ena_com_dev *ena_dev = adapter->ena_dev;
 	bool dev_up;
 
+	if (!test_bit(ENA_FLAG_DEVICE_RUNNING, &adapter->flags))
+		return;
+
 	netif_carrier_off(netdev);
 
 	del_timer_sync(&adapter->timer_service);
@@ -2579,6 +2582,7 @@ static void ena_destroy_device(struct ena_adapter *adapter, bool graceful)
 	adapter->reset_reason = ENA_REGS_RESET_NORMAL;
 
 	clear_bit(ENA_FLAG_TRIGGER_RESET, &adapter->flags);
+	clear_bit(ENA_FLAG_DEVICE_RUNNING, &adapter->flags);
 }
 
 static int ena_restore_device(struct ena_adapter *adapter)
@@ -2623,6 +2627,7 @@ static int ena_restore_device(struct ena_adapter *adapter)
 		}
 	}
 
+	set_bit(ENA_FLAG_DEVICE_RUNNING, &adapter->flags);
 	mod_timer(&adapter->timer_service, round_jiffies(jiffies + HZ));
 	dev_err(&pdev->dev, "Device reset completed successfully\n");
 
