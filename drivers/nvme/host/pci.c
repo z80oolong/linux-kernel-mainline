@@ -375,7 +375,13 @@ static void nvme_ext_write_doorbell(u16 value, u32 __iomem* q_db,
 	old_value = *db_addr;
 	*db_addr = value;
 
-	rmb();
+	/*
+	 * Ensure that the doorbell is updated before reading the event
+	 * index from memory.  The controller needs to provide similar
+	 * ordering to ensure the envent index is updated before reading
+	 * the doorbell.
+	 */
+	mb();
 	if (!nvme_ext_need_event(*event_idx, value, old_value))
 		goto no_doorbell;
 
