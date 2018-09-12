@@ -320,14 +320,6 @@ static inline pmd_t pmd_mkwrite(pmd_t pmd)
 	return pmd_set_flags(pmd, _PAGE_RW);
 }
 
-/* Only used by arch/x86/mm/pageattr.c: populate_pmd() */
-static inline pud_t pud_mkhuge(pud_t pud)
-{
-	pudval_t v = native_pud_val(pud);
-
-	return __pud(v | _PAGE_PSE);
-}
-
 #ifdef CONFIG_HAVE_ARCH_SOFT_DIRTY
 static inline int pte_soft_dirty(pte_t pte)
 {
@@ -402,8 +394,26 @@ static inline pud_t pfn_pud(unsigned long page_nr, pgprot_t pgprot)
 static inline pmd_t pmd_mknotpresent(pmd_t pmd)
 {
 	return pfn_pmd(pmd_pfn(pmd),
-		       __pgprot(pmd_flags(pmd) &
-				~(_PAGE_PRESENT|_PAGE_PROTNONE)));
+		       __pgprot(pmd_flags(pmd) & ~(_PAGE_PRESENT|_PAGE_PROTNONE)));
+}
+
+static inline pud_t pud_set_flags(pud_t pud, pudval_t set)
+{
+	pudval_t v = native_pud_val(pud);
+
+	return __pud(v | set);
+}
+
+static inline pud_t pud_clear_flags(pud_t pud, pudval_t clear)
+{
+	pudval_t v = native_pud_val(pud);
+
+	return __pud(v & ~clear);
+}
+
+static inline pud_t pud_mkhuge(pud_t pud)
+{
+	return pud_set_flags(pud, _PAGE_PSE);
 }
 
 static inline u64 flip_protnone_guard(u64 oldval, u64 val, u64 mask);
@@ -681,7 +691,7 @@ static inline unsigned long pgd_page_vaddr(pgd_t pgd)
  * Currently stuck as a macro due to indirect forward reference to
  * linux/mmzone.h's __section_mem_map_addr() definition:
  */
-#define pgd_page(pgd)	pfn_to_page(pgd_pfn(pgd))
+#define pgd_page(pgd)		pfn_to_page(pgd_pfn(pgd))
 
 /* to find an entry in a page-table-directory. */
 static inline unsigned long pud_index(unsigned long address)
