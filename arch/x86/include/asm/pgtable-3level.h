@@ -177,14 +177,12 @@ static inline pmd_t native_pmdp_get_and_clear(pmd_t *pmdp)
 #endif
 
 /* Encode and de-code a swap entry */
-#define SWP_TYPE_BITS			5
+#define SWP_TYPE_BITS		5
 
-#define SWP_OFFSET_FIRST_BIT		(_PAGE_BIT_PROTNONE + 1)
+#define SWP_OFFSET_FIRST_BIT	(_PAGE_BIT_PROTNONE + 1)
 
-/* We always extract/encode the offset by shifting it all the way up,
- * and then down again
- */
-#define SWP_OFFSET_SHIFT		(SWP_OFFSET_FIRST_BIT + SWP_TYPE_BITS)
+/* We always extract/encode the offset by shifting it all the way up, and then down again */
+#define SWP_OFFSET_SHIFT	(SWP_OFFSET_FIRST_BIT + SWP_TYPE_BITS)
 
 #define MAX_SWAPFILES_CHECK() BUILD_BUG_ON(MAX_SWAPFILES_SHIFT > 5)
 #define __swp_type(x)			(((x).val) & 0x1f)
