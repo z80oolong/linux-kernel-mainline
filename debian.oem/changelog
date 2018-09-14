@@ -4,6 +4,8 @@ linux-oem (4.15.0-1019.22) UNRELEASED; urgency=medium
   CHANGELOG: Use the printchanges target to see the curent changes.
   CHANGELOG: Use the insertchanges target to create the final log.
 
+  * drm/i915: Drop backported support for Cannonlake. (LP: #1792589)
+
   [ Ubuntu: 4.15.0-35.38 ]
 
   * linux: 4.15.0-35.38 -proposed tracker (LP: #1791719)
