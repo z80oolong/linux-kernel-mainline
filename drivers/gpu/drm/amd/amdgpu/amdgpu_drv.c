@@ -786,28 +786,6 @@ MODULE_DEVICE_TABLE(pci, pciidlist);
 
 static struct drm_driver kms_driver;
 
-static int amdgpu_kick_out_firmware_fb(struct pci_dev *pdev)
-{
-	struct apertures_struct *ap;
-	bool primary = false;
-
-	ap = alloc_apertures(1);
-	if (!ap)
-		return -ENOMEM;
-
-	ap->ranges[0].base = pci_resource_start(pdev, 0);
-	ap->ranges[0].size = pci_resource_len(pdev, 0);
-
-#ifdef CONFIG_X86
-	primary = pdev->resource[PCI_ROM_RESOURCE].flags & IORESOURCE_ROM_SHADOW;
-#endif
-	drm_fb_helper_remove_conflicting_framebuffers(ap, "amdgpudrmfb", primary);
-	kfree(ap);
-
-	return 0;
-}
-
-
 static int amdgpu_pci_probe(struct pci_dev *pdev,
 			    const struct pci_device_id *ent)
 {
@@ -835,20 +813,16 @@ static int amdgpu_pci_probe(struct pci_dev *pdev,
 		return ret;
 
 	/* Get rid of things like offb */
-	ret = amdgpu_kick_out_firmware_fb(pdev);
+	ret = drm_fb_helper_remove_conflicting_pci_framebuffers(pdev, 0, "amdgpudrmfb");
 	if (ret)
 		return ret;
-
-	/* warn the user if they mix atomic and non-atomic capable GPUs */
-	if ((kms_driver.driver_features & DRIVER_ATOMIC) && !supports_atomic)
-		DRM_ERROR("Mixing atomic and non-atomic capable GPUs!\n");
-	/* support atomic early so the atomic debugfs stuff gets created */
-	if (supports_atomic)
-		kms_driver.driver_features |= DRIVER_ATOMIC;
 
 	dev = drm_dev_alloc(&kms_driver, &pdev->dev);
 	if (IS_ERR(dev))
 		return PTR_ERR(dev);
+
+	if (!supports_atomic)
+		dev->driver_features &= ~DRIVER_ATOMIC;
 
 	ret = pci_enable_device(pdev);
 	if (ret)
@@ -1101,7 +1075,7 @@ amdgpu_get_crtc_scanout_position(struct drm_device *dev, unsigned int pipe,
 
 static struct drm_driver kms_driver = {
 	.driver_features =
-	    DRIVER_USE_AGP |
+	    DRIVER_USE_AGP | DRIVER_ATOMIC |
 	    DRIVER_HAVE_IRQ | DRIVER_IRQ_SHARED | DRIVER_GEM |
 	    DRIVER_PRIME | DRIVER_RENDER | DRIVER_MODESET | DRIVER_SYNCOBJ,
 	.load = amdgpu_driver_load_kms,
