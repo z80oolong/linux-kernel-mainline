@@ -1,0 +1,35 @@
+# Menu: HEADER
+# FORMAT: 2
+# ARCH: x86
+
+# Menu: Device Drivers >> SCSI device support >> SCSI device support >> SCSI low-level drivers
+CONFIG_SCSI_VIRTIO                              policy<{'amd64': 'y'}>
+#
+CONFIG_SCSI_VIRTIO                              note<tech preview of new feature>
+
+# Menu: Kernel hacking
+CONFIG_PANIC_ON_OOPS                            policy<{'amd64': 'y'}>
+#
+CONFIG_PANIC_ON_OOPS                            note<keep working if at all possible>
+
+# Menu: Kernel hacking >> Debug Lockups and Hangs
+CONFIG_BOOTPARAM_HARDLOCKUP_PANIC               policy<{'amd64': 'y'}>
+CONFIG_BOOTPARAM_SOFTLOCKUP_PANIC               policy<{'amd64': 'y'}>
+#
+
+# Menu: Networking support >> Networking options >> Network packet filtering framework (Netfilter) >> Core Netfilter Configuration
+CONFIG_NETFILTER_NETLINK_QUEUE                  policy<{'amd64': 'y'}>
+CONFIG_NETFILTER_NETLINK_LOG                    policy<{'amd64': 'y'}>
+#
+
+# Menu: Networking support >> Networking options >> Network packet filtering framework (Netfilter) >> Core Netfilter Configuration >> Netfilter connection tracking support
+CONFIG_NF_CONNTRACK                             policy<{'amd64': 'y'}>
+CONFIG_NF_CONNTRACK_PROCFS                      policy<{'amd64': 'y'}>
+CONFIG_NF_CT_NETLINK                            policy<{'amd64': 'y'}>
+#
+CONFIG_NF_CONNTRACK_PROCFS                      flag<DEPRECATED>
+
+# Menu: Device Drivers >> Block devices
+CONFIG_BLK_DEV_FD                               policy<{'amd64': 'n'}>
+CONFIG_BLK_DEV_FD                               note<LP:1729673>
+
