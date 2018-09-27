@@ -335,7 +335,7 @@ int intel_engines_init_mmio(struct drm_i915_private *dev_priv)
 
 	WARN_ON(ring_mask == 0);
 	WARN_ON(ring_mask &
-		GENMASK(sizeof(mask) * BITS_PER_BYTE - 1, I915_NUM_ENGINES));
+		GENMASK(BITS_PER_TYPE(mask) - 1, I915_NUM_ENGINES));
 
 	for (i = 0; i < ARRAY_SIZE(intel_engines); i++) {
 		if (!HAS_ENGINE(dev_priv, i))
@@ -989,6 +989,9 @@ bool intel_engine_is_idle(struct intel_engine_cs *engine)
 			tasklet_unlock(t);
 		}
 		local_bh_enable();
+
+		/* Otherwise flush the tasklet if it was on another cpu */
+		tasklet_unlock_wait(t);
 
 		if (READ_ONCE(engine->execlists.active))
 			return false;
