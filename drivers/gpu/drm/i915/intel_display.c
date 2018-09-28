@@ -3151,6 +3151,10 @@ int skl_check_plane_surface(struct intel_plane_state *plane_state)
 	plane_state->color_plane[0].stride = intel_fb_pitch(fb, 0, rotation);
 	plane_state->color_plane[1].stride = intel_fb_pitch(fb, 1, rotation);
 
+	ret = intel_plane_check_stride(plane_state);
+	if (ret)
+		return ret;
+
 	if (!plane_state->base.visible)
 		return 0;
 
@@ -3286,9 +3290,14 @@ int i9xx_check_plane_surface(struct intel_plane_state *plane_state)
 	int src_x = plane_state->base.src.x1 >> 16;
 	int src_y = plane_state->base.src.y1 >> 16;
 	u32 offset;
+	int ret;
 
 	intel_fill_fb_ggtt_view(&plane_state->view, fb, rotation);
 	plane_state->color_plane[0].stride = intel_fb_pitch(fb, 0, rotation);
+
+	ret = intel_plane_check_stride(plane_state);
+	if (ret)
+		return ret;
 
 	intel_add_fb_offsets(&src_x, &src_y, plane_state, 0);
 
@@ -5402,24 +5411,23 @@ static void intel_pre_plane_update(struct intel_crtc_state *old_crtc_state,
 		intel_update_watermarks(crtc);
 }
 
-static void intel_crtc_disable_planes(struct drm_crtc *crtc, unsigned plane_mask)
+static void intel_crtc_disable_planes(struct intel_crtc *crtc, unsigned plane_mask)
 {
-	struct drm_device *dev = crtc->dev;
-	struct intel_crtc *intel_crtc = to_intel_crtc(crtc);
-	struct drm_plane *p;
-	int pipe = intel_crtc->pipe;
+	struct drm_device *dev = crtc->base.dev;
+	struct intel_plane *plane;
+	unsigned fb_bits = 0;
 
-	intel_crtc_dpms_overlay_disable(intel_crtc);
+	intel_crtc_dpms_overlay_disable(crtc);
 
-	drm_for_each_plane_mask(p, dev, plane_mask)
-		to_intel_plane(p)->disable_plane(to_intel_plane(p), intel_crtc);
+	for_each_intel_plane_on_crtc(dev, crtc, plane) {
+		if (plane_mask & BIT(plane->id)) {
+			plane->disable_plane(plane, crtc);
 
-	/*
-	 * FIXME: Once we grow proper nuclear flip support out of this we need
-	 * to compute the mask of flip planes precisely. For the time being
-	 * consider this a flip to a NULL plane.
-	 */
-	intel_frontbuffer_flip(to_i915(dev), INTEL_FRONTBUFFER_ALL_MASK(pipe));
+			fb_bits |= plane->frontbuffer_bit;
+		}
+	}
+
+	intel_frontbuffer_flip(to_i915(dev), fb_bits);
 }
 
 static void intel_encoders_pre_pll_enable(struct drm_crtc *crtc,
@@ -9683,9 +9691,14 @@ static int intel_cursor_check_surface(struct intel_plane_state *plane_state)
 	unsigned int rotation = plane_state->base.rotation;
 	int src_x, src_y;
 	u32 offset;
+	int ret;
 
 	intel_fill_fb_ggtt_view(&plane_state->view, fb, rotation);
 	plane_state->color_plane[0].stride = intel_fb_pitch(fb, 0, rotation);
+
+	ret = intel_plane_check_stride(plane_state);
+	if (ret)
+		return ret;
 
 	src_x = plane_state->base.src_x >> 16;
 	src_y = plane_state->base.src_y >> 16;
@@ -10812,8 +10825,6 @@ static int intel_crtc_atomic_check(struct drm_crtc *crtc,
 }
 
 static const struct drm_crtc_helper_funcs intel_helper_funcs = {
-	.atomic_begin = intel_begin_crtc_commit,
-	.atomic_flush = intel_finish_crtc_commit,
 	.atomic_check = intel_crtc_atomic_check,
 };
 
@@ -12482,6 +12493,7 @@ static void intel_update_crtc(struct drm_crtc *crtc,
 	struct drm_device *dev = crtc->dev;
 	struct drm_i915_private *dev_priv = to_i915(dev);
 	struct intel_crtc *intel_crtc = to_intel_crtc(crtc);
+	struct intel_crtc_state *old_intel_cstate = to_intel_crtc_state(old_crtc_state);
 	struct intel_crtc_state *pipe_config = to_intel_crtc_state(new_crtc_state);
 	bool modeset = needs_modeset(new_crtc_state);
 	struct intel_plane_state *new_plane_state =
@@ -12502,7 +12514,12 @@ static void intel_update_crtc(struct drm_crtc *crtc,
 	if (new_plane_state)
 		intel_fbc_enable(intel_crtc, pipe_config, new_plane_state);
 
-	drm_atomic_helper_commit_planes_on_crtc(old_crtc_state);
+	intel_begin_crtc_commit(crtc, old_crtc_state);
+
+	intel_update_planes_on_crtc(to_intel_atomic_state(state), intel_crtc,
+				    old_intel_cstate, pipe_config);
+
+	intel_finish_crtc_commit(crtc, old_crtc_state);
 }
 
 static void intel_update_crtcs(struct drm_atomic_state *state)
@@ -12663,8 +12680,9 @@ static void intel_atomic_commit_tail(struct drm_atomic_state *state)
 	struct intel_atomic_state *intel_state = to_intel_atomic_state(state);
 	struct drm_i915_private *dev_priv = to_i915(dev);
 	struct drm_crtc_state *old_crtc_state, *new_crtc_state;
+	struct intel_crtc_state *new_intel_crtc_state, *old_intel_crtc_state;
 	struct drm_crtc *crtc;
-	struct intel_crtc_state *intel_cstate;
+	struct intel_crtc *intel_crtc;
 	u64 put_domains[I915_MAX_PIPES] = {};
 	int i;
 
@@ -12676,24 +12694,25 @@ static void intel_atomic_commit_tail(struct drm_atomic_state *state)
 		intel_display_power_get(dev_priv, POWER_DOMAIN_MODESET);
 
 	for_each_oldnew_crtc_in_state(state, crtc, old_crtc_state, new_crtc_state, i) {
-		struct intel_crtc *intel_crtc = to_intel_crtc(crtc);
+		old_intel_crtc_state = to_intel_crtc_state(old_crtc_state);
+		new_intel_crtc_state = to_intel_crtc_state(new_crtc_state);
+		intel_crtc = to_intel_crtc(crtc);
 
 		if (needs_modeset(new_crtc_state) ||
 		    to_intel_crtc_state(new_crtc_state)->update_pipe) {
 
-			put_domains[to_intel_crtc(crtc)->pipe] =
+			put_domains[intel_crtc->pipe] =
 				modeset_get_crtc_power_domains(crtc,
-					to_intel_crtc_state(new_crtc_state));
+					new_intel_crtc_state);
 		}
 
 		if (!needs_modeset(new_crtc_state))
 			continue;
 
-		intel_pre_plane_update(to_intel_crtc_state(old_crtc_state),
-				       to_intel_crtc_state(new_crtc_state));
+		intel_pre_plane_update(old_intel_crtc_state, new_intel_crtc_state);
 
 		if (old_crtc_state->active) {
-			intel_crtc_disable_planes(crtc, old_crtc_state->plane_mask);
+			intel_crtc_disable_planes(intel_crtc, old_intel_crtc_state->active_planes);
 
 			/*
 			 * We need to disable pipe CRC before disabling the pipe,
@@ -12701,7 +12720,7 @@ static void intel_atomic_commit_tail(struct drm_atomic_state *state)
 			 */
 			intel_crtc_disable_pipe_crc(intel_crtc);
 
-			dev_priv->display.crtc_disable(to_intel_crtc_state(old_crtc_state), state);
+			dev_priv->display.crtc_disable(old_intel_crtc_state, state);
 			intel_crtc->active = false;
 			intel_fbc_disable(intel_crtc);
 			intel_disable_shared_dpll(intel_crtc);
@@ -12722,7 +12741,7 @@ static void intel_atomic_commit_tail(struct drm_atomic_state *state)
 				 */
 				if (INTEL_GEN(dev_priv) >= 9)
 					dev_priv->display.initial_watermarks(intel_state,
-									     to_intel_crtc_state(new_crtc_state));
+									     new_intel_crtc_state);
 			}
 		}
 	}
@@ -12782,11 +12801,11 @@ static void intel_atomic_commit_tail(struct drm_atomic_state *state)
 	 * TODO: Move this (and other cleanup) to an async worker eventually.
 	 */
 	for_each_new_crtc_in_state(state, crtc, new_crtc_state, i) {
-		intel_cstate = to_intel_crtc_state(new_crtc_state);
+		new_intel_crtc_state = to_intel_crtc_state(new_crtc_state);
 
 		if (dev_priv->display.optimize_watermarks)
 			dev_priv->display.optimize_watermarks(intel_state,
-							      intel_cstate);
+							      new_intel_crtc_state);
 	}
 
 	for_each_oldnew_crtc_in_state(state, crtc, old_crtc_state, new_crtc_state, i) {
@@ -13513,14 +13532,16 @@ intel_legacy_cursor_update(struct drm_plane *plane,
 	struct drm_plane_state *old_plane_state, *new_plane_state;
 	struct intel_plane *intel_plane = to_intel_plane(plane);
 	struct drm_framebuffer *old_fb;
-	struct drm_crtc_state *crtc_state = crtc->state;
+	struct intel_crtc_state *crtc_state =
+		to_intel_crtc_state(crtc->state);
+	struct intel_crtc_state *new_crtc_state;
 
 	/*
 	 * When crtc is inactive or there is a modeset pending,
 	 * wait for it to complete in the slowpath
 	 */
-	if (!crtc_state->active || needs_modeset(crtc_state) ||
-	    to_intel_crtc_state(crtc_state)->update_pipe)
+	if (!crtc_state->base.active || needs_modeset(&crtc_state->base) ||
+	    crtc_state->update_pipe)
 		goto slow;
 
 	old_plane_state = plane->state;
@@ -13550,6 +13571,12 @@ intel_legacy_cursor_update(struct drm_plane *plane,
 	if (!new_plane_state)
 		return -ENOMEM;
 
+	new_crtc_state = to_intel_crtc_state(intel_crtc_duplicate_state(crtc));
+	if (!new_crtc_state) {
+		ret = -ENOMEM;
+		goto out_free;
+	}
+
 	drm_atomic_set_fb_for_plane(new_plane_state, fb);
 
 	new_plane_state->src_x = src_x;
@@ -13561,9 +13588,8 @@ intel_legacy_cursor_update(struct drm_plane *plane,
 	new_plane_state->crtc_w = crtc_w;
 	new_plane_state->crtc_h = crtc_h;
 
-	ret = intel_plane_atomic_check_with_state(to_intel_crtc_state(crtc->state),
-						  to_intel_crtc_state(crtc->state), /* FIXME need a new crtc state? */
-						  to_intel_plane_state(plane->state),
+	ret = intel_plane_atomic_check_with_state(crtc_state, new_crtc_state,
+						  to_intel_plane_state(old_plane_state),
 						  to_intel_plane_state(new_plane_state));
 	if (ret)
 		goto out_free;
@@ -13585,10 +13611,21 @@ intel_legacy_cursor_update(struct drm_plane *plane,
 	/* Swap plane state */
 	plane->state = new_plane_state;
 
+	/*
+	 * We cannot swap crtc_state as it may be in use by an atomic commit or
+	 * page flip that's running simultaneously. If we swap crtc_state and
+	 * destroy the old state, we will cause a use-after-free there.
+	 *
+	 * Only update active_planes, which is needed for our internal
+	 * bookkeeping. Either value will do the right thing when updating
+	 * planes atomically. If the cursor was part of the atomic update then
+	 * we would have taken the slowpath.
+	 */
+	crtc_state->active_planes = new_crtc_state->active_planes;
+
 	if (plane->state->visible) {
 		trace_intel_update_plane(plane, to_intel_crtc(crtc));
-		intel_plane->update_plane(intel_plane,
-					  to_intel_crtc_state(crtc->state),
+		intel_plane->update_plane(intel_plane, crtc_state,
 					  to_intel_plane_state(plane->state));
 	} else {
 		trace_intel_disable_plane(plane, to_intel_crtc(crtc));
@@ -13600,6 +13637,8 @@ intel_legacy_cursor_update(struct drm_plane *plane,
 out_unlock:
 	mutex_unlock(&dev_priv->drm.struct_mutex);
 out_free:
+	if (new_crtc_state)
+		intel_crtc_destroy_state(crtc, &new_crtc_state->base);
 	if (ret)
 		intel_plane_destroy_state(plane, new_plane_state);
 	else
@@ -13938,7 +13977,7 @@ static void intel_crtc_init_scalers(struct intel_crtc *crtc,
 		struct intel_scaler *scaler = &scaler_state->scalers[i];
 
 		scaler->in_use = 0;
-		scaler->mode = PS_SCALER_MODE_DYN;
+		scaler->mode = 0;
 	}
 
 	scaler_state->scaler_id = -1;
