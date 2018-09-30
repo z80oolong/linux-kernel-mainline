@@ -345,7 +345,7 @@ static int i915_getparam_ioctl(struct drm_device *dev, void *data,
 		value = HAS_WT(dev_priv);
 		break;
 	case I915_PARAM_HAS_ALIASING_PPGTT:
-		value = USES_PPGTT(dev_priv);
+		value = min_t(int, INTEL_PPGTT(dev_priv), I915_GEM_PPGTT_FULL);
 		break;
 	case I915_PARAM_HAS_SEMAPHORES:
 		value = HAS_LEGACY_SEMAPHORES(dev_priv);
@@ -1049,17 +1049,6 @@ static void i915_driver_cleanup_mmio(struct drm_i915_private *dev_priv)
 
 static void intel_sanitize_options(struct drm_i915_private *dev_priv)
 {
-	/*
-	 * i915.enable_ppgtt is read-only, so do an early pass to validate the
-	 * user's requested state against the hardware/driver capabilities.  We
-	 * do this now so that we can print out any log messages once rather
-	 * than every time we check intel_enable_ppgtt().
-	 */
-	i915_modparams.enable_ppgtt =
-		intel_sanitize_enable_ppgtt(dev_priv,
-					    i915_modparams.enable_ppgtt);
-	DRM_DEBUG_DRIVER("ppgtt mode: %i\n", i915_modparams.enable_ppgtt);
-
 	intel_gvt_sanitize_options(dev_priv);
 }
 
@@ -1374,6 +1363,15 @@ static int i915_driver_init_hw(struct drm_i915_private *dev_priv)
 
 	intel_device_info_runtime_init(mkwrite_device_info(dev_priv));
 
+	if (HAS_PPGTT(dev_priv)) {
+		if (intel_vgpu_active(dev_priv) &&
+		    !intel_vgpu_has_full_48bit_ppgtt(dev_priv)) {
+			i915_report_error(dev_priv,
+					  "incompatible vGPU found, support for isolated ppGTT required\n");
+			return -ENXIO;
+		}
+	}
+
 	intel_sanitize_options(dev_priv);
 
 	i915_perf_init(dev_priv);
@@ -1649,8 +1647,8 @@ i915_driver_create(struct pci_dev *pdev, const struct pci_device_id *ent)
 	device_info->device_id = pdev->device;
 
 	BUILD_BUG_ON(INTEL_MAX_PLATFORMS >
-		     sizeof(device_info->platform_mask) * BITS_PER_BYTE);
-	BUG_ON(device_info->gen > sizeof(device_info->gen_mask) * BITS_PER_BYTE);
+		     BITS_PER_TYPE(device_info->platform_mask));
+	BUG_ON(device_info->gen > BITS_PER_TYPE(device_info->gen_mask));
 
 	return i915;
 }

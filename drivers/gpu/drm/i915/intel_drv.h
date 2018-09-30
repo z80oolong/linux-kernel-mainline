@@ -1070,7 +1070,6 @@ struct intel_dp {
 	bool link_mst;
 	bool link_trained;
 	bool has_audio;
-	bool detect_done;
 	bool reset_link_params;
 	enum aux_ch aux_ch;
 	uint8_t dpcd[DP_RECEIVER_CAP_SIZE];
@@ -1488,7 +1487,6 @@ void intel_dump_cdclk_state(const struct intel_cdclk_state *cdclk_state,
 void i830_enable_pipe(struct drm_i915_private *dev_priv, enum pipe pipe);
 void i830_disable_pipe(struct drm_i915_private *dev_priv, enum pipe pipe);
 enum pipe intel_crtc_pch_transcoder(struct intel_crtc *crtc);
-void intel_update_rawclk(struct drm_i915_private *dev_priv);
 int vlv_get_hpll_vco(struct drm_i915_private *dev_priv);
 int vlv_get_cck_clock(struct drm_i915_private *dev_priv,
 		      const char *name, u32 reg, int ref_freq);
@@ -2140,6 +2138,7 @@ unsigned int skl_plane_max_stride(struct intel_plane *plane,
 				  unsigned int rotation);
 int skl_plane_check(struct intel_crtc_state *crtc_state,
 		    struct intel_plane_state *plane_state);
+int intel_plane_check_stride(const struct intel_plane_state *plane_state);
 int intel_plane_check_src_coordinates(struct intel_plane_state *plane_state);
 int chv_plane_check_rotation(const struct intel_plane_state *plane_state);
 
@@ -2188,6 +2187,10 @@ struct drm_plane_state *intel_plane_duplicate_state(struct drm_plane *plane);
 void intel_plane_destroy_state(struct drm_plane *plane,
 			       struct drm_plane_state *state);
 extern const struct drm_plane_helper_funcs intel_plane_helper_funcs;
+void intel_update_planes_on_crtc(struct intel_atomic_state *old_state,
+				 struct intel_crtc *crtc,
+				 struct intel_crtc_state *old_crtc_state,
+				 struct intel_crtc_state *new_crtc_state);
 int intel_plane_atomic_check_with_state(const struct intel_crtc_state *old_crtc_state,
 					struct intel_crtc_state *crtc_state,
 					const struct intel_plane_state *old_plane_state,
