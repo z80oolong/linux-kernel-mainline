@@ -2947,7 +2947,7 @@ static void intel_ddi_pre_enable_hdmi(struct intel_encoder *encoder,
 
 	intel_ddi_enable_pipe_clock(crtc_state);
 
-	intel_dig_port->set_infoframes(&encoder->base,
+	intel_dig_port->set_infoframes(encoder,
 				       crtc_state->has_infoframe,
 				       crtc_state, conn_state);
 }
@@ -3046,7 +3046,7 @@ static void intel_ddi_post_disable_hdmi(struct intel_encoder *encoder,
 	struct intel_digital_port *dig_port = enc_to_dig_port(&encoder->base);
 	struct intel_hdmi *intel_hdmi = &dig_port->hdmi;
 
-	dig_port->set_infoframes(&encoder->base, false,
+	dig_port->set_infoframes(encoder, false,
 				 old_crtc_state, old_conn_state);
 
 	intel_ddi_disable_pipe_clock(old_crtc_state);
@@ -3390,7 +3390,7 @@ void intel_ddi_get_config(struct intel_encoder *encoder,
 		pipe_config->has_hdmi_sink = true;
 		intel_dig_port = enc_to_dig_port(&encoder->base);
 
-		if (intel_dig_port->infoframe_enabled(&encoder->base, pipe_config))
+		if (intel_dig_port->infoframe_enabled(encoder, pipe_config))
 			pipe_config->has_infoframe = true;
 
 		if ((temp & TRANS_DDI_HDMI_SCRAMBLING_MASK) ==
@@ -3751,6 +3751,7 @@ void intel_ddi_init(struct drm_i915_private *dev_priv, enum port port)
 	struct intel_encoder *intel_encoder;
 	struct drm_encoder *encoder;
 	bool init_hdmi, init_dp, init_lspcon = false;
+	enum pipe pipe;
 
 
 	init_hdmi = (dev_priv->vbt.ddi_port_info[port].supports_dvi ||
@@ -3801,8 +3802,9 @@ void intel_ddi_init(struct drm_i915_private *dev_priv, enum port port)
 	intel_encoder->type = INTEL_OUTPUT_DDI;
 	intel_encoder->power_domain = intel_port_to_power_domain(port);
 	intel_encoder->port = port;
-	intel_encoder->crtc_mask = (1 << 0) | (1 << 1) | (1 << 2);
 	intel_encoder->cloneable = 0;
+	for_each_pipe(dev_priv, pipe)
+		intel_encoder->crtc_mask |= BIT(pipe);
 
 	if (INTEL_GEN(dev_priv) >= 11)
 		intel_dig_port->saved_port_bits = I915_READ(DDI_BUF_CTL(port)) &
