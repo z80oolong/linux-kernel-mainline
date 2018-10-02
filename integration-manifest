@@ -1,0 +1,28 @@
+drm drm-fixes fcb1349a2af5a3c4a1d789bb5d1a9b3e582652a3
+	Merge branch 'drm-fixes-4.19' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+drm-misc drm-misc-fixes 4d4c2d89913e2d891bd6a34b12050a2576e60525
+	drm/cma-helper: Fix crash in fbdev error path
+drm-intel drm-intel-fixes 4ca8ca9fe7dc792000c3762de5081a4d6dc33667
+	drm/i915: Avoid compiler warning for maybe unused gu_misc_iir
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 87c2ee740c07f1edae9eec8bc45cb9b32a68f323
+	Merge branch 'drm-next-4.20' of git://people.freedesktop.org/~agd5f/linux into drm-next
+drm-misc drm-misc-next-fixes 87c2ee740c07f1edae9eec8bc45cb9b32a68f323
+	Merge branch 'drm-next-4.20' of git://people.freedesktop.org/~agd5f/linux into drm-next
+drm-intel drm-intel-next-fixes 98a9bce38b3d93082353fda561abb73a4d7b8d94
+	drm/i915: Avoid compiler warning for maybe unused gu_misc_iir
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 469a9308adfcfaa85c85f02fec9fdecd9e38fe07
+	drm/fsl-dcu: use drm_display_mode_to_videomode to calculate timing parameters
+drm-intel drm-intel-next-queued 598c6cfe06900505ae16a355599e9f08432f4d7a
+	drm/i915/psr: Enable PSR1 on gen-9+ HW
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus b3a5402cbcebaf5a9db4d6a3268070e4a099355d
+	ALSA: hda: Fix the audio-component completion timeout
+sound-upstream for-next 96395e86e3f4c7f520bb7c53c7eee41b1992ebc2
+	ALSA: hda/ca0132 - Add ZxR exit commands
+drm-intel topic/core-for-CI aa4e21f2ab8dd8a6fc100caa862287f81a59de52
+	kernel/panic: Show the stacktrace after additional notifier messages
