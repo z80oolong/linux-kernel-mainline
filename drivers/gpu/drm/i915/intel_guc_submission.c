@@ -746,30 +746,28 @@ static bool __guc_dequeue(struct intel_engine_cs *engine)
 	while ((rb = rb_first_cached(&execlists->queue))) {
 		struct i915_priolist *p = to_priolist(rb);
 		struct i915_request *rq, *rn;
+		int i;
 
-		list_for_each_entry_safe(rq, rn, &p->requests, sched.link) {
+		priolist_for_each_request_consume(rq, rn, p, i) {
 			if (last && rq->hw_context != last->hw_context) {
-				if (port == last_port) {
-					__list_del_many(&p->requests,
-							&rq->sched.link);
+				if (port == last_port)
 					goto done;
-				}
 
 				if (submit)
 					port_assign(port, last);
 				port++;
 			}
 
-			INIT_LIST_HEAD(&rq->sched.link);
+			list_del_init(&rq->sched.link);
 
 			__i915_request_submit(rq);
 			trace_i915_request_in(rq, port_index(port, execlists));
+
 			last = rq;
 			submit = true;
 		}
 
 		rb_erase_cached(&p->node, &execlists->queue);
-		INIT_LIST_HEAD(&p->requests);
 		if (p->priority != I915_PRIORITY_NORMAL)
 			kmem_cache_free(engine->i915->priorities, p);
 	}
@@ -791,19 +789,8 @@ done:
 
 static void guc_dequeue(struct intel_engine_cs *engine)
 {
-	unsigned long flags;
-	bool submit;
-
-	local_irq_save(flags);
-
-	spin_lock(&engine->timeline.lock);
-	submit = __guc_dequeue(engine);
-	spin_unlock(&engine->timeline.lock);
-
-	if (submit)
+	if (__guc_dequeue(engine))
 		guc_submit(engine);
-
-	local_irq_restore(flags);
 }
 
 static void guc_submission_tasklet(unsigned long data)
@@ -812,6 +799,9 @@ static void guc_submission_tasklet(unsigned long data)
 	struct intel_engine_execlists * const execlists = &engine->execlists;
 	struct execlist_port *port = execlists->port;
 	struct i915_request *rq;
+	unsigned long flags;
+
+	spin_lock_irqsave(&engine->timeline.lock, flags);
 
 	rq = port_request(port);
 	while (rq && i915_request_completed(rq)) {
@@ -835,6 +825,8 @@ static void guc_submission_tasklet(unsigned long data)
 
 	if (!execlists_is_active(execlists, EXECLISTS_ACTIVE_PREEMPT))
 		guc_dequeue(engine);
+
+	spin_unlock_irqrestore(&engine->timeline.lock, flags);
 }
 
 static struct i915_request *
