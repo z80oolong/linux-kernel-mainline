@@ -3155,6 +3155,10 @@ int skl_check_plane_surface(struct intel_plane_state *plane_state)
 	if (ret)
 		return ret;
 
+	/* HW only has 8 bits pixel precision, disable plane if invisible */
+	if (!(plane_state->base.alpha >> 8))
+		plane_state->base.visible = false;
+
 	if (!plane_state->base.visible)
 		return 0;
 
@@ -3568,29 +3572,38 @@ static u32 skl_plane_ctl_format(uint32_t pixel_format)
 	return 0;
 }
 
-/*
- * XXX: For ARBG/ABGR formats we default to expecting scanout buffers
- * to be already pre-multiplied. We need to add a knob (or a different
- * DRM_FORMAT) for user-space to configure that.
- */
-static u32 skl_plane_ctl_alpha(uint32_t pixel_format)
+static u32 skl_plane_ctl_alpha(const struct intel_plane_state *plane_state)
 {
-	switch (pixel_format) {
-	case DRM_FORMAT_ABGR8888:
-	case DRM_FORMAT_ARGB8888:
+	if (!plane_state->base.fb->format->has_alpha)
+		return PLANE_CTL_ALPHA_DISABLE;
+
+	switch (plane_state->base.pixel_blend_mode) {
+	case DRM_MODE_BLEND_PIXEL_NONE:
+		return PLANE_CTL_ALPHA_DISABLE;
+	case DRM_MODE_BLEND_PREMULTI:
 		return PLANE_CTL_ALPHA_SW_PREMULTIPLY;
+	case DRM_MODE_BLEND_COVERAGE:
+		return PLANE_CTL_ALPHA_HW_PREMULTIPLY;
 	default:
+		MISSING_CASE(plane_state->base.pixel_blend_mode);
 		return PLANE_CTL_ALPHA_DISABLE;
 	}
 }
 
-static u32 glk_plane_color_ctl_alpha(uint32_t pixel_format)
+static u32 glk_plane_color_ctl_alpha(const struct intel_plane_state *plane_state)
 {
-	switch (pixel_format) {
-	case DRM_FORMAT_ABGR8888:
-	case DRM_FORMAT_ARGB8888:
+	if (!plane_state->base.fb->format->has_alpha)
+		return PLANE_COLOR_ALPHA_DISABLE;
+
+	switch (plane_state->base.pixel_blend_mode) {
+	case DRM_MODE_BLEND_PIXEL_NONE:
+		return PLANE_COLOR_ALPHA_DISABLE;
+	case DRM_MODE_BLEND_PREMULTI:
 		return PLANE_COLOR_ALPHA_SW_PREMULTIPLY;
+	case DRM_MODE_BLEND_COVERAGE:
+		return PLANE_COLOR_ALPHA_HW_PREMULTIPLY;
 	default:
+		MISSING_CASE(plane_state->base.pixel_blend_mode);
 		return PLANE_COLOR_ALPHA_DISABLE;
 	}
 }
@@ -3667,7 +3680,7 @@ u32 skl_plane_ctl(const struct intel_crtc_state *crtc_state,
 	plane_ctl = PLANE_CTL_ENABLE;
 
 	if (INTEL_GEN(dev_priv) < 10 && !IS_GEMINILAKE(dev_priv)) {
-		plane_ctl |= skl_plane_ctl_alpha(fb->format->format);
+		plane_ctl |= skl_plane_ctl_alpha(plane_state);
 		plane_ctl |=
 			PLANE_CTL_PIPE_GAMMA_ENABLE |
 			PLANE_CTL_PIPE_CSC_ENABLE |
@@ -3709,7 +3722,7 @@ u32 glk_plane_color_ctl(const struct intel_crtc_state *crtc_state,
 		plane_color_ctl |= PLANE_COLOR_PIPE_CSC_ENABLE;
 	}
 	plane_color_ctl |= PLANE_COLOR_PLANE_GAMMA_DISABLE;
-	plane_color_ctl |= glk_plane_color_ctl_alpha(fb->format->format);
+	plane_color_ctl |= glk_plane_color_ctl_alpha(plane_state);
 
 	if (fb->format->is_yuv) {
 		if (plane_state->base.color_encoding == DRM_COLOR_YCBCR_BT709)
@@ -5411,24 +5424,23 @@ static void intel_pre_plane_update(struct intel_crtc_state *old_crtc_state,
 		intel_update_watermarks(crtc);
 }
 
-static void intel_crtc_disable_planes(struct drm_crtc *crtc, unsigned plane_mask)
+static void intel_crtc_disable_planes(struct intel_crtc *crtc, unsigned plane_mask)
 {
-	struct drm_device *dev = crtc->dev;
-	struct intel_crtc *intel_crtc = to_intel_crtc(crtc);
-	struct drm_plane *p;
-	int pipe = intel_crtc->pipe;
+	struct drm_device *dev = crtc->base.dev;
+	struct intel_plane *plane;
+	unsigned fb_bits = 0;
 
-	intel_crtc_dpms_overlay_disable(intel_crtc);
+	intel_crtc_dpms_overlay_disable(crtc);
 
-	drm_for_each_plane_mask(p, dev, plane_mask)
-		to_intel_plane(p)->disable_plane(to_intel_plane(p), intel_crtc);
+	for_each_intel_plane_on_crtc(dev, crtc, plane) {
+		if (plane_mask & BIT(plane->id)) {
+			plane->disable_plane(plane, crtc);
 
-	/*
-	 * FIXME: Once we grow proper nuclear flip support out of this we need
-	 * to compute the mask of flip planes precisely. For the time being
-	 * consider this a flip to a NULL plane.
-	 */
-	intel_frontbuffer_flip(to_i915(dev), INTEL_FRONTBUFFER_ALL_MASK(pipe));
+			fb_bits |= plane->frontbuffer_bit;
+		}
+	}
+
+	intel_frontbuffer_flip(to_i915(dev), fb_bits);
 }
 
 static void intel_encoders_pre_pll_enable(struct drm_crtc *crtc,
@@ -10826,8 +10838,6 @@ static int intel_crtc_atomic_check(struct drm_crtc *crtc,
 }
 
 static const struct drm_crtc_helper_funcs intel_helper_funcs = {
-	.atomic_begin = intel_begin_crtc_commit,
-	.atomic_flush = intel_finish_crtc_commit,
 	.atomic_check = intel_crtc_atomic_check,
 };
 
@@ -12496,6 +12506,7 @@ static void intel_update_crtc(struct drm_crtc *crtc,
 	struct drm_device *dev = crtc->dev;
 	struct drm_i915_private *dev_priv = to_i915(dev);
 	struct intel_crtc *intel_crtc = to_intel_crtc(crtc);
+	struct intel_crtc_state *old_intel_cstate = to_intel_crtc_state(old_crtc_state);
 	struct intel_crtc_state *pipe_config = to_intel_crtc_state(new_crtc_state);
 	bool modeset = needs_modeset(new_crtc_state);
 	struct intel_plane_state *new_plane_state =
@@ -12516,7 +12527,12 @@ static void intel_update_crtc(struct drm_crtc *crtc,
 	if (new_plane_state)
 		intel_fbc_enable(intel_crtc, pipe_config, new_plane_state);
 
-	drm_atomic_helper_commit_planes_on_crtc(old_crtc_state);
+	intel_begin_crtc_commit(crtc, old_crtc_state);
+
+	intel_update_planes_on_crtc(to_intel_atomic_state(state), intel_crtc,
+				    old_intel_cstate, pipe_config);
+
+	intel_finish_crtc_commit(crtc, old_crtc_state);
 }
 
 static void intel_update_crtcs(struct drm_atomic_state *state)
@@ -12677,8 +12693,9 @@ static void intel_atomic_commit_tail(struct drm_atomic_state *state)
 	struct intel_atomic_state *intel_state = to_intel_atomic_state(state);
 	struct drm_i915_private *dev_priv = to_i915(dev);
 	struct drm_crtc_state *old_crtc_state, *new_crtc_state;
+	struct intel_crtc_state *new_intel_crtc_state, *old_intel_crtc_state;
 	struct drm_crtc *crtc;
-	struct intel_crtc_state *intel_cstate;
+	struct intel_crtc *intel_crtc;
 	u64 put_domains[I915_MAX_PIPES] = {};
 	int i;
 
@@ -12690,24 +12707,25 @@ static void intel_atomic_commit_tail(struct drm_atomic_state *state)
 		intel_display_power_get(dev_priv, POWER_DOMAIN_MODESET);
 
 	for_each_oldnew_crtc_in_state(state, crtc, old_crtc_state, new_crtc_state, i) {
-		struct intel_crtc *intel_crtc = to_intel_crtc(crtc);
+		old_intel_crtc_state = to_intel_crtc_state(old_crtc_state);
+		new_intel_crtc_state = to_intel_crtc_state(new_crtc_state);
+		intel_crtc = to_intel_crtc(crtc);
 
 		if (needs_modeset(new_crtc_state) ||
 		    to_intel_crtc_state(new_crtc_state)->update_pipe) {
 
-			put_domains[to_intel_crtc(crtc)->pipe] =
+			put_domains[intel_crtc->pipe] =
 				modeset_get_crtc_power_domains(crtc,
-					to_intel_crtc_state(new_crtc_state));
+					new_intel_crtc_state);
 		}
 
 		if (!needs_modeset(new_crtc_state))
 			continue;
 
-		intel_pre_plane_update(to_intel_crtc_state(old_crtc_state),
-				       to_intel_crtc_state(new_crtc_state));
+		intel_pre_plane_update(old_intel_crtc_state, new_intel_crtc_state);
 
 		if (old_crtc_state->active) {
-			intel_crtc_disable_planes(crtc, old_crtc_state->plane_mask);
+			intel_crtc_disable_planes(intel_crtc, old_intel_crtc_state->active_planes);
 
 			/*
 			 * We need to disable pipe CRC before disabling the pipe,
@@ -12715,7 +12733,7 @@ static void intel_atomic_commit_tail(struct drm_atomic_state *state)
 			 */
 			intel_crtc_disable_pipe_crc(intel_crtc);
 
-			dev_priv->display.crtc_disable(to_intel_crtc_state(old_crtc_state), state);
+			dev_priv->display.crtc_disable(old_intel_crtc_state, state);
 			intel_crtc->active = false;
 			intel_fbc_disable(intel_crtc);
 			intel_disable_shared_dpll(intel_crtc);
@@ -12736,7 +12754,7 @@ static void intel_atomic_commit_tail(struct drm_atomic_state *state)
 				 */
 				if (INTEL_GEN(dev_priv) >= 9)
 					dev_priv->display.initial_watermarks(intel_state,
-									     to_intel_crtc_state(new_crtc_state));
+									     new_intel_crtc_state);
 			}
 		}
 	}
@@ -12796,11 +12814,11 @@ static void intel_atomic_commit_tail(struct drm_atomic_state *state)
 	 * TODO: Move this (and other cleanup) to an async worker eventually.
 	 */
 	for_each_new_crtc_in_state(state, crtc, new_crtc_state, i) {
-		intel_cstate = to_intel_crtc_state(new_crtc_state);
+		new_intel_crtc_state = to_intel_crtc_state(new_crtc_state);
 
 		if (dev_priv->display.optimize_watermarks)
 			dev_priv->display.optimize_watermarks(intel_state,
-							      intel_cstate);
+							      new_intel_crtc_state);
 	}
 
 	for_each_oldnew_crtc_in_state(state, crtc, old_crtc_state, new_crtc_state, i) {
@@ -13183,13 +13201,12 @@ intel_prepare_plane_fb(struct drm_plane *plane,
 
 	ret = intel_plane_pin_fb(to_intel_plane_state(new_state));
 
-	fb_obj_bump_render_priority(obj);
-
 	mutex_unlock(&dev_priv->drm.struct_mutex);
 	i915_gem_object_unpin_pages(obj);
 	if (ret)
 		return ret;
 
+	fb_obj_bump_render_priority(obj);
 	intel_fb_obj_flush(obj, ORIGIN_DIRTYFB);
 
 	if (!new_state->fence) { /* implicit fencing */
@@ -13527,14 +13544,16 @@ intel_legacy_cursor_update(struct drm_plane *plane,
 	struct drm_plane_state *old_plane_state, *new_plane_state;
 	struct intel_plane *intel_plane = to_intel_plane(plane);
 	struct drm_framebuffer *old_fb;
-	struct drm_crtc_state *crtc_state = crtc->state;
+	struct intel_crtc_state *crtc_state =
+		to_intel_crtc_state(crtc->state);
+	struct intel_crtc_state *new_crtc_state;
 
 	/*
 	 * When crtc is inactive or there is a modeset pending,
 	 * wait for it to complete in the slowpath
 	 */
-	if (!crtc_state->active || needs_modeset(crtc_state) ||
-	    to_intel_crtc_state(crtc_state)->update_pipe)
+	if (!crtc_state->base.active || needs_modeset(&crtc_state->base) ||
+	    crtc_state->update_pipe)
 		goto slow;
 
 	old_plane_state = plane->state;
@@ -13564,6 +13583,12 @@ intel_legacy_cursor_update(struct drm_plane *plane,
 	if (!new_plane_state)
 		return -ENOMEM;
 
+	new_crtc_state = to_intel_crtc_state(intel_crtc_duplicate_state(crtc));
+	if (!new_crtc_state) {
+		ret = -ENOMEM;
+		goto out_free;
+	}
+
 	drm_atomic_set_fb_for_plane(new_plane_state, fb);
 
 	new_plane_state->src_x = src_x;
@@ -13575,9 +13600,8 @@ intel_legacy_cursor_update(struct drm_plane *plane,
 	new_plane_state->crtc_w = crtc_w;
 	new_plane_state->crtc_h = crtc_h;
 
-	ret = intel_plane_atomic_check_with_state(to_intel_crtc_state(crtc->state),
-						  to_intel_crtc_state(crtc->state), /* FIXME need a new crtc state? */
-						  to_intel_plane_state(plane->state),
+	ret = intel_plane_atomic_check_with_state(crtc_state, new_crtc_state,
+						  to_intel_plane_state(old_plane_state),
 						  to_intel_plane_state(new_plane_state));
 	if (ret)
 		goto out_free;
@@ -13599,10 +13623,21 @@ intel_legacy_cursor_update(struct drm_plane *plane,
 	/* Swap plane state */
 	plane->state = new_plane_state;
 
+	/*
+	 * We cannot swap crtc_state as it may be in use by an atomic commit or
+	 * page flip that's running simultaneously. If we swap crtc_state and
+	 * destroy the old state, we will cause a use-after-free there.
+	 *
+	 * Only update active_planes, which is needed for our internal
+	 * bookkeeping. Either value will do the right thing when updating
+	 * planes atomically. If the cursor was part of the atomic update then
+	 * we would have taken the slowpath.
+	 */
+	crtc_state->active_planes = new_crtc_state->active_planes;
+
 	if (plane->state->visible) {
 		trace_intel_update_plane(plane, to_intel_crtc(crtc));
-		intel_plane->update_plane(intel_plane,
-					  to_intel_crtc_state(crtc->state),
+		intel_plane->update_plane(intel_plane, crtc_state,
 					  to_intel_plane_state(plane->state));
 	} else {
 		trace_intel_disable_plane(plane, to_intel_crtc(crtc));
@@ -13614,6 +13649,8 @@ intel_legacy_cursor_update(struct drm_plane *plane,
 out_unlock:
 	mutex_unlock(&dev_priv->drm.struct_mutex);
 out_free:
+	if (new_crtc_state)
+		intel_crtc_destroy_state(crtc, &new_crtc_state->base);
 	if (ret)
 		intel_plane_destroy_state(plane, new_plane_state);
 	else
@@ -13839,7 +13876,7 @@ intel_primary_plane_create(struct drm_i915_private *dev_priv, enum pipe pipe)
 						   DRM_MODE_ROTATE_0,
 						   supported_rotations);
 
-	if (INTEL_GEN(dev_priv) >= 9)
+	if (INTEL_GEN(dev_priv) >= 9) {
 		drm_plane_create_color_properties(&primary->base,
 						  BIT(DRM_COLOR_YCBCR_BT601) |
 						  BIT(DRM_COLOR_YCBCR_BT709),
@@ -13847,6 +13884,13 @@ intel_primary_plane_create(struct drm_i915_private *dev_priv, enum pipe pipe)
 						  BIT(DRM_COLOR_YCBCR_FULL_RANGE),
 						  DRM_COLOR_YCBCR_BT709,
 						  DRM_COLOR_YCBCR_LIMITED_RANGE);
+
+		drm_plane_create_alpha_property(&primary->base);
+		drm_plane_create_blend_mode_property(&primary->base,
+						     BIT(DRM_MODE_BLEND_PIXEL_NONE) |
+						     BIT(DRM_MODE_BLEND_PREMULTI) |
+						     BIT(DRM_MODE_BLEND_COVERAGE));
+	}
 
 	drm_plane_helper_add(&primary->base, &intel_plane_helper_funcs);
 
@@ -13952,7 +13996,7 @@ static void intel_crtc_init_scalers(struct intel_crtc *crtc,
 		struct intel_scaler *scaler = &scaler_state->scalers[i];
 
 		scaler->in_use = 0;
-		scaler->mode = PS_SCALER_MODE_DYN;
+		scaler->mode = 0;
 	}
 
 	scaler_state->scaler_id = -1;
