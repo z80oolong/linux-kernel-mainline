@@ -1,0 +1,28 @@
+drm drm-fixes d8938c981f58ee344687b7910a611ac345960045
+	Merge branch 'drm-tda9950-fixes' of git://git.armlinux.org.uk/~rmk/linux-arm into drm-fixes
+drm-misc drm-misc-fixes 4d4c2d89913e2d891bd6a34b12050a2576e60525
+	drm/cma-helper: Fix crash in fbdev error path
+drm-intel drm-intel-fixes 4c9613ce556fdeb671e779668b627ea3a2b61728
+	drm/i915: Handle incomplete Z_FINISH for compressed error states
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next c530174b90fa3bcaa83d168b001b574bcb2da021
+	Merge branch 'for-upstream/mali-dp' of git://linux-arm.org/linux-ld into drm-next
+drm-misc drm-misc-next-fixes 4be9bd10e22dfc7fc101c5cf5969ef2d3a042d8a
+	drm/fb_helper: Allow leaking fbdev smem_start
+drm-intel drm-intel-next-fixes 98a9bce38b3d93082353fda561abb73a4d7b8d94
+	drm/i915: Avoid compiler warning for maybe unused gu_misc_iir
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 4db4b85014df7fa3c91a2e9330ca446ac9b3b882
+	drm: Fix kernel doc for DRM_MODE_PROP_IMMUTABLE
+drm-intel drm-intel-next-queued bc2477f7d3f3083d344b327e358e43093054023c
+	drm/i915/execlists: Flush the CS events before unpinning
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus b3a5402cbcebaf5a9db4d6a3268070e4a099355d
+	ALSA: hda: Fix the audio-component completion timeout
+sound-upstream for-next 2e75b676c3284930489a968d33b75e5d2b2c36c6
+	ALSA: intel8x0: Fix fall-through annotations
+drm-intel topic/core-for-CI aa4e21f2ab8dd8a6fc100caa862287f81a59de52
+	kernel/panic: Show the stacktrace after additional notifier messages
