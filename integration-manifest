@@ -1,0 +1,28 @@
+drm drm-fixes bdf800c6fdf5674999bc0228d5040cc0ae218fa8
+	Merge branch 'drm-fixes-4.19' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+drm-misc drm-misc-fixes db05c481977599236f12a85e55de9f5ab37b0a2c
+	drm: fb-helper: Reject all pixel format changing requests
+drm-intel drm-intel-fixes 4c9613ce556fdeb671e779668b627ea3a2b61728
+	drm/i915: Handle incomplete Z_FINISH for compressed error states
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next c530174b90fa3bcaa83d168b001b574bcb2da021
+	Merge branch 'for-upstream/mali-dp' of git://linux-arm.org/linux-ld into drm-next
+drm-misc drm-misc-next-fixes 4be9bd10e22dfc7fc101c5cf5969ef2d3a042d8a
+	drm/fb_helper: Allow leaking fbdev smem_start
+drm-intel drm-intel-next-fixes 98a9bce38b3d93082353fda561abb73a4d7b8d94
+	drm/i915: Avoid compiler warning for maybe unused gu_misc_iir
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 4db4b85014df7fa3c91a2e9330ca446ac9b3b882
+	drm: Fix kernel doc for DRM_MODE_PROP_IMMUTABLE
+drm-intel drm-intel-next-queued 7a4a2a460458b48c282c017fc83f58b83fad1522
+	drm/i915: Clean up early plane debugs
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 709ae62e8e6d9ac4df7dadb3b8ae432675c45ef9
+	ALSA: hda/realtek - Cannot adjust speaker's volume on Dell XPS 27 7760
+sound-upstream for-next d153135e93a50cdb6f1b52e238909e9965b56056
+	ALSA: hda/sigmatel - Disable automute for Elo VuPoint
+drm-intel topic/core-for-CI aa4e21f2ab8dd8a6fc100caa862287f81a59de52
+	kernel/panic: Show the stacktrace after additional notifier messages
