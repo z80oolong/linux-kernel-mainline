@@ -60,6 +60,17 @@
 /* 1 for AENQ + ADMIN */
 #define ENA_MAX_MSIX_VEC(io_queues)	(1 + (io_queues))
 
+/* The ENA buffer length fields is 16 bit long. So when PAGE_SIZE == 64kB the
+ * driver passes 0.
+ * Since the max packet size the ENA handles is ~9kB limit the buffer length to
+ * 16kB.
+ */
+#if PAGE_SIZE > SZ_16K
+#define ENA_PAGE_SIZE SZ_16K
+#else
+#define ENA_PAGE_SIZE PAGE_SIZE
+#endif
+
 #define ENA_REG_BAR			0
 #define ENA_MEM_BAR			2
 #define ENA_BAR_MASK (BIT(ENA_REG_BAR) | BIT(ENA_MEM_BAR))
@@ -359,16 +370,5 @@ void ena_dump_stats_to_dmesg(struct ena_adapter *adapter);
 void ena_dump_stats_to_buf(struct ena_adapter *adapter, u8 *buf);
 
 int ena_get_sset_count(struct net_device *netdev, int sset);
-
-/* The ENA buffer length fields is 16 bit long. So when PAGE_SIZE == 64kB the
- * driver passas 0.
- * Since the max packet size the ENA handles is ~9kB limit the buffer length to
- * 16kB.
- */
-#if PAGE_SIZE > SZ_16K
-#define ENA_PAGE_SIZE SZ_16K
-#else
-#define ENA_PAGE_SIZE PAGE_SIZE
-#endif
 
 #endif /* !(ENA_H) */
