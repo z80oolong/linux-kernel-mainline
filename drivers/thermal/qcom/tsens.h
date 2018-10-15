@@ -90,9 +90,10 @@ char *qfprom_read(struct device *, const char *);
 void compute_intercept_slope(struct tsens_device *, u32 *, u32 *, u32);
 int init_common(struct tsens_device *);
 int get_temp_common(struct tsens_device *, int, int *);
+int code_to_degc(u32 adc_code, const struct tsens_sensor *s);
 
 /* TSENS v1 targets */
-extern const struct tsens_data data_8916, data_8974, data_8960;
+extern const struct tsens_data data_8916, data_8974, data_8960, data_tsens_v1;
 /* TSENS v2 targets */
 extern const struct tsens_data data_8996, data_tsens_v2;
 
