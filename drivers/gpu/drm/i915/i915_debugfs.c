@@ -2215,7 +2215,22 @@ static int i915_rps_boost_info(struct seq_file *m, void *data)
 	struct drm_i915_private *dev_priv = node_to_i915(m->private);
 	struct drm_device *dev = &dev_priv->drm;
 	struct intel_rps *rps = &dev_priv->gt_pm.rps;
+	u32 act_freq = rps->cur_freq;
 	struct drm_file *file;
+
+	if (intel_runtime_pm_get_if_in_use(dev_priv)) {
+		if (IS_VALLEYVIEW(dev_priv) || IS_CHERRYVIEW(dev_priv)) {
+			mutex_lock(&dev_priv->pcu_lock);
+			act_freq = vlv_punit_read(dev_priv,
+						  PUNIT_REG_GPU_FREQ_STS);
+			act_freq = (act_freq >> 8) & 0xff;
+			mutex_unlock(&dev_priv->pcu_lock);
+		} else {
+			act_freq = intel_get_cagf(dev_priv,
+						  I915_READ(GEN6_RPSTAT1));
+		}
+		intel_runtime_pm_put(dev_priv);
+	}
 
 	seq_printf(m, "RPS enabled? %d\n", rps->enabled);
 	seq_printf(m, "GPU busy? %s [%d requests]\n",
@@ -2224,8 +2239,9 @@ static int i915_rps_boost_info(struct seq_file *m, void *data)
 	seq_printf(m, "Boosts outstanding? %d\n",
 		   atomic_read(&rps->num_waiters));
 	seq_printf(m, "Interactive? %d\n", READ_ONCE(rps->power.interactive));
-	seq_printf(m, "Frequency requested %d\n",
-		   intel_gpu_freq(dev_priv, rps->cur_freq));
+	seq_printf(m, "Frequency requested %d, actual %d\n",
+		   intel_gpu_freq(dev_priv, rps->cur_freq),
+		   intel_gpu_freq(dev_priv, act_freq));
 	seq_printf(m, "  min hard:%d, soft:%d; max soft:%d, hard:%d\n",
 		   intel_gpu_freq(dev_priv, rps->min_freq),
 		   intel_gpu_freq(dev_priv, rps->min_freq_softlimit),
@@ -2900,15 +2916,14 @@ static int i915_dmc_info(struct seq_file *m, void *unused)
 	seq_printf(m, "version: %d.%d\n", CSR_VERSION_MAJOR(csr->version),
 		   CSR_VERSION_MINOR(csr->version));
 
-	if (IS_KABYLAKE(dev_priv) ||
-	    (IS_SKYLAKE(dev_priv) && csr->version >= CSR_VERSION(1, 6))) {
+	if (IS_BROXTON(dev_priv)) {
+		seq_printf(m, "DC3 -> DC5 count: %d\n",
+			   I915_READ(BXT_CSR_DC3_DC5_COUNT));
+	} else if (IS_GEN(dev_priv, 9, 11)) {
 		seq_printf(m, "DC3 -> DC5 count: %d\n",
 			   I915_READ(SKL_CSR_DC3_DC5_COUNT));
 		seq_printf(m, "DC5 -> DC6 count: %d\n",
 			   I915_READ(SKL_CSR_DC5_DC6_COUNT));
-	} else if (IS_BROXTON(dev_priv) && csr->version >= CSR_VERSION(1, 4)) {
-		seq_printf(m, "DC3 -> DC5 count: %d\n",
-			   I915_READ(BXT_CSR_DC3_DC5_COUNT));
 	}
 
 out:
@@ -4172,6 +4187,7 @@ i915_drop_caches_set(void *data, u64 val)
 
 	DRM_DEBUG("Dropping caches: 0x%08llx [0x%08llx]\n",
 		  val, val & DROP_ALL);
+	intel_runtime_pm_get(i915);
 
 	if (val & DROP_RESET_ACTIVE && !intel_engines_are_idle(i915))
 		i915_gem_set_wedged(i915);
@@ -4189,11 +4205,8 @@ i915_drop_caches_set(void *data, u64 val)
 						     I915_WAIT_LOCKED,
 						     MAX_SCHEDULE_TIMEOUT);
 
-		if (val & DROP_RESET_SEQNO) {
-			intel_runtime_pm_get(i915);
+		if (ret == 0 && val & DROP_RESET_SEQNO)
 			ret = i915_gem_set_global_seqno(&i915->drm, 1);
-			intel_runtime_pm_put(i915);
-		}
 
 		if (val & DROP_RETIRE)
 			i915_retire_requests(i915);
@@ -4230,6 +4243,8 @@ i915_drop_caches_set(void *data, u64 val)
 
 	if (val & DROP_FREED)
 		i915_gem_drain_freed_objects(i915);
+
+	intel_runtime_pm_put(i915);
 
 	return ret;
 }
@@ -4899,13 +4914,10 @@ static int i915_dpcd_show(struct seq_file *m, void *data)
 			continue;
 
 		err = drm_dp_dpcd_read(&intel_dp->aux, b->offset, buf, size);
-		if (err <= 0) {
-			DRM_ERROR("dpcd read (%zu bytes at %u) failed (%zd)\n",
-				  size, b->offset, err);
-			continue;
-		}
-
-		seq_printf(m, "%04x: %*ph\n", b->offset, (int) size, buf);
+		if (err < 0)
+			seq_printf(m, "%04x: ERROR %d\n", b->offset, (int)err);
+		else
+			seq_printf(m, "%04x: %*ph\n", b->offset, (int)err, buf);
 	}
 
 	return 0;
