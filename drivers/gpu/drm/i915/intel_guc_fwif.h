@@ -601,7 +601,9 @@ struct guc_shared_ctx_data {
  * registers, where first register holds data treated as message header,
  * and other registers are used to hold message payload.
  *
- * For Gen9+, GuC uses software scratch registers 0xC180-0xC1B8
+ * For Gen9+, GuC uses software scratch registers 0xC180-0xC1B8,
+ * but no H2G command takes more than 8 parameters and the GuC FW
+ * itself uses an 8-element array to store the H2G message.
  *
  *      +-----------+---------+---------+---------+
  *      |  MMIO[0]  | MMIO[1] |   ...   | MMIO[n] |
@@ -632,6 +634,8 @@ struct guc_shared_ctx_data {
  *   response data can be returned in remaining payload registers or **data**
  *   field.
  */
+
+#define GUC_MAX_MMIO_MSG_LEN		8
 
 #define INTEL_GUC_MSG_TYPE_SHIFT	28
 #define INTEL_GUC_MSG_TYPE_MASK		(0xF << INTEL_GUC_MSG_TYPE_SHIFT)
@@ -685,6 +689,13 @@ enum intel_guc_report_status {
 	INTEL_GUC_REPORT_STATUS_ACKED = 0x1,
 	INTEL_GUC_REPORT_STATUS_ERROR = 0x2,
 	INTEL_GUC_REPORT_STATUS_COMPLETE = 0x4,
+};
+
+enum intel_guc_sleep_state_status {
+	INTEL_GUC_SLEEP_STATE_SUCCESS = 0x0,
+	INTEL_GUC_SLEEP_STATE_PREEMPT_TO_IDLE_FAILED = 0x1,
+	INTEL_GUC_SLEEP_STATE_ENGINE_RESET_FAILED = 0x2
+#define INTEL_GUC_SLEEP_STATE_INVALID_MASK 0x80000000
 };
 
 #define GUC_LOG_CONTROL_LOGGING_ENABLED	(1 << 0)
