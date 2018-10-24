@@ -399,7 +399,7 @@ int cap_inode_getsecurity(const struct inode *inode, const char *name,
 	if (strcmp(name, "capability") != 0)
 		return -EOPNOTSUPP;
 
-	dentry = d_find_alias((struct inode *)inode);
+	dentry = d_find_any_alias((struct inode *)inode);
 	if (!dentry)
 		return -EINVAL;
 
