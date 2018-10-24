@@ -76,6 +76,7 @@ blowfish_common
 blowfish_generic
 bnx2x
 bonding
+bpfilter
 br2684
 br_netfilter
 brd
