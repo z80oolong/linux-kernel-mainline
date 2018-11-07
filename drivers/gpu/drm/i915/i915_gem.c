@@ -1740,6 +1740,7 @@ i915_gem_set_domain_ioctl(struct drm_device *dev, void *data,
 	 */
 	err = i915_gem_object_wait(obj,
 				   I915_WAIT_INTERRUPTIBLE |
+				   I915_WAIT_PRIORITY |
 				   (write_domain ? I915_WAIT_ALL : 0),
 				   MAX_SCHEDULE_TIMEOUT,
 				   to_rps_client(file));
@@ -2403,6 +2404,7 @@ i915_gem_object_put_pages_gtt(struct drm_i915_gem_object *obj,
 			mark_page_accessed(page);
 
 		put_page(page);
+		cond_resched();
 	}
 	obj->mm.dirty = false;
 
@@ -2483,7 +2485,7 @@ unlock:
 	mutex_unlock(&obj->mm.lock);
 }
 
-static bool i915_sg_trim(struct sg_table *orig_st)
+bool i915_sg_trim(struct sg_table *orig_st)
 {
 	struct sg_table new_st;
 	struct scatterlist *sg, *new_sg;
@@ -2573,6 +2575,7 @@ rebuild_st:
 		gfp_t gfp = noreclaim;
 
 		do {
+			cond_resched();
 			page = shmem_read_mapping_page_gfp(mapping, i, gfp);
 			if (likely(!IS_ERR(page)))
 				break;
@@ -2583,7 +2586,6 @@ rebuild_st:
 			}
 
 			i915_gem_shrink(dev_priv, 2 * page_count, NULL, *s++);
-			cond_resched();
 
 			/*
 			 * We've tried hard to allocate the memory by reaping
@@ -3743,7 +3745,9 @@ i915_gem_wait_ioctl(struct drm_device *dev, void *data, struct drm_file *file)
 	start = ktime_get();
 
 	ret = i915_gem_object_wait(obj,
-				   I915_WAIT_INTERRUPTIBLE | I915_WAIT_ALL,
+				   I915_WAIT_INTERRUPTIBLE |
+				   I915_WAIT_PRIORITY |
+				   I915_WAIT_ALL,
 				   to_wait_timeout(args->timeout_ns),
 				   to_rps_client(file));
 
@@ -5293,18 +5297,6 @@ int i915_gem_init_hw(struct drm_i915_private *dev_priv)
 		I915_WRITE(MI_PREDICATE_RESULT_2, IS_HSW_GT3(dev_priv) ?
 			   LOWER_SLICE_ENABLED : LOWER_SLICE_DISABLED);
 
-	if (HAS_PCH_NOP(dev_priv)) {
-		if (IS_IVYBRIDGE(dev_priv)) {
-			u32 temp = I915_READ(GEN7_MSG_CTL);
-			temp &= ~(WAIT_FOR_PCH_FLR_ACK | WAIT_FOR_PCH_RESET_ACK);
-			I915_WRITE(GEN7_MSG_CTL, temp);
-		} else if (INTEL_GEN(dev_priv) >= 7) {
-			u32 temp = I915_READ(HSW_NDE_RSTWRN_OPT);
-			temp &= ~RESET_PCH_HANDSHAKE_ENABLE;
-			I915_WRITE(HSW_NDE_RSTWRN_OPT, temp);
-		}
-	}
-
 	intel_gt_workarounds_apply(dev_priv);
 
 	i915_gem_init_swizzling(dev_priv);
@@ -5951,7 +5943,7 @@ void i915_gem_track_fb(struct drm_i915_gem_object *old,
 	 * the bits.
 	 */
 	BUILD_BUG_ON(INTEL_FRONTBUFFER_BITS_PER_PIPE * I915_MAX_PIPES >
-		     sizeof(atomic_t) * BITS_PER_BYTE);
+		     BITS_PER_TYPE(atomic_t));
 
 	if (old) {
 		WARN_ON(!(atomic_read(&old->frontbuffer_bits) & frontbuffer_bits));
