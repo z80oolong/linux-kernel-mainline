@@ -692,7 +692,7 @@ static int loop_change_fd(struct loop_device *lo, struct block_device *bdev,
 	int		error;
 	bool		partscan;
 
-	error = mutex_lock_killable_nested(&loop_ctl_mutex, 1);
+	error = mutex_lock_killable(&loop_ctl_mutex);
 	if (error)
 		return error;
 	error = -ENXIO;
@@ -966,7 +966,7 @@ static int loop_set_fd(struct loop_device *lo, fmode_t mode,
 		get_file(file);
 	}
 
-	error = mutex_lock_killable_nested(&loop_ctl_mutex, 1);
+	error = mutex_lock_killable(&loop_ctl_mutex);
 	if (error)
 		goto out_putf;
 
@@ -1190,7 +1190,7 @@ static int loop_clr_fd(struct loop_device *lo)
 {
 	int err;
 
-	err = mutex_lock_killable_nested(&loop_ctl_mutex, 1);
+	err = mutex_lock_killable(&loop_ctl_mutex);
 	if (err)
 		return err;
 	if (lo->lo_state != Lo_bound) {
@@ -1227,7 +1227,7 @@ loop_set_status(struct loop_device *lo, const struct loop_info64 *info)
 	struct block_device *bdev;
 	bool partscan = false;
 
-	err = mutex_lock_killable_nested(&loop_ctl_mutex, 1);
+	err = mutex_lock_killable(&loop_ctl_mutex);
 	if (err)
 		return err;
 	if (lo->lo_encrypt_key_size &&
@@ -1332,7 +1332,7 @@ loop_get_status(struct loop_device *lo, struct loop_info64 *info)
 	struct kstat stat;
 	int ret;
 
-	ret = mutex_lock_killable_nested(&loop_ctl_mutex, 1);
+	ret = mutex_lock_killable(&loop_ctl_mutex);
 	if (ret)
 		return ret;
 	if (lo->lo_state != Lo_bound) {
@@ -1521,7 +1521,7 @@ static int lo_simple_ioctl(struct loop_device *lo, unsigned int cmd,
 {
 	int err;
 
-	err = mutex_lock_killable_nested(&loop_ctl_mutex, 1);
+	err = mutex_lock_killable(&loop_ctl_mutex);
 	if (err)
 		return err;
 	switch (cmd) {
