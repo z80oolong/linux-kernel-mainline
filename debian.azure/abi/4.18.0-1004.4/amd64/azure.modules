@@ -724,6 +724,8 @@ uio
 uio_hv_generic
 uio_pdrv_genirq
 unix_diag
+vboxguest
+vboxsf
 veth
 vfio
 vfio-pci
