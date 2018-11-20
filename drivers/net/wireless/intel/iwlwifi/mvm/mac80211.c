@@ -1173,6 +1173,8 @@ static void iwl_mvm_restart_cleanup(struct iwl_mvm *mvm)
 
 	iwl_mvm_stop_device(mvm);
 
+	mvm->cur_aid = 0;
+
 	mvm->scan_status = 0;
 	mvm->ps_disabled = false;
 	mvm->rfkill_safe_init_done = false;
