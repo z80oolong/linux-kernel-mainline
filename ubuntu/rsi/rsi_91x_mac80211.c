@@ -2687,7 +2687,24 @@ out:
 	return status;
 }
 
+static void rsi_mac80211_event_callback(struct ieee80211_hw *hw,
+					struct ieee80211_vif *vif,
+					const struct ieee80211_event *event)
+{
+	struct rsi_hw *adapter = hw->priv;
+	struct rsi_common *common = adapter->priv;
+	struct ieee80211_bss_conf *bss = &adapter->vifs[0]->bss_conf;
 
+	if (event->type == MLME_EVENT && event->u.mlme.data == ASSOC_EVENT &&
+	    event->u.mlme.status == MLME_TIMEOUT) {
+		ven_rsi_dbg(ERR_ZONE, "%s: ASSOC Timeout: reason = %d\n",
+			    __func__, event->u.mlme.reason);
+		rsi_send_sta_notify_frame(common, STA_OPMODE,
+					  STA_DISCONNECTED,
+					  bss->bssid, bss->qos,
+					  bss->aid, 0);
+	}
+}
 
 static struct ieee80211_ops mac80211_ops = {
 	.tx = rsi_mac80211_tx,
@@ -2722,6 +2739,7 @@ static struct ieee80211_ops mac80211_ops = {
 #endif
 	.remain_on_channel = rsi_mac80211_roc,
 	.cancel_remain_on_channel = rsi_mac80211_cancel_roc,
+	.event_callback = rsi_mac80211_event_callback,
 };
 
 /**
