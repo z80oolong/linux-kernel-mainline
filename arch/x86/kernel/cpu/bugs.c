@@ -77,6 +77,10 @@ u64 __ro_after_init x86_amd_ls_cfg_ssbd_mask;
 
 /* Control conditional STIPB in switch_to() */
 DEFINE_STATIC_KEY_FALSE(switch_to_cond_stibp);
+/* Control conditional IBPB in switch_mm() */
+DEFINE_STATIC_KEY_FALSE(switch_mm_cond_ibpb);
+/* Control unconditional IBPB in switch_mm() */
+DEFINE_STATIC_KEY_FALSE(switch_mm_always_ibpb);
 
 /* Control MDS CPU buffer clear before returning to user space */
 DEFINE_STATIC_KEY_FALSE(mds_user_clear);
@@ -419,12 +423,21 @@ spectre_v2_user_select_mitigation(enum spectre_v2_mitigation_cmd v2_cmd)
 		break;
 	}
 
-	/*
-	 * Initialize Indirect Branch Prediction Barrier if supported and not
-	 * disabled on the commandline
-	 */
+	/* Initialize Indirect Branch Prediction Barrier */
 	if (boot_cpu_has(X86_FEATURE_IBPB)) {
 		setup_force_cpu_cap(X86_FEATURE_USE_IBPB);
+
+		switch (mode) {
+		case SPECTRE_V2_USER_STRICT:
+			static_branch_enable(&switch_mm_always_ibpb);
+			break;
+		default:
+			break;
+		}
+
+		pr_info("mitigation: Enabling %s Indirect Branch Prediction Barrier\n",
+			mode == SPECTRE_V2_USER_STRICT ? "always-on" : "conditional");
+
 		if (!noibpb)
 			set_ibpb_enabled(1);   /* Enable IBPB */
 	}
@@ -1124,20 +1137,40 @@ static char *stibp_state(void)
 
 static char *ibpb_state(void)
 {
-	if (ibpb_enabled)
-		return ", IBPB";
-	else
-		return "";
+	if (boot_cpu_has(X86_FEATURE_IBPB)) {
+		switch (spectre_v2_user) {
+		case SPECTRE_V2_USER_NONE:
+			return ", IBPB: disabled";
+		case SPECTRE_V2_USER_STRICT:
+			return ", IBPB: always-on";
+		}
+	}
+	return "";
 }
 
-static char *ibrs_state(void)
+static char *ubuntu_ibpb_state(void)
 {
-	if (ibrs_enabled == 2)
-		return ", IBRS: kernel+user";
-	else if (ibrs_enabled)
-		return ", IBRS: kernel";
-	else
+	if (ibpb_enabled) {
+		/* This is the default behaviour so don't show anything */
 		return "";
+	} else {
+		/* IBPB in the kernel is disabled */
+		return ", IBPB: kernel-off";
+	}
+}
+
+static char *ubuntu_ibrs_state(void)
+{
+	if (ibrs_enabled == 2) {
+		/* IBRS is enabled in both kernel and user space */
+		return ", IBRS: kernel+user";
+	} else if (ibrs_enabled) {
+		/* IBRS is only enabled in the kernel */
+		return ", IBRS: kernel";
+	} else {
+		/* This is the default behaviour so don't show anything */
+		return "";
+	}
 }
 
 static ssize_t cpu_show_common(struct device *dev, struct device_attribute *attr,
@@ -1156,9 +1189,10 @@ static ssize_t cpu_show_common(struct device *dev, struct device_attribute *attr
 		return sprintf(buf, "Mitigation: __user pointer sanitization\n");
 
 	case X86_BUG_SPECTRE_V2:
-		return sprintf(buf, "%s%s%s%s%s%s%s\n", spectre_v2_strings[spectre_v2_enabled],
+		return sprintf(buf, "%s%s%s%s%s%s%s%s\n", spectre_v2_strings[spectre_v2_enabled],
+			       ubuntu_ibpb_state(),
 			       ibpb_state(),
-			       ibrs_state(),
+			       ubuntu_ibrs_state(),
 			       boot_cpu_has(X86_FEATURE_USE_IBRS_FW) ? ", IBRS_FW" : "",
 			       stibp_state(),
 			       boot_cpu_has(X86_FEATURE_RSB_CTXSW) ? ", RSB filling" : "",
