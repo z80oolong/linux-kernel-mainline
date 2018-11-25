@@ -204,6 +204,12 @@ enum spectre_v2_mitigation {
 	SPECTRE_V2_IBRS_ENHANCED,
 };
 
+/* The indirect branch speculation control variants */
+enum spectre_v2_user_mitigation {
+	SPECTRE_V2_USER_NONE,
+	SPECTRE_V2_USER_STRICT,
+};
+
 /* The Speculative Store Bypass disable variants */
 enum ssb_mitigation {
 	SPEC_STORE_BYPASS_NONE,
@@ -297,6 +303,8 @@ do {									\
 	if (ibrs_enabled)						\
 		native_wrmsrl(MSR_IA32_SPEC_CTRL, val);			\
  } while (0)
+
+DECLARE_STATIC_KEY_FALSE(switch_to_cond_stibp);
 
 DECLARE_STATIC_KEY_FALSE(mds_user_clear);
 DECLARE_STATIC_KEY_FALSE(mds_idle_clear);
