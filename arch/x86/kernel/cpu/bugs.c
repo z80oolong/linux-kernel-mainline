@@ -1004,6 +1004,32 @@ static ssize_t mds_show_state(char *buf)
 		       sched_smt_active() ? "vulnerable" : "disabled");
 }
 
+static char *stibp_state(void)
+{
+	if (x86_spec_ctrl_base & SPEC_CTRL_STIBP)
+		return ", STIBP";
+	else
+		return "";
+}
+
+static char *ibpb_state(void)
+{
+	if (ibpb_enabled)
+		return ", IBPB";
+	else
+		return "";
+}
+
+static char *ibrs_state(void)
+{
+	if (ibrs_enabled == 2)
+		return ", IBRS: kernel+user";
+	else if (ibrs_enabled)
+		return ", IBRS: kernel";
+	else
+		return "";
+}
+
 static ssize_t cpu_show_common(struct device *dev, struct device_attribute *attr,
 			       char *buf, unsigned int bug)
 {
@@ -1021,10 +1047,10 @@ static ssize_t cpu_show_common(struct device *dev, struct device_attribute *attr
 
 	case X86_BUG_SPECTRE_V2:
 		return sprintf(buf, "%s%s%s%s%s%s%s\n", spectre_v2_strings[spectre_v2_enabled],
-			       ibpb_enabled ? ", IBPB" : "",
-			       ibrs_enabled == 2 ? ", IBRS (user space)" : ibrs_enabled ? ", IBRS" : "",
+			       ibpb_state(),
+			       ibrs_state(),
 			       boot_cpu_has(X86_FEATURE_USE_IBRS_FW) ? ", IBRS_FW" : "",
-			       (x86_spec_ctrl_base & SPEC_CTRL_STIBP) ? ", STIBP" : "",
+			       stibp_state(),
 			       boot_cpu_has(X86_FEATURE_RSB_CTXSW) ? ", RSB filling" : "",
 			       spectre_v2_module_string());
 
