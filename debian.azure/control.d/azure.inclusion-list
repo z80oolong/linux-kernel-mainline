@@ -127,7 +127,7 @@ drivers/nvme/host/nvme.ko
 drivers/nvmem/nvmem_core.ko
 drivers/parport/parport.ko
 drivers/parport/parport_pc.ko
-drivers/pci/host/pci-hyperv.ko
+drivers/pci/controller/pci-hyperv.ko
 drivers/platform/x86/pvpanic.ko
 drivers/pps/pps_core.ko
 drivers/ptp/ptp.ko
@@ -182,7 +182,7 @@ drivers/xen/*
 ! find sound/core -name oss -prune -o -name *.ko -print
 fs/9p/*
 fs/aufs/aufs.ko
-fs/autofs4/autofs4.ko
+fs/autofs/autofs4.ko
 fs/binfmt_misc.ko
 fs/btrfs/*
 fs/cachefiles/cachefiles.ko
