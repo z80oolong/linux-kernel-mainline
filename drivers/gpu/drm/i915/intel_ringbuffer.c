@@ -546,10 +546,11 @@ static int init_ring_common(struct intel_engine_cs *engine)
 	/* Check that the ring offsets point within the ring! */
 	GEM_BUG_ON(!intel_ring_offset_valid(ring, ring->head));
 	GEM_BUG_ON(!intel_ring_offset_valid(ring, ring->tail));
-
 	intel_ring_update_space(ring);
+
+	/* First wake the ring up to an empty/idle ring */
 	I915_WRITE_HEAD(engine, ring->head);
-	I915_WRITE_TAIL(engine, ring->tail);
+	I915_WRITE_TAIL(engine, ring->head);
 	(void)I915_READ_TAIL(engine);
 
 	I915_WRITE_CTL(engine, RING_CTL_SIZE(ring->size) | RING_VALID);
@@ -573,6 +574,12 @@ static int init_ring_common(struct intel_engine_cs *engine)
 
 	if (INTEL_GEN(dev_priv) > 2)
 		I915_WRITE_MODE(engine, _MASKED_BIT_DISABLE(STOP_RING));
+
+	/* Now awake, let it get started */
+	if (ring->tail != ring->head) {
+		I915_WRITE_TAIL(engine, ring->tail);
+		(void)I915_READ_TAIL(engine);
+	}
 
 	/* Papering over lost _interrupts_ immediately following the restart */
 	intel_engine_wakeup(engine);
@@ -608,7 +615,9 @@ static void skip_request(struct i915_request *rq)
 
 static void reset_ring(struct intel_engine_cs *engine, struct i915_request *rq)
 {
-	GEM_TRACE("%s seqno=%x\n", engine->name, rq ? rq->global_seqno : 0);
+	GEM_TRACE("%s request global=%d, current=%d\n",
+		  engine->name, rq ? rq->global_seqno : 0,
+		  intel_engine_get_seqno(engine));
 
 	/*
 	 * Try to restore the logical GPU state to match the continuation
@@ -1055,8 +1064,7 @@ i915_emit_bb_start(struct i915_request *rq,
 int intel_ring_pin(struct intel_ring *ring)
 {
 	struct i915_vma *vma = ring->vma;
-	enum i915_map_type map =
-		HAS_LLC(vma->vm->i915) ? I915_MAP_WB : I915_MAP_WC;
+	enum i915_map_type map = i915_coherent_map_type(vma->vm->i915);
 	unsigned int flags;
 	void *addr;
 	int ret;
