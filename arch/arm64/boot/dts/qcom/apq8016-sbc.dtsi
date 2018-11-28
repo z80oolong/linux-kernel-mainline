@@ -506,6 +506,29 @@
 		wcnss@a21b000 {
 			status = "okay";
 		};
+
+		hexagon@4080000 {
+			status = "okay";
+
+			smd-edge {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				fastrpc {
+					compatible = "qcom,fastrpc";
+					qcom,smd-channels = "fastrpcsmd-apps-dsp";
+					label = "adsp";
+
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					qcom,msm_fastrpc_compute_cb_1 {
+						compatible = "qcom,fastrpc-compute-cb";
+						reg = <1>;
+					};
+				};
+			};
+		};
 	};
 
 	usb2513 {
