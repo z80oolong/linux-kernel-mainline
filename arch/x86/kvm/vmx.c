@@ -680,7 +680,7 @@ static inline int pi_test_sn(struct pi_desc *pi_desc)
 }
 
 struct vmx_msrs {
-	unsigned		nr;
+	unsigned int		nr;
 	struct vmx_msr_entry	val[NR_AUTOLOAD_MSRS];
 };
 
@@ -702,8 +702,8 @@ struct vcpu_vmx {
 	u64 		      msr_guest_kernel_gs_base;
 #endif
 
-	u64		      arch_capabilities;
-	u64		      spec_ctrl;
+	u64 		      arch_capabilities;
+	u64 		      spec_ctrl;
 
 	u32 vm_entry_controls_shadow;
 	u32 vm_exit_controls_shadow;
@@ -5710,8 +5710,8 @@ static int handle_exception(struct kvm_vcpu *vcpu)
 		/* EPT won't cause page fault directly */
 		BUG_ON(enable_ept);
 		cr2 = vmcs_readl(EXIT_QUALIFICATION);
-		vcpu->arch.l1tf_flush_l1d = true;
 		trace_kvm_page_fault(cr2, error_code);
+		vcpu->arch.l1tf_flush_l1d = true;
 
 		if (kvm_event_needs_reinjection(vcpu))
 			kvm_mmu_unprotect_page_virt(vcpu, cr2);

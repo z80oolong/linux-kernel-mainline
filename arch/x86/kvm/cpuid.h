@@ -121,28 +121,6 @@ static inline bool guest_cpuid_is_amd(struct kvm_vcpu *vcpu)
 	return best && best->ebx == X86EMUL_CPUID_VENDOR_AuthenticAMD_ebx;
 }
 
-static inline int guest_cpuid_family(struct kvm_vcpu *vcpu)
-{
-	struct kvm_cpuid_entry2 *best;
-
-	best = kvm_find_cpuid_entry(vcpu, 0x1, 0);
-	if (!best)
-		return -1;
-
-	return __x86_family(best->eax);
-}
-
-static inline int guest_cpuid_model(struct kvm_vcpu *vcpu)
-{
-	struct kvm_cpuid_entry2 *best;
-
-	best = kvm_find_cpuid_entry(vcpu, 0x1, 0);
-	if (!best)
-		return -1;
-
-	return x86_model(best->eax);
-}
-
 static inline bool guest_cpuid_has_gbpages(struct kvm_vcpu *vcpu)
 {
 	struct kvm_cpuid_entry2 *best;
@@ -242,5 +220,27 @@ static inline bool guest_cpuid_has_nrips(struct kvm_vcpu *vcpu)
 	return best && (best->edx & bit(BIT_NRIPS));
 }
 #undef BIT_NRIPS
+
+static inline int guest_cpuid_family(struct kvm_vcpu *vcpu)
+{
+	struct kvm_cpuid_entry2 *best;
+
+	best = kvm_find_cpuid_entry(vcpu, 0x1, 0);
+	if (!best)
+		return -1;
+
+	return __x86_family(best->eax);
+}
+
+static inline int guest_cpuid_model(struct kvm_vcpu *vcpu)
+{
+	struct kvm_cpuid_entry2 *best;
+
+	best = kvm_find_cpuid_entry(vcpu, 0x1, 0);
+	if (!best)
+		return -1;
+
+	return x86_model(best->eax);
+}
 
 #endif
