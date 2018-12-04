@@ -314,6 +314,10 @@
 # define DP_PSR_SETUP_TIME_SHIFT            1
 # define DP_PSR2_SU_Y_COORDINATE_REQUIRED   (1 << 4)  /* eDP 1.4a */
 # define DP_PSR2_SU_GRANULARITY_REQUIRED    (1 << 5)  /* eDP 1.4b */
+
+#define DP_PSR2_SU_X_GRANULARITY	    0x072 /* eDP 1.4b */
+#define DP_PSR2_SU_Y_GRANULARITY	    0x074 /* eDP 1.4b */
+
 /*
  * 0x80-0x8f describe downstream port capabilities, but there are two layouts
  * based on whether DP_DETAILED_CAP_INFO_AVAILABLE was set.  If it was not,
@@ -1123,7 +1127,8 @@ drm_dp_is_branch(const u8 dpcd[DP_RECEIVER_CAP_SIZE])
 u8 drm_dp_dsc_sink_max_slice_count(const u8 dsc_dpcd[DP_DSC_RECEIVER_CAP_SIZE],
 				   bool is_edp);
 u8 drm_dp_dsc_sink_line_buf_depth(const u8 dsc_dpcd[DP_DSC_RECEIVER_CAP_SIZE]);
-u8 drm_dp_dsc_sink_max_color_depth(const u8 dsc_dpc[DP_DSC_RECEIVER_CAP_SIZE]);
+int drm_dp_dsc_sink_supported_input_bpcs(const u8 dsc_dpc[DP_DSC_RECEIVER_CAP_SIZE],
+					 u8 dsc_bpc[3]);
 
 static inline bool
 drm_dp_sink_supports_dsc(const u8 dsc_dpcd[DP_DSC_RECEIVER_CAP_SIZE])
@@ -1364,6 +1369,13 @@ enum drm_dp_quirk {
 	 * to 16 bits. So will give a constant value (0x8000) for compatability.
 	 */
 	DP_DPCD_QUIRK_CONSTANT_N,
+	/**
+	 * @DP_DPCD_QUIRK_NO_PSR
+	 *
+	 * The device does not support PSR even if reports that it supports or
+	 * driver still need to implement proper handling for such device.
+	 */
+	DP_DPCD_QUIRK_NO_PSR,
 };
 
 /**
