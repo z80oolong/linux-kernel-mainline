@@ -66,6 +66,7 @@ aufs
 auth_rpcgss
 authenc
 authencesn
+autofs4
 ax25
 bcache
 be2net
@@ -572,6 +573,7 @@ parport
 parport_pc
 pata_acpi
 pcbc
+pci-hyperv
 pcrypt
 phonet
 pkcs7_test_key
