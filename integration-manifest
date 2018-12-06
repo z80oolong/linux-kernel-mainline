@@ -1,0 +1,28 @@
+drm drm-fixes ebcdcef30333660d3314158bac362425ade3d28c
+	Merge tag 'drm-misc-fixes-2018-11-28-1' of git://anongit.freedesktop.org/drm/drm-misc into drm-fixes
+drm-misc drm-misc-fixes b31a3ca745a4a47ba63208d37cd50abffe58280f
+	drm/fb-helper: Fix typo in parameter description
+drm-intel drm-intel-fixes d76b21ebf8ff0ec5030e98c64c50dca2254474f3
+	Merge tag 'gvt-fixes-2018-12-04' of https://github.com/intel/gvt-linux into drm-intel-fixes
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 467e8a516dcf922d1ea343cebb0e751f81f0dca3
+	Merge tag 'drm-intel-next-2018-12-04' of git://anongit.freedesktop.org/drm/drm-intel into drm-next
+drm-misc drm-misc-next-fixes 8f054b6f53ff34fb787bde4c5940f86a9c175177
+	drm/panel: simple: Innolux TV123WAM is actually P120ZDG-BF1
+drm-intel drm-intel-next-fixes 651022382c7f8da46cb4872a545ee1da6d097d2a
+	Linux 4.20-rc1
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 0b258ed1a219a9776e8f6967eb34837ae0332e64
+	drm: revert "expand replace_fence to support timeline point v2"
+drm-intel drm-intel-next-queued 8d9d005d38bada06604545f815fcbb69c1d08e63
+	drm/i915/fbc/cnl: Add GLK and CNL+ hardware tracking area
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus b72f936f6b325f4fde06b02e4b6ab682f6f2e73f
+	ALSA: hda/realtek: Fix mic issue on Acer AIO Veriton Z4860G/Z6860G
+sound-upstream for-next 917bb90c65da91719d9f2b8b6d8683c49c988553
+	ALSA: hda/hdmi - Add Tegra186 and Tegra194 support
+drm-intel topic/core-for-CI dafdf69736d66075836b7bc291584cd0889e7601
+	perf/core: Avoid removing shared pmu_context on unregister
