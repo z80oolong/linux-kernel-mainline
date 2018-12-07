@@ -1,0 +1,77 @@
+Release Notes 4th July:
+- In order to get the driver ready for the linux mainline kernel it was completely rewritten.
+- The filenames and also the driver name itself changed.
+
+  The driver name in the old driver was "ixx_usb" and the filenames were:
+  ixx_usb_core.c / ixx_usb_core.h: The core module for all IXXAT USB-to-CAN devices
+  ixx_usb_fd.c: Adapter implementations for IXXAT devices with CL2 (new communication layer) interface (including DELL hardware).
+  ixx_usb_v2.c: Adapter implementations for IXXAT devices with CL1 (old communication layer) interface.
+  Only the CL2 adapter is CAN-FD capable (except the DELL hardware wasn’t CAN-FD capable at this point).
+  There was also a module for pci devices which wasn't relevant for the RevA delivery.
+ 
+  The driver name in the new driver is "ixxat_usb2can".
+  We changed this to point out the IXXAT brand name and the USB-to-CAN product line.
+  The filenames are:
+  ixxat_usb_cl1.c: Adapter implementation for IXXAT devices with CL1 (old communication layer) interface.
+  ixxat_usb_cl2.c: Adapter implementation for IXXAT devices with CL2 (new communication layer) interface (including DELL hardware).
+  ixxat_usb_core.c / ixxat_usb_core.h: The core module for all IXXAT USB-to-CAN devices.
+
+- Fixed Linux kernel coding style issues
+- Using ktime API for timestamps
+- Removed CAN-IDM100 support (Microchip RevA microcontroller)
+- Added CAN-IDM101 support (Microchip RevB microcontroller, now CAN-FD capable)
+- Added Error-Passive recognition
+- Moved CAN messages handling to the core module
+
+Release Notes 9th July:
+- Using “if (err)” instead of “if (ret < 0)” when appropriate
+- Using __le types when appropriate
+- Preinitializing variables in their declaration when appropriate
+- Removed unnecessary preinitialization of variables
+- Using a device command structure which contains the request and response block of a command
+- Using a helper function to initialize device commands
+- Removed unnecessary type casts
+- Using a union for CL1/CL2 CAN messages
+- Removed unnecessary restart task
+- Better cleanup code in ixxat_usb_create_dev()
+
+Release Notes 17th September:
+- Fixed sparse errors.
+- Using just one space after macro/define names.
+- Cleaned up code for setting exmode in "ixxat_usb_init_ctrl"
+  (ixxat_usb2can_cl2.c).
+- Preventing array out of bounds access in "ixxat_usb_get_dev_caps".
+- Removed unnecessary variables in "ixxat_usb_get_dev_info".
+- Doing the stats before allocating the skb in can message handling.
+- Renamed "ixxat_usb_snd_cmd" to "ixxat_usb_send_cmd"
+- Using just one function for usb_control_msg handling.
+- Stating CAN FD capability in module description.
+- Making sure that skb is always freed in ixxat_usb_handle_error().
+- Removed unnecessary modification of skb in ixxat_usb_encode_msg().
+- Omitted the use of the unlikely macro.
+- Removed unnecessary preinitialisation of variables.
+- Fixed concurrency issue in ixxat_usb_write_bulk_callback().
+- Removed comment above bit-timing calculation in
+  ixxat_usb_init_ctrl() (ixxat_usb_cl1.c)
+- Moved all variable declaration to the beginning of the function.
+- Check size of received usb messages to prevent accessing memory outside of the
+  message.
+- Return the size of the encoded message in ixxat_usb_encode_msg() instead of
+  using a pointer.
+- Using the BIT() macro where appropriate.
+- Removed ctrl_open flag in struct ixxat_usb_device and using the state variable instead.
+- Added IDM200 support.
+- Fixed Busoff-Recovery.
+
+Known issues:
+On Ubuntu 18.04 LTS sending can messages on high busload leads to message loss.
+Also we never get ENOBUFS regardless how much can messages are sent.
+
+Tested with:
+  sudo ip link set can0 up type can bitrate 1000000
+  sudo ip link set txqueuelen 10 dev can0
+  cangen -g 0 -Ii -L8 -Di -n 1000 -i -x can0
+
+This behaviour seems to ocurr only on Ubuntu 18.04 regardless of installed kernel version.
+This was tested with a self compiled 4.17.0 kernel on both Ubuntu 18.04.1 LTS and Ubuntu 16.04.5 LTS.
+The behaviour was also observed with a PEAK usb controller (and it's socketcan driver).
