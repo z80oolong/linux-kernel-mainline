@@ -31,6 +31,12 @@ endif
 ##
 ##
 ##
+ifeq ($(ARCH),x86)
+obj-m                         += ixxat-usb2can/
+endif
+##
+##
+##
 ##
 ##
 ##
