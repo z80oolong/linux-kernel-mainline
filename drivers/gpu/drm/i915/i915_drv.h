@@ -281,16 +281,14 @@ struct drm_i915_display_funcs {
 	int (*get_fifo_size)(struct drm_i915_private *dev_priv,
 			     enum i9xx_plane_id i9xx_plane);
 	int (*compute_pipe_wm)(struct intel_crtc_state *cstate);
-	int (*compute_intermediate_wm)(struct drm_device *dev,
-				       struct intel_crtc *intel_crtc,
-				       struct intel_crtc_state *newstate);
+	int (*compute_intermediate_wm)(struct intel_crtc_state *newstate);
 	void (*initial_watermarks)(struct intel_atomic_state *state,
 				   struct intel_crtc_state *cstate);
 	void (*atomic_update_watermarks)(struct intel_atomic_state *state,
 					 struct intel_crtc_state *cstate);
 	void (*optimize_watermarks)(struct intel_atomic_state *state,
 				    struct intel_crtc_state *cstate);
-	int (*compute_global_watermarks)(struct drm_atomic_state *state);
+	int (*compute_global_watermarks)(struct intel_atomic_state *state);
 	void (*update_wm)(struct intel_crtc *crtc);
 	int (*modeset_calc_cdclk)(struct drm_atomic_state *state);
 	/* Returns the active state of the crtc, and if the crtc is active,
@@ -322,8 +320,8 @@ struct drm_i915_display_funcs {
 	/* display clock increase/decrease */
 	/* pll clock increase/decrease */
 
-	void (*load_csc_matrix)(struct drm_crtc_state *crtc_state);
-	void (*load_luts)(struct drm_crtc_state *crtc_state);
+	void (*load_csc_matrix)(struct intel_crtc_state *crtc_state);
+	void (*load_luts)(struct intel_crtc_state *crtc_state);
 };
 
 #define CSR_VERSION(major, minor)	((major) << 16 | (minor))
@@ -509,6 +507,7 @@ struct i915_psr {
 	ktime_t last_exit;
 	bool sink_not_reliable;
 	bool irq_aux_error;
+	u16 su_x_granularity;
 };
 
 enum intel_pch {
