@@ -1,0 +1,28 @@
+drm drm-fixes e594a5e349ddbfdaca1951bb3f8d72f3f1660d73
+	drm/ast: Fix connector leak during driver unload
+drm-misc drm-misc-fixes b31a3ca745a4a47ba63208d37cd50abffe58280f
+	drm/fb-helper: Fix typo in parameter description
+drm-intel drm-intel-fixes d76b21ebf8ff0ec5030e98c64c50dca2254474f3
+	Merge tag 'gvt-fixes-2018-12-04' of https://github.com/intel/gvt-linux into drm-intel-fixes
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next e69aa5f9b97f7f871643336deb281db5cb14878b
+	Merge tag 'drm-misc-next-2018-12-06' of git://anongit.freedesktop.org/drm/drm-misc into drm-next
+drm-misc drm-misc-next-fixes 0b258ed1a219a9776e8f6967eb34837ae0332e64
+	drm: revert "expand replace_fence to support timeline point v2"
+drm-intel drm-intel-next-fixes e69aa5f9b97f7f871643336deb281db5cb14878b
+	Merge tag 'drm-misc-next-2018-12-06' of git://anongit.freedesktop.org/drm/drm-misc into drm-next
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next cb8ce7111117e16a87f3f55c014ccd1f19f81016
+	drm/dp/mst: Validate REMOTE_I2C_READ harder
+drm-intel drm-intel-next-queued 302da0cdf784f2aab5e84aaa14c0132d405542f9
+	drm/i915: Use intel_ types more consistently for color management code (v2)
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 0bea4cc8383519f78f3f74caca7bdebdfb346d3b
+	ALSA: hda/realtek: Enable audio jacks of ASUS UX433FN/UX333FA with ALC294
+sound-upstream for-next 46079bacb469c2eff15802fcccc88b0bd56b1e6e
+	Merge branch 'for-linus' into for-next
+drm-intel topic/core-for-CI dafdf69736d66075836b7bc291584cd0889e7601
+	perf/core: Avoid removing shared pmu_context on unregister
