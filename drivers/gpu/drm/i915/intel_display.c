@@ -5645,7 +5645,7 @@ static void ironlake_crtc_enable(struct intel_crtc_state *pipe_config,
 	 * On ILK+ LUT must be loaded before the pipe is running but with
 	 * clocks enabled
 	 */
-	intel_color_load_luts(&pipe_config->base);
+	intel_color_load_luts(pipe_config);
 
 	if (dev_priv->display.initial_watermarks != NULL)
 		dev_priv->display.initial_watermarks(old_intel_state, pipe_config);
@@ -5756,7 +5756,7 @@ static void haswell_crtc_enable(struct intel_crtc_state *pipe_config,
 
 	haswell_set_pipemisc(pipe_config);
 
-	intel_color_set_csc(&pipe_config->base);
+	intel_color_set_csc(pipe_config);
 
 	intel_crtc->active = true;
 
@@ -5775,7 +5775,7 @@ static void haswell_crtc_enable(struct intel_crtc_state *pipe_config,
 	 * On ILK+ LUT must be loaded before the pipe is running but with
 	 * clocks enabled
 	 */
-	intel_color_load_luts(&pipe_config->base);
+	intel_color_load_luts(pipe_config);
 
 	/*
 	 * Display WA #1153: enable hardware to bypass the alpha math
@@ -6121,7 +6121,7 @@ static void valleyview_crtc_enable(struct intel_crtc_state *pipe_config,
 
 	i9xx_set_pipeconf(pipe_config);
 
-	intel_color_set_csc(&pipe_config->base);
+	intel_color_set_csc(pipe_config);
 
 	intel_crtc->active = true;
 
@@ -6141,7 +6141,7 @@ static void valleyview_crtc_enable(struct intel_crtc_state *pipe_config,
 
 	i9xx_pfit_enable(pipe_config);
 
-	intel_color_load_luts(&pipe_config->base);
+	intel_color_load_luts(pipe_config);
 
 	dev_priv->display.initial_watermarks(old_intel_state,
 					     pipe_config);
@@ -6197,7 +6197,7 @@ static void i9xx_crtc_enable(struct intel_crtc_state *pipe_config,
 
 	i9xx_pfit_enable(pipe_config);
 
-	intel_color_load_luts(&pipe_config->base);
+	intel_color_load_luts(pipe_config);
 
 	if (dev_priv->display.initial_watermarks != NULL)
 		dev_priv->display.initial_watermarks(old_intel_state,
@@ -10978,7 +10978,7 @@ static int intel_crtc_atomic_check(struct drm_crtc *crtc,
 	}
 
 	if (crtc_state->color_mgmt_changed) {
-		ret = intel_color_check(crtc, crtc_state);
+		ret = intel_color_check(pipe_config);
 		if (ret)
 			return ret;
 
@@ -13594,8 +13594,8 @@ static void intel_begin_crtc_commit(struct drm_crtc *crtc,
 	if (!modeset &&
 	    (intel_cstate->base.color_mgmt_changed ||
 	     intel_cstate->update_pipe)) {
-		intel_color_set_csc(&intel_cstate->base);
-		intel_color_load_luts(&intel_cstate->base);
+		intel_color_set_csc(intel_cstate);
+		intel_color_load_luts(intel_cstate);
 	}
 
 	/* Perform vblank evasion around commit operation */
@@ -14168,7 +14168,7 @@ static int intel_crtc_init(struct drm_i915_private *dev_priv, enum pipe pipe)
 
 	drm_crtc_helper_add(&intel_crtc->base, &intel_helper_funcs);
 
-	intel_color_init(&intel_crtc->base);
+	intel_color_init(intel_crtc);
 
 	WARN_ON(drm_crtc_index(&intel_crtc->base) != intel_crtc->pipe);
 
