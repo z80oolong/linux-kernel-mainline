@@ -937,8 +937,8 @@ void intel_engine_init_cmd_parser(struct intel_engine_cs *engine)
 	int cmd_table_count;
 	int ret;
 
-	if (!IS_GEN7(engine->i915) && !(IS_GEN9(engine->i915) &&
-					engine->id == BCS))
+	if (!IS_GEN(engine->i915, 7) && !(IS_GEN(engine->i915, 9) &&
+					  engine->id == BCS))
 		return;
 
 	switch (engine->id) {
@@ -968,7 +968,7 @@ void intel_engine_init_cmd_parser(struct intel_engine_cs *engine)
 		break;
 	case BCS:
 		engine->get_cmd_length_mask = gen7_blt_get_cmd_length_mask;
-		if (IS_GEN9(engine->i915)) {
+		if (IS_GEN(engine->i915, 9)) {
 			cmd_tables = gen9_blt_cmd_table;
 			cmd_table_count = ARRAY_SIZE(gen9_blt_cmd_table);
 			engine->get_cmd_length_mask =
@@ -984,7 +984,7 @@ void intel_engine_init_cmd_parser(struct intel_engine_cs *engine)
 			cmd_table_count = ARRAY_SIZE(gen7_blt_cmd_table);
 		}
 
-		if (IS_GEN9(engine->i915)) {
+		if (IS_GEN(engine->i915, 9)) {
 			engine->reg_tables = gen9_blt_reg_tables;
 			engine->reg_table_count =
 				ARRAY_SIZE(gen9_blt_reg_tables);
