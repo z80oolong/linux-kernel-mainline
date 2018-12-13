@@ -411,16 +411,6 @@ specv2_set_mode:
 	pr_info("%s\n", spectre_v2_strings[mode]);
 
 	/*
-	 * Initialize Indirect Branch Prediction Barrier if supported and not
-	 * disabled on the commandline
-	 */
-	if (boot_cpu_has(X86_FEATURE_IBPB)) {
-		setup_force_cpu_cap(X86_FEATURE_USE_IBPB);
-		if (!noibpb)
-			set_ibpb_enabled(1);   /* Enable IBPB */
-	}
-
-	/*
 	 * If spectre v2 protection has been enabled, unconditionally fill
 	 * RSB during a context switch; this protects against two independent
 	 * issues:
@@ -430,6 +420,16 @@ specv2_set_mode:
 	 */
 	setup_force_cpu_cap(X86_FEATURE_RSB_CTXSW);
 	pr_info("Spectre v2 / SpectreRSB mitigation: Filling RSB on context switch\n");
+
+	/*
+	 * Initialize Indirect Branch Prediction Barrier if supported and not
+	 * disabled on the commandline
+	 */
+	if (boot_cpu_has(X86_FEATURE_IBPB)) {
+		setup_force_cpu_cap(X86_FEATURE_USE_IBPB);
+		if (!noibpb)
+			set_ibpb_enabled(1);   /* Enable IBPB */
+	}
 
 	/*
 	 * Retpoline means the kernel is safe because it has no indirect
