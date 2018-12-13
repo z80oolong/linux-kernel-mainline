@@ -184,6 +184,10 @@
 # define THUNK_TARGET(addr) [thunk_target] "rm" (addr)
 #endif
 
+/* The IBPB runtime control knob */
+extern unsigned int ibpb_enabled;
+int set_ibpb_enabled(unsigned int);
+
 /* The Spectre V2 mitigation variants */
 enum spectre_v2_mitigation {
 	SPECTRE_V2_NONE,
@@ -243,7 +247,9 @@ static inline void indirect_branch_prediction_barrier(void)
 {
 	u64 val = PRED_CMD_IBPB;
 
-	alternative_msr_write(MSR_IA32_PRED_CMD, val, X86_FEATURE_USE_IBPB);
+	if (ibpb_enabled)
+		alternative_msr_write(MSR_IA32_PRED_CMD, val,
+				      X86_FEATURE_USE_IBPB);
 }
 
 /*

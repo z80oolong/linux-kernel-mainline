@@ -30,6 +30,16 @@
 #include <asm/intel-family.h>
 #include <asm/e820.h>
 
+unsigned int noibpb = 0;
+
+static int __init noibpb_handler(char *str)
+{
+	noibpb = 1;
+	return 0;
+}
+
+early_param("noibpb", noibpb_handler);
+
 static void __init spectre_v2_select_mitigation(void);
 static void __init ssb_select_mitigation(void);
 static void __init l1tf_select_mitigation(void);
@@ -390,14 +400,14 @@ specv2_set_mode:
 	spectre_v2_enabled = mode;
 	pr_info("%s\n", spectre_v2_strings[mode]);
 
-	/* Initialize Indirect Branch Prediction Barrier if supported */
+	/*
+	 * Initialize Indirect Branch Prediction Barrier if supported and not
+	 * disabled on the commandline
+	 */
 	if (boot_cpu_has(X86_FEATURE_IBPB)) {
 		setup_force_cpu_cap(X86_FEATURE_USE_IBPB);
-		pr_info("Spectre v2 mitigation: Enabling Indirect Branch Prediction Barrier\n");
-
-		set_ibpb_supported();
-		if (ibpb_inuse)
-			sysctl_ibpb_enabled = 1;
+		if (!noibpb)
+			set_ibpb_enabled(1);   /* Enable IBPB */
 	}
 
 	/* Initialize Indirect Branch Restricted Speculation if supported */
@@ -409,8 +419,7 @@ specv2_set_mode:
 			sysctl_ibrs_enabled = 1;
         }
 
-	pr_info("Spectre v2 mitigation: Speculation control IBPB %s IBRS %s",
-	        ibpb_supported ? "supported" : "not-supported",
+	pr_info("Spectre v2 mitigation: Speculation control IBRS %s",
 	        ibrs_supported ? "supported" : "not-supported");
 
 	/*
@@ -863,7 +872,7 @@ static ssize_t cpu_show_common(struct device *dev, struct device_attribute *attr
 
 	case X86_BUG_SPECTRE_V2:
 		return sprintf(buf, "%s%s%s%s\n", spectre_v2_strings[spectre_v2_enabled],
-			       ibpb_inuse ? ", IBPB (Intel v4)" : "",
+			       ibpb_enabled ? ", IBPB" : "",
 			       boot_cpu_has(X86_FEATURE_USE_IBRS_FW) ? ", IBRS_FW" : "",
 			       spectre_v2_module_string());
 

@@ -21,6 +21,9 @@
 
 #include "cpu.h"
 
+/* "noibpb" commandline parameter present (1) or not (0) */
+extern unsigned int noibpb;
+
 /*
  * nodes_per_socket: Stores the number of nodes per socket.
  * Refer to Fam15h Models 00-0fh BKDG - CPUID Fn8000_001E_ECX
@@ -842,7 +845,7 @@ static void init_amd(struct cpuinfo_x86 *c)
 	 * speculative control features, IBPB type support can be achieved by
 	 * disabling indirect branch predictor support.
 	 */
-	if (!ibpb_disabled && !cpu_has(c, X86_FEATURE_SPEC_CTRL) &&
+	if (!noibpb && !cpu_has(c, X86_FEATURE_SPEC_CTRL) &&
 	    !cpu_has(c, X86_FEATURE_IBPB)) {
 		u64 val;
 
