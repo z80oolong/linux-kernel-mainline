@@ -8,7 +8,7 @@
 
 #ifdef __ASSEMBLY__
 
-.extern use_ibrs
+.extern ibrs_enabled
 
 #define __ASM_ENABLE_IBRS			\
 	pushq %rax;				\
@@ -21,11 +21,13 @@
 	popq %rdx;				\
 	popq %rcx;				\
 	popq %rax
+
 #define __ASM_ENABLE_IBRS_CLOBBER		\
 	movl $MSR_IA32_SPEC_CTRL, %ecx;		\
 	movl $0, %edx;				\
 	movl $SPEC_CTRL_IBRS, %eax;		\
 	wrmsr;
+
 #define __ASM_DISABLE_IBRS			\
 	pushq %rax;				\
 	pushq %rcx;				\
@@ -39,7 +41,7 @@
 	popq %rax
 
 .macro ENABLE_IBRS
-	testl	$1, use_ibrs
+	testl	$1, ibrs_enabled
 	jz	10f
 	__ASM_ENABLE_IBRS
 	jmp 20f
@@ -49,7 +51,7 @@
 .endm
 
 .macro ENABLE_IBRS_CLOBBER
-	testl	$1, use_ibrs
+	testl	$1, ibrs_enabled
 	jz	11f
 	__ASM_ENABLE_IBRS_CLOBBER
 	jmp 21f
@@ -59,7 +61,7 @@
 .endm
 
 .macro DISABLE_IBRS
-	testl	$1, use_ibrs
+	testl	$1, ibrs_enabled
 	jz	9f
 	__ASM_DISABLE_IBRS
 9:

@@ -107,8 +107,8 @@ static void delay_mwaitx(unsigned long __loops)
 	for (;;) {
 		delay = min_t(u64, MWAITX_MAX_LOOPS, loops);
 
-		if (ibrs_inuse && (delay > IBRS_DISABLE_THRESHOLD))
-			native_wrmsrl(MSR_IA32_SPEC_CTRL, x86_spec_ctrl_base);
+		if (delay > IBRS_DISABLE_THRESHOLD)
+			ubuntu_restrict_branch_speculation_end();
 
 		/*
 		 * Use cpu_tss as a cacheline-aligned, seldomly
@@ -123,8 +123,8 @@ static void delay_mwaitx(unsigned long __loops)
 		 */
 		__mwaitx(MWAITX_DISABLE_CSTATES, delay, MWAITX_ECX_TIMER_ENABLE);
 
-		if (ibrs_inuse && (delay > IBRS_DISABLE_THRESHOLD))
-			native_wrmsrl(MSR_IA32_SPEC_CTRL, x86_spec_ctrl_base | SPEC_CTRL_IBRS);
+		if (delay > IBRS_DISABLE_THRESHOLD)
+			ubuntu_restrict_branch_speculation_start();
 
 		end = rdtsc_ordered();
 

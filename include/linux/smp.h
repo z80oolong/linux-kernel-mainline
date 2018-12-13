@@ -50,52 +50,6 @@ void on_each_cpu_cond(bool (*cond_func)(int cpu, void *info),
 
 int smp_call_function_single_async(int cpu, struct call_single_data *csd);
 
-#ifdef CONFIG_X86
-
-#define IBxx_INUSE 	(1 << 0)
-#define IBxx_SUPPORTED 	(1 << 1)
-#define IBxx_DISABLED 	(1 << 2)
-
-/* indicate usage of IBRS to control execution speculation */
-extern int use_ibrs;
-extern u32 sysctl_ibrs_enabled;
-extern struct mutex spec_ctrl_mutex;
-
-static inline int __check_ibrs_inuse(void)
-{
-	if (use_ibrs & IBxx_INUSE)
-		return 1;
-	else
-		/* rmb to prevent wrong speculation for security */
-		rmb();
-	return 0;
-}
-
-#define ibrs_inuse 	(__check_ibrs_inuse())
-#define ibrs_supported	(use_ibrs & IBxx_SUPPORTED)
-#define ibrs_disabled	(use_ibrs & IBxx_DISABLED)
-
-static inline void set_ibrs_supported(void)
-{
-	use_ibrs |= IBxx_SUPPORTED;
-	if (!ibrs_disabled)
-		use_ibrs |= IBxx_INUSE;
-}
-static inline void set_ibrs_disabled(void)
-{
-	use_ibrs |= IBxx_DISABLED;
-	if (ibrs_inuse)
-		use_ibrs &= ~IBxx_INUSE;
-}
-static inline void clear_ibrs_disabled(void)
-{
-	use_ibrs &= ~IBxx_DISABLED;
-	if (ibrs_supported)
-		use_ibrs |= IBxx_INUSE;
-}
-
-#endif /* CONFIG_X86 */
-
 #ifdef CONFIG_SMP
 
 #include <linux/preempt.h>

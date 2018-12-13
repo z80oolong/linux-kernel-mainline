@@ -106,15 +106,13 @@ static inline void mwait_idle_with_hints(unsigned long eax, unsigned long ecx)
 			mb();
 		}
 
-		if (ibrs_inuse)
-			native_wrmsrl(MSR_IA32_SPEC_CTRL, x86_spec_ctrl_base);
+		ubuntu_restrict_branch_speculation_end();
 
 		__monitor((void *)&current_thread_info()->flags, 0, 0);
 		if (!need_resched())
 			__mwait(eax, ecx);
 
-		if (ibrs_inuse)
-			native_wrmsrl(MSR_IA32_SPEC_CTRL, x86_spec_ctrl_base | SPEC_CTRL_IBRS);
+		ubuntu_restrict_branch_speculation_start();
 	}
 	current_clr_polling();
 }

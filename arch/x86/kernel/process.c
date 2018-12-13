@@ -566,17 +566,15 @@ static void mwait_idle(void)
 			smp_mb(); /* quirk */
 		}
 
-		if (ibrs_inuse)
-                        native_wrmsrl(MSR_IA32_SPEC_CTRL, x86_spec_ctrl_base);
+		ubuntu_restrict_branch_speculation_end();
 
 		__monitor((void *)&current_thread_info()->flags, 0, 0);
+
 		if (!need_resched()) {
 			__sti_mwait(0, 0);
-			if (ibrs_inuse)
-				native_wrmsrl(MSR_IA32_SPEC_CTRL, x86_spec_ctrl_base | SPEC_CTRL_IBRS);
+			ubuntu_restrict_branch_speculation_start();
 		} else {
-			if (ibrs_inuse)
-				native_wrmsrl(MSR_IA32_SPEC_CTRL, x86_spec_ctrl_base | SPEC_CTRL_IBRS);
+			ubuntu_restrict_branch_speculation_start();
 			local_irq_enable();
 		}
 		trace_cpu_idle_rcuidle(PWR_EVENT_EXIT, smp_processor_id());

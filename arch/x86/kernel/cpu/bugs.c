@@ -40,6 +40,16 @@ static int __init noibpb_handler(char *str)
 
 early_param("noibpb", noibpb_handler);
 
+unsigned int noibrs = 0;
+
+static int __init noibrs_handler(char *str)
+{
+	noibrs = 1;
+	return 0;
+}
+
+early_param("noibrs", noibrs_handler);
+
 static void __init spectre_v2_select_mitigation(void);
 static void __init ssb_select_mitigation(void);
 static void __init l1tf_select_mitigation(void);
@@ -410,18 +420,6 @@ specv2_set_mode:
 			set_ibpb_enabled(1);   /* Enable IBPB */
 	}
 
-	/* Initialize Indirect Branch Restricted Speculation if supported */
-	if (boot_cpu_has(X86_FEATURE_IBRS)) {
-		pr_info("Spectre v2 mitigation: Enabling Indirect Branch Restricted Speculation\n");
-
-		set_ibrs_supported();
-		if (ibrs_inuse)
-			sysctl_ibrs_enabled = 1;
-        }
-
-	pr_info("Spectre v2 mitigation: Speculation control IBRS %s",
-	        ibrs_supported ? "supported" : "not-supported");
-
 	/*
 	 * If spectre v2 protection has been enabled, unconditionally fill
 	 * RSB during a context switch; this protects against two independent
@@ -432,21 +430,6 @@ specv2_set_mode:
 	 */
 	setup_force_cpu_cap(X86_FEATURE_RSB_CTXSW);
 	pr_info("Spectre v2 / SpectreRSB mitigation: Filling RSB on context switch\n");
-
-	/*
-	 * If we have a full retpoline mode and then disable IBPB in kernel mode
-	 * we do not require both.
-	 */
-	if (mode == SPECTRE_V2_RETPOLINE_AMD ||
-	    mode == SPECTRE_V2_RETPOLINE_GENERIC)
-	{
-		if (ibrs_supported) {
-			pr_info("Retpoline compiled kernel.  Defaulting IBRS to disabled");
-			set_ibrs_disabled();
-			if (!ibrs_inuse)
-				sysctl_ibrs_enabled = 0;
-		}
-	}
 
 	/*
 	 * Retpoline means the kernel is safe because it has no indirect
@@ -462,6 +445,11 @@ specv2_set_mode:
 	if (boot_cpu_has(X86_FEATURE_IBRS) && mode != SPECTRE_V2_IBRS_ENHANCED) {
 		setup_force_cpu_cap(X86_FEATURE_USE_IBRS_FW);
 		pr_info("Enabling Restricted Speculation for firmware calls\n");
+
+		if (!noibrs &&
+		    mode != SPECTRE_V2_RETPOLINE_GENERIC &&
+		    mode != SPECTRE_V2_RETPOLINE_AMD)
+			set_ibrs_enabled(1);   /* Enable IBRS */
 	}
 }
 
@@ -871,8 +859,9 @@ static ssize_t cpu_show_common(struct device *dev, struct device_attribute *attr
 		break;
 
 	case X86_BUG_SPECTRE_V2:
-		return sprintf(buf, "%s%s%s%s\n", spectre_v2_strings[spectre_v2_enabled],
+		return sprintf(buf, "%s%s%s%s%s\n", spectre_v2_strings[spectre_v2_enabled],
 			       ibpb_enabled ? ", IBPB" : "",
+			       ibrs_enabled == 2 ? ", IBRS (user space)" : ibrs_enabled ? ", IBRS" : "",
 			       boot_cpu_has(X86_FEATURE_USE_IBRS_FW) ? ", IBRS_FW" : "",
 			       spectre_v2_module_string());
 
