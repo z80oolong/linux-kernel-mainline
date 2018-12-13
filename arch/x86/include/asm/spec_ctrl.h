@@ -9,14 +9,17 @@
 #ifdef __ASSEMBLY__
 
 .extern ibrs_enabled
+.extern x86_spec_ctrl_base
 
 #define __ASM_ENABLE_IBRS			\
 	pushq %rax;				\
 	pushq %rcx;				\
 	pushq %rdx;				\
 	movl $MSR_IA32_SPEC_CTRL, %ecx;		\
-	movl $0, %edx;				\
-	movl $SPEC_CTRL_IBRS, %eax;		\
+	movq x86_spec_ctrl_base, %rdx;		\
+	shr $32, %rdx;				\
+	movq x86_spec_ctrl_base, %rax;		\
+	orl $SPEC_CTRL_IBRS, %eax;		\
 	wrmsr;					\
 	popq %rdx;				\
 	popq %rcx;				\
@@ -24,8 +27,10 @@
 
 #define __ASM_ENABLE_IBRS_CLOBBER		\
 	movl $MSR_IA32_SPEC_CTRL, %ecx;		\
-	movl $0, %edx;				\
-	movl $SPEC_CTRL_IBRS, %eax;		\
+	movq x86_spec_ctrl_base, %rdx;		\
+	shr $32, %rdx;				\
+	movq x86_spec_ctrl_base, %rax;		\
+	orl $SPEC_CTRL_IBRS, %eax;		\
 	wrmsr;
 
 #define __ASM_DISABLE_IBRS			\
@@ -33,8 +38,9 @@
 	pushq %rcx;				\
 	pushq %rdx;				\
 	movl $MSR_IA32_SPEC_CTRL, %ecx;		\
-	movl $0, %edx;				\
-	movl $0, %eax;				\
+	movq x86_spec_ctrl_base, %rdx;		\
+	shr $32, %rdx;				\
+	movq x86_spec_ctrl_base, %rax;		\
 	wrmsr;					\
 	popq %rdx;				\
 	popq %rcx;				\
