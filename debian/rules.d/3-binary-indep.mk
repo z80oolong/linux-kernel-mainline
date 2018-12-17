@@ -146,6 +146,10 @@ ifeq ($(do_tools_hyperv),true)
 endif
 endif
 
+ifeq ($(do_tools_acpidbg),true)
+	install -m755 debian/tools/generic $(toolsbin)/acpidbg
+endif
+
 endif
 
 ifeq ($(do_tools_host),true)
