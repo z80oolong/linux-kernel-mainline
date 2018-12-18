@@ -77,7 +77,9 @@ static int dsa_slave_open(struct net_device *dev)
 	if (!(master->flags & IFF_UP))
 		return -ENETDOWN;
 
-	if (!ether_addr_equal(dev->dev_addr, master->dev_addr)) {
+	if (!is_valid_ether_addr(dev->dev_addr)) {
+		eth_hw_addr_inherit(dev, master);
+	} else if (!ether_addr_equal(dev->dev_addr, master->dev_addr)) {
 		err = dev_uc_add(master, dev->dev_addr);
 		if (err < 0)
 			goto out;
