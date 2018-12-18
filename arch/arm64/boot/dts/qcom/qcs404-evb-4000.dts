@@ -11,7 +11,7 @@
 	compatible = "qcom,qcs404-evb";
 };
 
-#define AR8035
+#define QCA8K
 
 &ethernet {
 	status = "ok";
