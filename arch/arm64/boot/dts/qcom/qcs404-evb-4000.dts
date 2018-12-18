@@ -21,6 +21,20 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&ethernet_defaults>;
 
+#ifdef AR8035
+	phy-handle = <&phy1>;
+	phy-mode = "rgmii";
+	mdio {
+		#address-cells = <0x1>;
+		#size-cells = <0x0>;
+		compatible = "snps,dwmac-mdio";
+		phy1: phy@4 {
+			device_type = "ethernet-phy";
+			reg = <0x4>;
+		};
+	};
+#endif
+
 };
 
 &tlmm {
