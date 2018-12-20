@@ -2327,6 +2327,8 @@ intel_info(const struct drm_i915_private *dev_priv)
 				 (dev_priv)->info.gt == 3)
 #define IS_CNL_WITH_PORT_F(dev_priv)   (IS_CANNONLAKE(dev_priv) && \
 					(INTEL_DEVID(dev_priv) & 0x0004) == 0x0004)
+#define IS_ICL_WITH_PORT_F(dev_priv)   (IS_ICELAKE(dev_priv) && \
+					INTEL_DEVID(dev_priv) != 0x8A51)
 
 #define IS_ALPHA_SUPPORT(intel_info) ((intel_info)->is_alpha_support)
 
