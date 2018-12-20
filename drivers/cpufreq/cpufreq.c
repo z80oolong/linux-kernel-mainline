@@ -1318,6 +1318,9 @@ static int cpufreq_online(unsigned int cpu)
 	if (cpufreq_driver->ready)
 		cpufreq_driver->ready(policy);
 
+	if (cpufreq_driver->flags & CPUFREQ_AUTO_REGISTER_COOLING_DEV)
+		register_cooling_device(policy);
+
 	pr_debug("initialization complete\n");
 
 	return 0;
@@ -1404,6 +1407,9 @@ static int cpufreq_offline(unsigned int cpu)
 
 		goto unlock;
 	}
+
+	if (cpufreq_driver->flags & CPUFREQ_AUTO_REGISTER_COOLING_DEV)
+		unregister_cooling_device(policy);
 
 	if (cpufreq_driver->stop_cpu)
 		cpufreq_driver->stop_cpu(policy);

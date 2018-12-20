@@ -13,6 +13,7 @@
 
 #include <linux/clk.h>
 #include <linux/cpumask.h>
+#include <linux/cpu_cooling.h>
 #include <linux/completion.h>
 #include <linux/kobject.h>
 #include <linux/notifier.h>
@@ -151,6 +152,11 @@ struct cpufreq_policy {
 
 	/* For cpufreq driver's internal use */
 	void			*driver_data;
+
+#ifdef CONFIG_CPU_THERMAL
+	/* Pointer to the cooling device if used for thermal mitigation */
+	struct thermal_cooling_device *cdev;
+#endif
 };
 
 /* Only for ACPI */
@@ -378,6 +384,12 @@ struct cpufreq_driver {
  */
 #define CPUFREQ_NO_AUTO_DYNAMIC_SWITCHING	BIT(6)
 
+/*
+ * Set by drivers that want the core to automatically register the cpufreq
+ * driver as a thermal cooling device.
+ */
+#define CPUFREQ_AUTO_REGISTER_COOLING_DEV	BIT(7)
+
 int cpufreq_register_driver(struct cpufreq_driver *driver_data);
 int cpufreq_unregister_driver(struct cpufreq_driver *driver_data);
 
@@ -407,6 +419,19 @@ cpufreq_verify_within_cpu_limits(struct cpufreq_policy *policy)
 			policy->cpuinfo.max_freq);
 }
 
+#ifdef CONFIG_CPU_THERMAL
+static inline void register_cooling_device(struct cpufreq_policy *policy) {
+	policy->cdev = of_cpufreq_cooling_register(policy);
+}
+
+static inline void unregister_cooling_device(struct cpufreq_policy *policy) {
+	cpufreq_cooling_unregister(policy->cdev);
+	policy->cdev = NULL;
+}
+#else
+static inline void register_cooling_device(struct cpufreq_policy *policy) {}
+static inline void unregister_cooling_device(struct cpufreq_policy *policy) {}
+#endif
 #ifdef CONFIG_CPU_FREQ
 void cpufreq_suspend(void);
 void cpufreq_resume(void);
