@@ -1885,6 +1885,13 @@ static const struct usb_device_id acm_ids[] = {
 	.driver_info = IGNORE_DEVICE,
 	},
 
+	{ USB_DEVICE(0x1bc7, 0x0021), /* Telit 3G ACM only composition */
+	.driver_info = SEND_ZERO_PACKET,
+	},
+	{ USB_DEVICE(0x1bc7, 0x0023), /* Telit 3G ACM + ECM composition */
+	.driver_info = SEND_ZERO_PACKET,
+	},
+
 	/* Exclude Exar USB serial ports */
 	{ USB_DEVICE(0x04e2, 0x1400), .driver_info = IGNORE_DEVICE, },
 	{ USB_DEVICE(0x04e2, 0x1401), .driver_info = IGNORE_DEVICE, },
