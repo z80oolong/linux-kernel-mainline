@@ -1957,7 +1957,6 @@ struct drm_i915_private {
 		struct list_head active_rings;
 		struct list_head closed_vma;
 		u32 active_requests;
-		u32 request_serial;
 
 		/**
 		 * Is the GPU currently considered idle, or busy executing
@@ -2411,8 +2410,6 @@ intel_info(const struct drm_i915_private *dev_priv)
 #define HAS_BSD2(dev_priv)	HAS_ENGINE(dev_priv, VCS2)
 #define HAS_BLT(dev_priv)	HAS_ENGINE(dev_priv, BCS)
 #define HAS_VEBOX(dev_priv)	HAS_ENGINE(dev_priv, VECS)
-
-#define HAS_LEGACY_SEMAPHORES(dev_priv) IS_GEN(dev_priv, 7)
 
 /*
  * The Gen7 cmdparser copies the scanned buffer to the ggtt for execution
