@@ -42,7 +42,6 @@
 #include <linux/reset.h>
 #include <linux/sched.h>
 #include <linux/slab.h>
-#include <linux/suspend.h>
 
 #include "i2c-designware-core.h"
 
@@ -372,10 +371,7 @@ static int dw_i2c_plat_probe(struct platform_device *pdev)
 	adap->dev.of_node = pdev->dev.of_node;
 	adap->nr = -1;
 
-	dev_pm_set_driver_flags(&pdev->dev,
-				DPM_FLAG_SMART_PREPARE |
-				DPM_FLAG_SMART_SUSPEND |
-				DPM_FLAG_LEAVE_SUSPENDED);
+	dev_pm_set_driver_flags(&pdev->dev, DPM_FLAG_SMART_PREPARE);
 
 	/* The code below assumes runtime PM to be disabled. */
 	WARN_ON(pm_runtime_enabled(&pdev->dev));
@@ -451,13 +447,7 @@ static int dw_i2c_plat_prepare(struct device *dev)
 
 static void dw_i2c_plat_complete(struct device *dev)
 {
-	/*
-	 * The device can only be in runtime suspend at this point if it has not
-	 * been resumed throughout the ending system suspend/resume cycle, so if
-	 * the platform firmware might mess up with it, request the runtime PM
-	 * framework to resume it.
-	 */
-	if (pm_runtime_suspended(dev) && pm_resume_via_firmware())
+	if (dev->power.direct_complete)
 		pm_request_resume(dev);
 }
 #else
@@ -470,8 +460,15 @@ static int dw_i2c_plat_suspend(struct device *dev)
 {
 	struct dw_i2c_dev *i_dev = dev_get_drvdata(dev);
 
+	if (i_dev->suspended) {
+		i_dev->skip_resume = true;
+		return 0;
+	}
+
 	i_dev->disable(i_dev);
 	i2c_dw_plat_prepare_clk(i_dev, false);
+
+	i_dev->suspended = true;
 
 	return 0;
 }
@@ -480,8 +477,18 @@ static int dw_i2c_plat_resume(struct device *dev)
 {
 	struct dw_i2c_dev *i_dev = dev_get_drvdata(dev);
 
+	if (!i_dev->suspended)
+		return 0;
+
+	if (i_dev->skip_resume) {
+		i_dev->skip_resume = false;
+		return 0;
+	}
+
 	i2c_dw_plat_prepare_clk(i_dev, true);
 	i_dev->init(i_dev);
+
+	i_dev->suspended = false;
 
 	return 0;
 }
