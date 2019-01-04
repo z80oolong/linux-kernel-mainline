@@ -3230,13 +3230,6 @@ void i915_gem_reset_engine(struct intel_engine_cs *engine,
 			   struct i915_request *request,
 			   bool stalled)
 {
-	/*
-	 * Make sure this write is visible before we re-enable the interrupt
-	 * handlers on another CPU, as tasklet_enable() resolves to just
-	 * a compiler barrier which is insufficient for our purpose here.
-	 */
-	smp_store_mb(engine->irq_posted, 0);
-
 	if (request)
 		request = i915_gem_reset_request(engine, request, stalled);
 
@@ -3318,7 +3311,7 @@ static void nop_submit_request(struct i915_request *request)
 
 	spin_lock_irqsave(&request->engine->timeline.lock, flags);
 	__i915_request_submit(request);
-	intel_engine_init_global_seqno(request->engine, request->global_seqno);
+	intel_engine_write_global_seqno(request->engine, request->global_seqno);
 	spin_unlock_irqrestore(&request->engine->timeline.lock, flags);
 }
 
@@ -3359,7 +3352,7 @@ void i915_gem_set_wedged(struct drm_i915_private *i915)
 
 	/*
 	 * Make sure no request can slip through without getting completed by
-	 * either this call here to intel_engine_init_global_seqno, or the one
+	 * either this call here to intel_engine_write_global_seqno, or the one
 	 * in nop_submit_request.
 	 */
 	synchronize_rcu();
@@ -3386,6 +3379,9 @@ bool i915_gem_unset_wedged(struct drm_i915_private *i915)
 	lockdep_assert_held(&i915->drm.struct_mutex);
 	if (!test_bit(I915_WEDGED, &i915->gpu_error.flags))
 		return true;
+
+	if (!i915->gt.scratch) /* Never full initialised, recovery impossible */
+		return false;
 
 	GEM_TRACE("start\n");
 
@@ -3425,8 +3421,7 @@ bool i915_gem_unset_wedged(struct drm_i915_private *i915)
 	i915_retire_requests(i915);
 	GEM_BUG_ON(i915->gt.active_requests);
 
-	if (!intel_gpu_reset(i915, ALL_ENGINES))
-		intel_engines_sanitize(i915);
+	intel_engines_sanitize(i915, false);
 
 	/*
 	 * Undo nop_submit_request. We prevent all new i915 requests from
@@ -5030,8 +5025,6 @@ void __i915_gem_object_release_unless_active(struct drm_i915_gem_object *obj)
 
 void i915_gem_sanitize(struct drm_i915_private *i915)
 {
-	int err;
-
 	GEM_TRACE("\n");
 
 	mutex_lock(&i915->drm.struct_mutex);
@@ -5056,11 +5049,7 @@ void i915_gem_sanitize(struct drm_i915_private *i915)
 	 * it may impact the display and we are uncertain about the stability
 	 * of the reset, so this could be applied to even earlier gen.
 	 */
-	err = -ENODEV;
-	if (INTEL_GEN(i915) >= 5 && intel_has_gpu_reset(i915))
-		err = WARN_ON(intel_gpu_reset(i915, ALL_ENGINES));
-	if (!err)
-		intel_engines_sanitize(i915);
+	intel_engines_sanitize(i915, false);
 
 	intel_uncore_forcewake_put(i915, FORCEWAKE_ALL);
 	intel_runtime_pm_put(i915);
@@ -5226,15 +5215,15 @@ void i915_gem_init_swizzling(struct drm_i915_private *dev_priv)
 	I915_WRITE(DISP_ARB_CTL, I915_READ(DISP_ARB_CTL) |
 				 DISP_TILE_SURFACE_SWIZZLING);
 
-	if (IS_GEN5(dev_priv))
+	if (IS_GEN(dev_priv, 5))
 		return;
 
 	I915_WRITE(TILECTL, I915_READ(TILECTL) | TILECTL_SWZCTL);
-	if (IS_GEN6(dev_priv))
+	if (IS_GEN(dev_priv, 6))
 		I915_WRITE(ARB_MODE, _MASKED_BIT_ENABLE(ARB_MODE_SWIZZLE_SNB));
-	else if (IS_GEN7(dev_priv))
+	else if (IS_GEN(dev_priv, 7))
 		I915_WRITE(ARB_MODE, _MASKED_BIT_ENABLE(ARB_MODE_SWIZZLE_IVB));
-	else if (IS_GEN8(dev_priv))
+	else if (IS_GEN(dev_priv, 8))
 		I915_WRITE(GAMTARBMODE, _MASKED_BIT_ENABLE(ARB_MODE_SWIZZLE_BDW));
 	else
 		BUG();
@@ -5256,10 +5245,10 @@ static void init_unused_rings(struct drm_i915_private *dev_priv)
 		init_unused_ring(dev_priv, SRB1_BASE);
 		init_unused_ring(dev_priv, SRB2_BASE);
 		init_unused_ring(dev_priv, SRB3_BASE);
-	} else if (IS_GEN2(dev_priv)) {
+	} else if (IS_GEN(dev_priv, 2)) {
 		init_unused_ring(dev_priv, SRB0_BASE);
 		init_unused_ring(dev_priv, SRB1_BASE);
-	} else if (IS_GEN3(dev_priv)) {
+	} else if (IS_GEN(dev_priv, 3)) {
 		init_unused_ring(dev_priv, PRB1_BASE);
 		init_unused_ring(dev_priv, PRB2_BASE);
 	}
@@ -5583,7 +5572,7 @@ int i915_gem_init(struct drm_i915_private *dev_priv)
 	}
 
 	ret = i915_gem_init_scratch(dev_priv,
-				    IS_GEN2(dev_priv) ? SZ_256K : PAGE_SIZE);
+				    IS_GEN(dev_priv, 2) ? SZ_256K : PAGE_SIZE);
 	if (ret) {
 		GEM_BUG_ON(ret == -EIO);
 		goto err_ggtt;
