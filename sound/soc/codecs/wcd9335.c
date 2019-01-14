@@ -5552,6 +5552,7 @@ static const struct slim_device_id wcd9335_slim_id[] = {
 	{SLIM_MANF_ID_QCOM, SLIM_PROD_CODE_WCD9335, 0x1, 0x0},
 	{}
 };
+MODULE_DEVICE_TABLE(slim, wcd9335_slim_id);
 
 static struct slim_driver wcd9335_slim_driver = {
 	.driver = {
@@ -5565,3 +5566,4 @@ static struct slim_driver wcd9335_slim_driver = {
 module_slim_driver(wcd9335_slim_driver);
 MODULE_DESCRIPTION("WCD9335 slim driver");
 MODULE_LICENSE("GPL v2");
+MODULE_ALIAS("slim:217:1a0:*");
