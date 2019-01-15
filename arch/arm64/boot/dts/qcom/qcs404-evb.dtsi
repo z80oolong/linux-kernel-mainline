@@ -60,7 +60,7 @@
 
 		vdd-s1-supply = <&vph_pwr>;
 		vdd-s2-supply = <&vph_pwr>;
-		vdd-s3-supply = <&vph_pwr>;
+		vdd-s3-supply = <&pms405_s3>;
 		vdd-s4-supply = <&vph_pwr>;
 		vdd-s5-supply = <&vph_pwr>;
 		vdd-l1-l2-supply = <&vreg_s5_1p35>;
