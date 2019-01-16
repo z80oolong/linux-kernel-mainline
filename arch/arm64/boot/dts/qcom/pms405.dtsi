@@ -52,4 +52,24 @@
 			interrupts = <0x0 0x61 0x1 IRQ_TYPE_NONE>;
 		};
 	};
+
+	pms405_1: pms405@1 {
+		compatible = "qcom,spmi-pmic";
+		reg = <0x1 SPMI_USID>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		regulators {
+			compatible = "qcom,pms405-regulators";
+			vdd_s3-supply = <&pms405_s3>;
+
+			pms405_s3: s3 {
+				regulator-always-on;
+				regulator-boot-on;
+				regulator-name = "vdd_cpu";
+				regulator-min-microvolt = <1048000>;
+				regulator-max-microvolt = <1352000>;
+			};
+		};
+	};
 };
