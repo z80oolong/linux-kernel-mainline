@@ -47,7 +47,7 @@
 int intel_digital_connector_atomic_get_property(struct drm_connector *connector,
 						const struct drm_connector_state *state,
 						struct drm_property *property,
-						uint64_t *val)
+						u64 *val)
 {
 	struct drm_device *dev = connector->dev;
 	struct drm_i915_private *dev_priv = to_i915(dev);
@@ -79,7 +79,7 @@ int intel_digital_connector_atomic_get_property(struct drm_connector *connector,
 int intel_digital_connector_atomic_set_property(struct drm_connector *connector,
 						struct drm_connector_state *state,
 						struct drm_property *property,
-						uint64_t val)
+						u64 val)
 {
 	struct drm_device *dev = connector->dev;
 	struct drm_i915_private *dev_priv = to_i915(dev);
