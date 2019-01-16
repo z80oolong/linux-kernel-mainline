@@ -31,7 +31,6 @@
 #include <linux/sysrq.h>
 #include <linux/slab.h>
 #include <linux/circ_buf.h>
-#include <drm/drmP.h>
 #include <drm/i915_drm.h>
 #include "i915_drv.h"
 #include "i915_trace.h"
@@ -950,7 +949,7 @@ static int __intel_get_crtc_scanline(struct intel_crtc *crtc)
 	if (mode->flags & DRM_MODE_FLAG_INTERLACE)
 		vtotal /= 2;
 
-	if (IS_GEN2(dev_priv))
+	if (IS_GEN(dev_priv, 2))
 		position = I915_READ_FW(PIPEDSL(pipe)) & DSL_LINEMASK_GEN2;
 	else
 		position = I915_READ_FW(PIPEDSL(pipe)) & DSL_LINEMASK_GEN3;
@@ -1030,7 +1029,7 @@ static bool i915_get_crtc_scanoutpos(struct drm_device *dev, unsigned int pipe,
 	if (stime)
 		*stime = ktime_get();
 
-	if (IS_GEN2(dev_priv) || IS_G4X(dev_priv) || INTEL_GEN(dev_priv) >= 5) {
+	if (IS_GEN(dev_priv, 2) || IS_G4X(dev_priv) || INTEL_GEN(dev_priv) >= 5) {
 		/* No obvious pixelcount register. Only query vertical
 		 * scanout position from Display scan line register.
 		 */
@@ -1090,7 +1089,7 @@ static bool i915_get_crtc_scanoutpos(struct drm_device *dev, unsigned int pipe,
 	else
 		position += vtotal - vbl_end;
 
-	if (IS_GEN2(dev_priv) || IS_G4X(dev_priv) || INTEL_GEN(dev_priv) >= 5) {
+	if (IS_GEN(dev_priv, 2) || IS_G4X(dev_priv) || INTEL_GEN(dev_priv) >= 5) {
 		*vpos = position;
 		*hpos = 0;
 	} else {
@@ -1189,13 +1188,6 @@ static void notify_ring(struct intel_engine_cs *engine)
 				rq = i915_request_get(waiter);
 
 			tsk = wait->tsk;
-		} else {
-			if (engine->irq_seqno_barrier &&
-			    i915_seqno_passed(seqno, wait->seqno - 1)) {
-				set_bit(ENGINE_IRQ_BREADCRUMB,
-					&engine->irq_posted);
-				tsk = wait->tsk;
-			}
 		}
 
 		engine->breadcrumbs.irq_count++;
@@ -2547,7 +2539,7 @@ static void ilk_display_irq_handler(struct drm_i915_private *dev_priv,
 		I915_WRITE(SDEIIR, pch_iir);
 	}
 
-	if (IS_GEN5(dev_priv) && de_iir & DE_PCU_EVENT)
+	if (IS_GEN(dev_priv, 5) && de_iir & DE_PCU_EVENT)
 		ironlake_rps_change_irq_handler(dev_priv);
 }
 
@@ -2938,46 +2930,6 @@ static irqreturn_t gen8_irq_handler(int irq, void *arg)
 	return IRQ_HANDLED;
 }
 
-struct wedge_me {
-	struct delayed_work work;
-	struct drm_i915_private *i915;
-	const char *name;
-};
-
-static void wedge_me(struct work_struct *work)
-{
-	struct wedge_me *w = container_of(work, typeof(*w), work.work);
-
-	dev_err(w->i915->drm.dev,
-		"%s timed out, cancelling all in-flight rendering.\n",
-		w->name);
-	i915_gem_set_wedged(w->i915);
-}
-
-static void __init_wedge(struct wedge_me *w,
-			 struct drm_i915_private *i915,
-			 long timeout,
-			 const char *name)
-{
-	w->i915 = i915;
-	w->name = name;
-
-	INIT_DELAYED_WORK_ONSTACK(&w->work, wedge_me);
-	schedule_delayed_work(&w->work, timeout);
-}
-
-static void __fini_wedge(struct wedge_me *w)
-{
-	cancel_delayed_work_sync(&w->work);
-	destroy_delayed_work_on_stack(&w->work);
-	w->i915 = NULL;
-}
-
-#define i915_wedge_on_timeout(W, DEV, TIMEOUT)				\
-	for (__init_wedge((W), (DEV), (TIMEOUT), __func__);		\
-	     (W)->i915;							\
-	     __fini_wedge((W)))
-
 static u32
 gen11_gt_engine_identity(struct drm_i915_private * const i915,
 			 const unsigned int bank, const unsigned int bit)
@@ -3188,203 +3140,6 @@ static irqreturn_t gen11_irq_handler(int irq, void *arg)
 	return IRQ_HANDLED;
 }
 
-static void i915_reset_device(struct drm_i915_private *dev_priv,
-			      u32 engine_mask,
-			      const char *reason)
-{
-	struct i915_gpu_error *error = &dev_priv->gpu_error;
-	struct kobject *kobj = &dev_priv->drm.primary->kdev->kobj;
-	char *error_event[] = { I915_ERROR_UEVENT "=1", NULL };
-	char *reset_event[] = { I915_RESET_UEVENT "=1", NULL };
-	char *reset_done_event[] = { I915_ERROR_UEVENT "=0", NULL };
-	struct wedge_me w;
-
-	kobject_uevent_env(kobj, KOBJ_CHANGE, error_event);
-
-	DRM_DEBUG_DRIVER("resetting chip\n");
-	kobject_uevent_env(kobj, KOBJ_CHANGE, reset_event);
-
-	/* Use a watchdog to ensure that our reset completes */
-	i915_wedge_on_timeout(&w, dev_priv, 5*HZ) {
-		intel_prepare_reset(dev_priv);
-
-		error->reason = reason;
-		error->stalled_mask = engine_mask;
-
-		/* Signal that locked waiters should reset the GPU */
-		smp_mb__before_atomic();
-		set_bit(I915_RESET_HANDOFF, &error->flags);
-		wake_up_all(&error->wait_queue);
-
-		/* Wait for anyone holding the lock to wakeup, without
-		 * blocking indefinitely on struct_mutex.
-		 */
-		do {
-			if (mutex_trylock(&dev_priv->drm.struct_mutex)) {
-				i915_reset(dev_priv, engine_mask, reason);
-				mutex_unlock(&dev_priv->drm.struct_mutex);
-			}
-		} while (wait_on_bit_timeout(&error->flags,
-					     I915_RESET_HANDOFF,
-					     TASK_UNINTERRUPTIBLE,
-					     1));
-
-		error->stalled_mask = 0;
-		error->reason = NULL;
-
-		intel_finish_reset(dev_priv);
-	}
-
-	if (!test_bit(I915_WEDGED, &error->flags))
-		kobject_uevent_env(kobj, KOBJ_CHANGE, reset_done_event);
-}
-
-void i915_clear_error_registers(struct drm_i915_private *dev_priv)
-{
-	u32 eir;
-
-	if (!IS_GEN2(dev_priv))
-		I915_WRITE(PGTBL_ER, I915_READ(PGTBL_ER));
-
-	if (INTEL_GEN(dev_priv) < 4)
-		I915_WRITE(IPEIR, I915_READ(IPEIR));
-	else
-		I915_WRITE(IPEIR_I965, I915_READ(IPEIR_I965));
-
-	I915_WRITE(EIR, I915_READ(EIR));
-	eir = I915_READ(EIR);
-	if (eir) {
-		/*
-		 * some errors might have become stuck,
-		 * mask them.
-		 */
-		DRM_DEBUG_DRIVER("EIR stuck: 0x%08x, masking\n", eir);
-		I915_WRITE(EMR, I915_READ(EMR) | eir);
-		I915_WRITE(IIR, I915_MASTER_ERROR_INTERRUPT);
-	}
-
-	if (INTEL_GEN(dev_priv) >= 8) {
-		I915_WRITE(GEN8_RING_FAULT_REG,
-			   I915_READ(GEN8_RING_FAULT_REG) & ~RING_FAULT_VALID);
-		POSTING_READ(GEN8_RING_FAULT_REG);
-	} else if (INTEL_GEN(dev_priv) >= 6) {
-		struct intel_engine_cs *engine;
-		enum intel_engine_id id;
-
-		for_each_engine(engine, dev_priv, id) {
-			I915_WRITE(RING_FAULT_REG(engine),
-				   I915_READ(RING_FAULT_REG(engine)) &
-				   ~RING_FAULT_VALID);
-		}
-		POSTING_READ(RING_FAULT_REG(dev_priv->engine[RCS]));
-	}
-}
-
-/**
- * i915_handle_error - handle a gpu error
- * @dev_priv: i915 device private
- * @engine_mask: mask representing engines that are hung
- * @flags: control flags
- * @fmt: Error message format string
- *
- * Do some basic checking of register state at error time and
- * dump it to the syslog.  Also call i915_capture_error_state() to make
- * sure we get a record and make it available in debugfs.  Fire a uevent
- * so userspace knows something bad happened (should trigger collection
- * of a ring dump etc.).
- */
-void i915_handle_error(struct drm_i915_private *dev_priv,
-		       u32 engine_mask,
-		       unsigned long flags,
-		       const char *fmt, ...)
-{
-	struct intel_engine_cs *engine;
-	unsigned int tmp;
-	char error_msg[80];
-	char *msg = NULL;
-
-	if (fmt) {
-		va_list args;
-
-		va_start(args, fmt);
-		vscnprintf(error_msg, sizeof(error_msg), fmt, args);
-		va_end(args);
-
-		msg = error_msg;
-	}
-
-	/*
-	 * In most cases it's guaranteed that we get here with an RPM
-	 * reference held, for example because there is a pending GPU
-	 * request that won't finish until the reset is done. This
-	 * isn't the case at least when we get here by doing a
-	 * simulated reset via debugfs, so get an RPM reference.
-	 */
-	intel_runtime_pm_get(dev_priv);
-
-	engine_mask &= INTEL_INFO(dev_priv)->ring_mask;
-
-	if (flags & I915_ERROR_CAPTURE) {
-		i915_capture_error_state(dev_priv, engine_mask, msg);
-		i915_clear_error_registers(dev_priv);
-	}
-
-	/*
-	 * Try engine reset when available. We fall back to full reset if
-	 * single reset fails.
-	 */
-	if (intel_has_reset_engine(dev_priv) &&
-	    !i915_terminally_wedged(&dev_priv->gpu_error)) {
-		for_each_engine_masked(engine, dev_priv, engine_mask, tmp) {
-			BUILD_BUG_ON(I915_RESET_MODESET >= I915_RESET_ENGINE);
-			if (test_and_set_bit(I915_RESET_ENGINE + engine->id,
-					     &dev_priv->gpu_error.flags))
-				continue;
-
-			if (i915_reset_engine(engine, msg) == 0)
-				engine_mask &= ~intel_engine_flag(engine);
-
-			clear_bit(I915_RESET_ENGINE + engine->id,
-				  &dev_priv->gpu_error.flags);
-			wake_up_bit(&dev_priv->gpu_error.flags,
-				    I915_RESET_ENGINE + engine->id);
-		}
-	}
-
-	if (!engine_mask)
-		goto out;
-
-	/* Full reset needs the mutex, stop any other user trying to do so. */
-	if (test_and_set_bit(I915_RESET_BACKOFF, &dev_priv->gpu_error.flags)) {
-		wait_event(dev_priv->gpu_error.reset_queue,
-			   !test_bit(I915_RESET_BACKOFF,
-				     &dev_priv->gpu_error.flags));
-		goto out;
-	}
-
-	/* Prevent any other reset-engine attempt. */
-	for_each_engine(engine, dev_priv, tmp) {
-		while (test_and_set_bit(I915_RESET_ENGINE + engine->id,
-					&dev_priv->gpu_error.flags))
-			wait_on_bit(&dev_priv->gpu_error.flags,
-				    I915_RESET_ENGINE + engine->id,
-				    TASK_UNINTERRUPTIBLE);
-	}
-
-	i915_reset_device(dev_priv, engine_mask, msg);
-
-	for_each_engine(engine, dev_priv, tmp) {
-		clear_bit(I915_RESET_ENGINE + engine->id,
-			  &dev_priv->gpu_error.flags);
-	}
-
-	clear_bit(I915_RESET_BACKOFF, &dev_priv->gpu_error.flags);
-	wake_up_all(&dev_priv->gpu_error.reset_queue);
-
-out:
-	intel_runtime_pm_put(dev_priv);
-}
-
 /* Called from drm generic code, passed 'crtc' which
  * we use as a pipe index
  */
@@ -3586,11 +3341,8 @@ static void ironlake_irq_reset(struct drm_device *dev)
 {
 	struct drm_i915_private *dev_priv = to_i915(dev);
 
-	if (IS_GEN5(dev_priv))
-		I915_WRITE(HWSTAM, 0xffffffff);
-
 	GEN3_IRQ_RESET(DE);
-	if (IS_GEN7(dev_priv))
+	if (IS_GEN(dev_priv, 7))
 		I915_WRITE(GEN7_ERR_INT, 0xffffffff);
 
 	if (IS_HASWELL(dev_priv)) {
@@ -4045,7 +3797,7 @@ static void gen5_gt_irq_postinstall(struct drm_device *dev)
 	}
 
 	gt_irqs |= GT_RENDER_USER_INTERRUPT;
-	if (IS_GEN5(dev_priv)) {
+	if (IS_GEN(dev_priv, 5)) {
 		gt_irqs |= ILK_BSD_USER_INTERRUPT;
 	} else {
 		gt_irqs |= GT_BLT_USER_INTERRUPT | GT_BSD_USER_INTERRUPT;
@@ -4182,9 +3934,6 @@ static void gen8_gt_irq_postinstall(struct drm_i915_private *dev_priv)
 		GT_RENDER_USER_INTERRUPT << GEN8_VECS_IRQ_SHIFT |
 			GT_CONTEXT_SWITCH_INTERRUPT << GEN8_VECS_IRQ_SHIFT
 		};
-
-	if (HAS_L3_DPF(dev_priv))
-		gt_interrupts[0] |= GT_RENDER_L3_PARITY_ERROR_INTERRUPT;
 
 	dev_priv->pm_ier = 0x0;
 	dev_priv->pm_imr = ~dev_priv->pm_ier;
@@ -4368,8 +4117,6 @@ static void i8xx_irq_reset(struct drm_device *dev)
 
 	i9xx_pipestat_irq_reset(dev_priv);
 
-	I915_WRITE16(HWSTAM, 0xffff);
-
 	GEN2_IRQ_RESET();
 }
 
@@ -4537,8 +4284,6 @@ static void i915_irq_reset(struct drm_device *dev)
 
 	i9xx_pipestat_irq_reset(dev_priv);
 
-	I915_WRITE(HWSTAM, 0xffffffff);
-
 	GEN3_IRQ_RESET();
 }
 
@@ -4647,8 +4392,6 @@ static void i965_irq_reset(struct drm_device *dev)
 	I915_WRITE(PORT_HOTPLUG_STAT, I915_READ(PORT_HOTPLUG_STAT));
 
 	i9xx_pipestat_irq_reset(dev_priv);
-
-	I915_WRITE(HWSTAM, 0xffffffff);
 
 	GEN3_IRQ_RESET();
 }
@@ -4836,7 +4579,7 @@ void intel_irq_init(struct drm_i915_private *dev_priv)
 	if (INTEL_GEN(dev_priv) >= 8)
 		rps->pm_intrmsk_mbz |= GEN8_PMINTR_DISABLE_REDIRECT_TO_GUC;
 
-	if (IS_GEN2(dev_priv)) {
+	if (IS_GEN(dev_priv, 2)) {
 		/* Gen2 doesn't have a hardware frame counter */
 		dev->max_vblank_count = 0;
 	} else if (IS_G4X(dev_priv) || INTEL_GEN(dev_priv) >= 5) {
@@ -4852,7 +4595,7 @@ void intel_irq_init(struct drm_i915_private *dev_priv)
 	 * Gen2 doesn't have a hardware frame counter and so depends on
 	 * vblank interrupts to produce sane vblank seuquence numbers.
 	 */
-	if (!IS_GEN2(dev_priv))
+	if (!IS_GEN(dev_priv, 2))
 		dev->vblank_disable_immediate = true;
 
 	/* Most platforms treat the display irq block as an always-on
@@ -4924,14 +4667,14 @@ void intel_irq_init(struct drm_i915_private *dev_priv)
 		dev->driver->disable_vblank = ironlake_disable_vblank;
 		dev_priv->display.hpd_irq_setup = ilk_hpd_irq_setup;
 	} else {
-		if (IS_GEN2(dev_priv)) {
+		if (IS_GEN(dev_priv, 2)) {
 			dev->driver->irq_preinstall = i8xx_irq_reset;
 			dev->driver->irq_postinstall = i8xx_irq_postinstall;
 			dev->driver->irq_handler = i8xx_irq_handler;
 			dev->driver->irq_uninstall = i8xx_irq_reset;
 			dev->driver->enable_vblank = i8xx_enable_vblank;
 			dev->driver->disable_vblank = i8xx_disable_vblank;
-		} else if (IS_GEN3(dev_priv)) {
+		} else if (IS_GEN(dev_priv, 3)) {
 			dev->driver->irq_preinstall = i915_irq_reset;
 			dev->driver->irq_postinstall = i915_irq_postinstall;
 			dev->driver->irq_uninstall = i915_irq_reset;
