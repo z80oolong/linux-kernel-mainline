@@ -488,7 +488,7 @@ static void vlv_get_fifo_size(struct intel_crtc_state *crtc_state)
 	int sprite0_start, sprite1_start;
 
 	switch (pipe) {
-		uint32_t dsparb, dsparb2, dsparb3;
+		u32 dsparb, dsparb2, dsparb3;
 	case PIPE_A:
 		dsparb = I915_READ(DSPARB);
 		dsparb2 = I915_READ(DSPARB2);
@@ -521,7 +521,7 @@ static void vlv_get_fifo_size(struct intel_crtc_state *crtc_state)
 static int i9xx_get_fifo_size(struct drm_i915_private *dev_priv,
 			      enum i9xx_plane_id i9xx_plane)
 {
-	uint32_t dsparb = I915_READ(DSPARB);
+	u32 dsparb = I915_READ(DSPARB);
 	int size;
 
 	size = dsparb & 0x7f;
@@ -537,7 +537,7 @@ static int i9xx_get_fifo_size(struct drm_i915_private *dev_priv,
 static int i830_get_fifo_size(struct drm_i915_private *dev_priv,
 			      enum i9xx_plane_id i9xx_plane)
 {
-	uint32_t dsparb = I915_READ(DSPARB);
+	u32 dsparb = I915_READ(DSPARB);
 	int size;
 
 	size = dsparb & 0x1ff;
@@ -554,7 +554,7 @@ static int i830_get_fifo_size(struct drm_i915_private *dev_priv,
 static int i845_get_fifo_size(struct drm_i915_private *dev_priv,
 			      enum i9xx_plane_id i9xx_plane)
 {
-	uint32_t dsparb = I915_READ(DSPARB);
+	u32 dsparb = I915_READ(DSPARB);
 	int size;
 
 	size = dsparb & 0x7f;
@@ -675,9 +675,9 @@ static unsigned int intel_wm_method1(unsigned int pixel_rate,
 				     unsigned int cpp,
 				     unsigned int latency)
 {
-	uint64_t ret;
+	u64 ret;
 
-	ret = (uint64_t) pixel_rate * cpp * latency;
+	ret = (u64)pixel_rate * cpp * latency;
 	ret = DIV_ROUND_UP_ULL(ret, 10000);
 
 	return ret;
@@ -1097,9 +1097,9 @@ static int g4x_fbc_fifo_size(int level)
 	}
 }
 
-static uint16_t g4x_compute_wm(const struct intel_crtc_state *crtc_state,
-			       const struct intel_plane_state *plane_state,
-			       int level)
+static u16 g4x_compute_wm(const struct intel_crtc_state *crtc_state,
+			  const struct intel_plane_state *plane_state,
+			  int level)
 {
 	struct intel_plane *plane = to_intel_plane(plane_state->base.plane);
 	struct drm_i915_private *dev_priv = to_i915(plane->base.dev);
@@ -1196,9 +1196,9 @@ static bool g4x_raw_fbc_wm_set(struct intel_crtc_state *crtc_state,
 	return dirty;
 }
 
-static uint32_t ilk_compute_fbc_wm(const struct intel_crtc_state *cstate,
-				   const struct intel_plane_state *pstate,
-				   uint32_t pri_val);
+static u32 ilk_compute_fbc_wm(const struct intel_crtc_state *cstate,
+			      const struct intel_plane_state *pstate,
+			      u32 pri_val);
 
 static bool g4x_raw_plane_wm_compute(struct intel_crtc_state *crtc_state,
 				     const struct intel_plane_state *plane_state)
@@ -1606,9 +1606,9 @@ static void vlv_setup_wm_latency(struct drm_i915_private *dev_priv)
 	}
 }
 
-static uint16_t vlv_compute_wm_level(const struct intel_crtc_state *crtc_state,
-				     const struct intel_plane_state *plane_state,
-				     int level)
+static u16 vlv_compute_wm_level(const struct intel_crtc_state *crtc_state,
+				const struct intel_plane_state *plane_state,
+				int level)
 {
 	struct intel_plane *plane = to_intel_plane(plane_state->base.plane);
 	struct drm_i915_private *dev_priv = to_i915(plane->base.dev);
@@ -1976,7 +1976,7 @@ static void vlv_atomic_update_fifo(struct intel_atomic_state *state,
 	spin_lock(&dev_priv->uncore.lock);
 
 	switch (crtc->pipe) {
-		uint32_t dsparb, dsparb2, dsparb3;
+		u32 dsparb, dsparb2, dsparb3;
 	case PIPE_A:
 		dsparb = I915_READ_FW(DSPARB);
 		dsparb2 = I915_READ_FW(DSPARB2);
@@ -2270,8 +2270,8 @@ static void i9xx_update_wm(struct intel_crtc *unused_crtc)
 {
 	struct drm_i915_private *dev_priv = to_i915(unused_crtc->base.dev);
 	const struct intel_watermark_params *wm_info;
-	uint32_t fwater_lo;
-	uint32_t fwater_hi;
+	u32 fwater_lo;
+	u32 fwater_hi;
 	int cwm, srwm = 1;
 	int fifo_size;
 	int planea_wm, planeb_wm;
@@ -2414,7 +2414,7 @@ static void i845_update_wm(struct intel_crtc *unused_crtc)
 	struct drm_i915_private *dev_priv = to_i915(unused_crtc->base.dev);
 	struct intel_crtc *crtc;
 	const struct drm_display_mode *adjusted_mode;
-	uint32_t fwater_lo;
+	u32 fwater_lo;
 	int planea_wm;
 
 	crtc = single_enabled_crtc(dev_priv);
@@ -2463,8 +2463,7 @@ static unsigned int ilk_wm_method2(unsigned int pixel_rate,
 	return ret;
 }
 
-static uint32_t ilk_wm_fbc(uint32_t pri_val, uint32_t horiz_pixels,
-			   uint8_t cpp)
+static u32 ilk_wm_fbc(u32 pri_val, u32 horiz_pixels, u8 cpp)
 {
 	/*
 	 * Neither of these should be possible since this function shouldn't be
@@ -2481,22 +2480,21 @@ static uint32_t ilk_wm_fbc(uint32_t pri_val, uint32_t horiz_pixels,
 }
 
 struct ilk_wm_maximums {
-	uint16_t pri;
-	uint16_t spr;
-	uint16_t cur;
-	uint16_t fbc;
+	u16 pri;
+	u16 spr;
+	u16 cur;
+	u16 fbc;
 };
 
 /*
  * For both WM_PIPE and WM_LP.
  * mem_value must be in 0.1us units.
  */
-static uint32_t ilk_compute_pri_wm(const struct intel_crtc_state *cstate,
-				   const struct intel_plane_state *pstate,
-				   uint32_t mem_value,
-				   bool is_lp)
+static u32 ilk_compute_pri_wm(const struct intel_crtc_state *cstate,
+			      const struct intel_plane_state *pstate,
+			      u32 mem_value, bool is_lp)
 {
-	uint32_t method1, method2;
+	u32 method1, method2;
 	int cpp;
 
 	if (mem_value == 0)
@@ -2524,11 +2522,11 @@ static uint32_t ilk_compute_pri_wm(const struct intel_crtc_state *cstate,
  * For both WM_PIPE and WM_LP.
  * mem_value must be in 0.1us units.
  */
-static uint32_t ilk_compute_spr_wm(const struct intel_crtc_state *cstate,
-				   const struct intel_plane_state *pstate,
-				   uint32_t mem_value)
+static u32 ilk_compute_spr_wm(const struct intel_crtc_state *cstate,
+			      const struct intel_plane_state *pstate,
+			      u32 mem_value)
 {
-	uint32_t method1, method2;
+	u32 method1, method2;
 	int cpp;
 
 	if (mem_value == 0)
@@ -2551,9 +2549,9 @@ static uint32_t ilk_compute_spr_wm(const struct intel_crtc_state *cstate,
  * For both WM_PIPE and WM_LP.
  * mem_value must be in 0.1us units.
  */
-static uint32_t ilk_compute_cur_wm(const struct intel_crtc_state *cstate,
-				   const struct intel_plane_state *pstate,
-				   uint32_t mem_value)
+static u32 ilk_compute_cur_wm(const struct intel_crtc_state *cstate,
+			      const struct intel_plane_state *pstate,
+			      u32 mem_value)
 {
 	int cpp;
 
@@ -2571,9 +2569,9 @@ static uint32_t ilk_compute_cur_wm(const struct intel_crtc_state *cstate,
 }
 
 /* Only for WM_LP. */
-static uint32_t ilk_compute_fbc_wm(const struct intel_crtc_state *cstate,
-				   const struct intel_plane_state *pstate,
-				   uint32_t pri_val)
+static u32 ilk_compute_fbc_wm(const struct intel_crtc_state *cstate,
+			      const struct intel_plane_state *pstate,
+			      u32 pri_val)
 {
 	int cpp;
 
@@ -2739,9 +2737,9 @@ static bool ilk_validate_wm_level(int level,
 			DRM_DEBUG_KMS("Cursor WM%d too large %u (max %u)\n",
 				      level, result->cur_val, max->cur);
 
-		result->pri_val = min_t(uint32_t, result->pri_val, max->pri);
-		result->spr_val = min_t(uint32_t, result->spr_val, max->spr);
-		result->cur_val = min_t(uint32_t, result->cur_val, max->cur);
+		result->pri_val = min_t(u32, result->pri_val, max->pri);
+		result->spr_val = min_t(u32, result->spr_val, max->spr);
+		result->cur_val = min_t(u32, result->cur_val, max->cur);
 		result->enable = true;
 	}
 
@@ -2757,9 +2755,9 @@ static void ilk_compute_wm_level(const struct drm_i915_private *dev_priv,
 				 const struct intel_plane_state *curstate,
 				 struct intel_wm_level *result)
 {
-	uint16_t pri_latency = dev_priv->wm.pri_latency[level];
-	uint16_t spr_latency = dev_priv->wm.spr_latency[level];
-	uint16_t cur_latency = dev_priv->wm.cur_latency[level];
+	u16 pri_latency = dev_priv->wm.pri_latency[level];
+	u16 spr_latency = dev_priv->wm.spr_latency[level];
+	u16 cur_latency = dev_priv->wm.cur_latency[level];
 
 	/* WM1+ latency values stored in 0.5us units */
 	if (level > 0) {
@@ -2783,7 +2781,7 @@ static void ilk_compute_wm_level(const struct drm_i915_private *dev_priv,
 	result->enable = true;
 }
 
-static uint32_t
+static u32
 hsw_compute_linetime_wm(const struct intel_crtc_state *cstate)
 {
 	const struct intel_atomic_state *intel_state =
@@ -2812,10 +2810,10 @@ hsw_compute_linetime_wm(const struct intel_crtc_state *cstate)
 }
 
 static void intel_read_wm_latency(struct drm_i915_private *dev_priv,
-				  uint16_t wm[8])
+				  u16 wm[8])
 {
 	if (INTEL_GEN(dev_priv) >= 9) {
-		uint32_t val;
+		u32 val;
 		int ret, i;
 		int level, max_level = ilk_wm_max_level(dev_priv);
 
@@ -2899,7 +2897,7 @@ static void intel_read_wm_latency(struct drm_i915_private *dev_priv,
 			wm[0] += 1;
 
 	} else if (IS_HASWELL(dev_priv) || IS_BROADWELL(dev_priv)) {
-		uint64_t sskpd = I915_READ64(MCH_SSKPD);
+		u64 sskpd = I915_READ64(MCH_SSKPD);
 
 		wm[0] = (sskpd >> 56) & 0xFF;
 		if (wm[0] == 0)
@@ -2909,14 +2907,14 @@ static void intel_read_wm_latency(struct drm_i915_private *dev_priv,
 		wm[3] = (sskpd >> 20) & 0x1FF;
 		wm[4] = (sskpd >> 32) & 0x1FF;
 	} else if (INTEL_GEN(dev_priv) >= 6) {
-		uint32_t sskpd = I915_READ(MCH_SSKPD);
+		u32 sskpd = I915_READ(MCH_SSKPD);
 
 		wm[0] = (sskpd >> SSKPD_WM0_SHIFT) & SSKPD_WM_MASK;
 		wm[1] = (sskpd >> SSKPD_WM1_SHIFT) & SSKPD_WM_MASK;
 		wm[2] = (sskpd >> SSKPD_WM2_SHIFT) & SSKPD_WM_MASK;
 		wm[3] = (sskpd >> SSKPD_WM3_SHIFT) & SSKPD_WM_MASK;
 	} else if (INTEL_GEN(dev_priv) >= 5) {
-		uint32_t mltr = I915_READ(MLTR_ILK);
+		u32 mltr = I915_READ(MLTR_ILK);
 
 		/* ILK primary LP0 latency is 700 ns */
 		wm[0] = 7;
@@ -2928,7 +2926,7 @@ static void intel_read_wm_latency(struct drm_i915_private *dev_priv,
 }
 
 static void intel_fixup_spr_wm_latency(struct drm_i915_private *dev_priv,
-				       uint16_t wm[5])
+				       u16 wm[5])
 {
 	/* ILK sprite LP0 latency is 1300 ns */
 	if (IS_GEN(dev_priv, 5))
@@ -2936,7 +2934,7 @@ static void intel_fixup_spr_wm_latency(struct drm_i915_private *dev_priv,
 }
 
 static void intel_fixup_cur_wm_latency(struct drm_i915_private *dev_priv,
-				       uint16_t wm[5])
+				       u16 wm[5])
 {
 	/* ILK cursor LP0 latency is 1300 ns */
 	if (IS_GEN(dev_priv, 5))
@@ -2958,7 +2956,7 @@ int ilk_wm_max_level(const struct drm_i915_private *dev_priv)
 
 static void intel_print_wm_latency(struct drm_i915_private *dev_priv,
 				   const char *name,
-				   const uint16_t wm[8])
+				   const u16 wm[8])
 {
 	int level, max_level = ilk_wm_max_level(dev_priv);
 
@@ -2987,7 +2985,7 @@ static void intel_print_wm_latency(struct drm_i915_private *dev_priv,
 }
 
 static bool ilk_increase_wm_latency(struct drm_i915_private *dev_priv,
-				    uint16_t wm[5], uint16_t min)
+				    u16 wm[5], u16 min)
 {
 	int level, max_level = ilk_wm_max_level(dev_priv);
 
@@ -2996,7 +2994,7 @@ static bool ilk_increase_wm_latency(struct drm_i915_private *dev_priv,
 
 	wm[0] = max(wm[0], min);
 	for (level = 1; level <= max_level; level++)
-		wm[level] = max_t(uint16_t, wm[level], DIV_ROUND_UP(min, 5));
+		wm[level] = max_t(u16, wm[level], DIV_ROUND_UP(min, 5));
 
 	return true;
 }
@@ -3543,7 +3541,7 @@ static void ilk_write_wm_values(struct drm_i915_private *dev_priv,
 {
 	struct ilk_wm_values *previous = &dev_priv->wm.hw;
 	unsigned int dirty;
-	uint32_t val;
+	u32 val;
 
 	dirty = ilk_compute_wm_dirty(dev_priv, previous, results);
 	if (!dirty)
@@ -4039,7 +4037,7 @@ skl_plane_downscale_amount(const struct intel_crtc_state *cstate,
 			   const struct intel_plane_state *pstate)
 {
 	struct intel_plane *plane = to_intel_plane(pstate->base.plane);
-	uint32_t src_w, src_h, dst_w, dst_h;
+	u32 src_w, src_h, dst_w, dst_h;
 	uint_fixed_16_16_t fp_w_ratio, fp_h_ratio;
 	uint_fixed_16_16_t downscale_h, downscale_w;
 
@@ -4085,8 +4083,8 @@ skl_pipe_downscale_amount(const struct intel_crtc_state *crtc_state)
 		return pipe_downscale;
 
 	if (crtc_state->pch_pfit.enabled) {
-		uint32_t src_w, src_h, dst_w, dst_h;
-		uint32_t pfit_size = crtc_state->pch_pfit.size;
+		u32 src_w, src_h, dst_w, dst_h;
+		u32 pfit_size = crtc_state->pch_pfit.size;
 		uint_fixed_16_16_t fp_w_ratio, fp_h_ratio;
 		uint_fixed_16_16_t downscale_h, downscale_w;
 
@@ -4119,7 +4117,7 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
 	const struct drm_plane_state *pstate;
 	struct intel_plane_state *intel_pstate;
 	int crtc_clock, dotclk;
-	uint32_t pipe_max_pixel_rate;
+	u32 pipe_max_pixel_rate;
 	uint_fixed_16_16_t pipe_downscale;
 	uint_fixed_16_16_t max_downscale = u32_to_fixed16(1);
 
@@ -4175,8 +4173,8 @@ skl_plane_relative_data_rate(const struct intel_crtc_state *cstate,
 {
 	struct intel_plane *intel_plane =
 		to_intel_plane(intel_pstate->base.plane);
-	uint32_t data_rate;
-	uint32_t width = 0, height = 0;
+	u32 data_rate;
+	u32 width = 0, height = 0;
 	struct drm_framebuffer *fb;
 	u32 format;
 	uint_fixed_16_16_t down_scale_amount;
@@ -4319,15 +4317,15 @@ skl_allocate_pipe_ddb(struct intel_crtc_state *cstate,
 	struct intel_crtc *intel_crtc = to_intel_crtc(crtc);
 	struct skl_ddb_entry *alloc = &cstate->wm.skl.ddb;
 	struct skl_plane_wm *wm;
-	uint16_t alloc_size, start = 0;
-	uint16_t total[I915_MAX_PLANES] = {};
-	uint16_t uv_total[I915_MAX_PLANES] = {};
+	u16 alloc_size, start = 0;
+	u16 total[I915_MAX_PLANES] = {};
+	u16 uv_total[I915_MAX_PLANES] = {};
 	u64 total_data_rate;
 	enum plane_id plane_id;
 	int num_active;
 	u64 plane_data_rate[I915_MAX_PLANES] = {};
 	u64 uv_plane_data_rate[I915_MAX_PLANES] = {};
-	uint16_t blocks = 0;
+	u16 blocks = 0;
 	int level;
 
 	/* Clear the partitioning for disabled planes. */
@@ -4499,10 +4497,10 @@ skl_allocate_pipe_ddb(struct intel_crtc_state *cstate,
  * 2xcdclk is 1350 MHz and the pixel rate should never exceed that.
 */
 static uint_fixed_16_16_t
-skl_wm_method1(const struct drm_i915_private *dev_priv, uint32_t pixel_rate,
-	       uint8_t cpp, uint32_t latency, uint32_t dbuf_block_size)
+skl_wm_method1(const struct drm_i915_private *dev_priv, u32 pixel_rate,
+	       u8 cpp, u32 latency, u32 dbuf_block_size)
 {
-	uint32_t wm_intermediate_val;
+	u32 wm_intermediate_val;
 	uint_fixed_16_16_t ret;
 
 	if (latency == 0)
@@ -4517,12 +4515,11 @@ skl_wm_method1(const struct drm_i915_private *dev_priv, uint32_t pixel_rate,
 	return ret;
 }
 
-static uint_fixed_16_16_t skl_wm_method2(uint32_t pixel_rate,
-			uint32_t pipe_htotal,
-			uint32_t latency,
-			uint_fixed_16_16_t plane_blocks_per_line)
+static uint_fixed_16_16_t
+skl_wm_method2(u32 pixel_rate, u32 pipe_htotal, u32 latency,
+	       uint_fixed_16_16_t plane_blocks_per_line)
 {
-	uint32_t wm_intermediate_val;
+	u32 wm_intermediate_val;
 	uint_fixed_16_16_t ret;
 
 	if (latency == 0)
@@ -4538,8 +4535,8 @@ static uint_fixed_16_16_t skl_wm_method2(uint32_t pixel_rate,
 static uint_fixed_16_16_t
 intel_get_linetime_us(const struct intel_crtc_state *cstate)
 {
-	uint32_t pixel_rate;
-	uint32_t crtc_htotal;
+	u32 pixel_rate;
+	u32 crtc_htotal;
 	uint_fixed_16_16_t linetime_us;
 
 	if (!cstate->base.active)
@@ -4556,11 +4553,11 @@ intel_get_linetime_us(const struct intel_crtc_state *cstate)
 	return linetime_us;
 }
 
-static uint32_t
+static u32
 skl_adjusted_plane_pixel_rate(const struct intel_crtc_state *cstate,
 			      const struct intel_plane_state *pstate)
 {
-	uint64_t adjusted_pixel_rate;
+	u64 adjusted_pixel_rate;
 	uint_fixed_16_16_t downscale_amount;
 
 	/* Shouldn't reach here on disabled planes... */
@@ -4587,7 +4584,7 @@ skl_compute_plane_wm_params(const struct intel_crtc_state *cstate,
 	struct drm_i915_private *dev_priv = to_i915(plane->base.dev);
 	const struct drm_plane_state *pstate = &intel_pstate->base;
 	const struct drm_framebuffer *fb = pstate->fb;
-	uint32_t interm_pbpl;
+	u32 interm_pbpl;
 	struct intel_atomic_state *state =
 		to_intel_atomic_state(cstate->base.state);
 	bool apply_memory_bw_wa = skl_needs_memory_bw_wa(state);
@@ -4701,10 +4698,10 @@ static void skl_compute_plane_wm(const struct intel_crtc_state *cstate,
 {
 	struct drm_i915_private *dev_priv =
 		to_i915(intel_pstate->base.plane->dev);
-	uint32_t latency = dev_priv->wm.skl_latency[level];
+	u32 latency = dev_priv->wm.skl_latency[level];
 	uint_fixed_16_16_t method1, method2;
 	uint_fixed_16_16_t selected_result;
-	uint32_t res_blocks, res_lines;
+	u32 res_blocks, res_lines;
 	struct intel_atomic_state *state =
 		to_intel_atomic_state(cstate->base.state);
 	bool apply_memory_bw_wa = skl_needs_memory_bw_wa(state);
@@ -4815,13 +4812,13 @@ skl_compute_wm_levels(const struct intel_crtc_state *cstate,
 	}
 }
 
-static uint32_t
+static u32
 skl_compute_linetime_wm(const struct intel_crtc_state *cstate)
 {
 	struct drm_atomic_state *state = cstate->base.state;
 	struct drm_i915_private *dev_priv = to_i915(state->dev);
 	uint_fixed_16_16_t linetime_us;
-	uint32_t linetime_wm;
+	u32 linetime_wm;
 
 	linetime_us = intel_get_linetime_us(cstate);
 
@@ -4844,9 +4841,9 @@ static void skl_compute_transition_wm(const struct intel_crtc_state *cstate,
 {
 	struct drm_device *dev = cstate->base.crtc->dev;
 	const struct drm_i915_private *dev_priv = to_i915(dev);
-	uint16_t trans_min, trans_y_tile_min;
-	const uint16_t trans_amount = 10; /* This is configurable amount */
-	uint16_t wm0_sel_res_b, trans_offset_b, res_blocks;
+	u16 trans_min, trans_y_tile_min;
+	const u16 trans_amount = 10; /* This is configurable amount */
+	u16 wm0_sel_res_b, trans_offset_b, res_blocks;
 
 	/* Transition WM are not recommended by HW team for GEN9 */
 	if (INTEL_GEN(dev_priv) <= 9)
@@ -4875,8 +4872,8 @@ static void skl_compute_transition_wm(const struct intel_crtc_state *cstate,
 	wm0_sel_res_b = wm->wm[0].plane_res_b - 1;
 
 	if (wp->y_tiled) {
-		trans_y_tile_min = (uint16_t) mul_round_up_u32_fixed16(2,
-							wp->y_tile_minimum);
+		trans_y_tile_min =
+			(u16)mul_round_up_u32_fixed16(2, wp->y_tile_minimum);
 		res_blocks = max(wm0_sel_res_b, trans_y_tile_min) +
 				trans_offset_b;
 	} else {
@@ -5050,7 +5047,7 @@ static void skl_write_wm_level(struct drm_i915_private *dev_priv,
 			       i915_reg_t reg,
 			       const struct skl_wm_level *level)
 {
-	uint32_t val = 0;
+	u32 val = 0;
 
 	if (level->plane_en) {
 		val |= PLANE_WM_EN;
@@ -5181,12 +5178,12 @@ static int skl_update_pipe_wm(struct intel_crtc_state *cstate,
 	return 0;
 }
 
-static uint32_t
+static u32
 pipes_modified(struct intel_atomic_state *state)
 {
 	struct intel_crtc *crtc;
 	struct intel_crtc_state *cstate;
-	uint32_t i, ret = 0;
+	u32 i, ret = 0;
 
 	for_each_new_intel_crtc_in_state(state, crtc, cstate, i)
 		ret |= drm_crtc_mask(&crtc->base);
@@ -5287,7 +5284,7 @@ skl_ddb_add_affected_pipes(struct intel_atomic_state *state, bool *changed)
 	const struct drm_i915_private *dev_priv = to_i915(dev);
 	struct intel_crtc *crtc;
 	struct intel_crtc_state *crtc_state;
-	uint32_t realloc_pipes = pipes_modified(state);
+	u32 realloc_pipes = pipes_modified(state);
 	int ret, i;
 
 	/*
@@ -5586,7 +5583,7 @@ static void ilk_optimize_watermarks(struct intel_atomic_state *state,
 	mutex_unlock(&dev_priv->wm.wm_mutex);
 }
 
-static inline void skl_wm_level_from_reg_val(uint32_t val,
+static inline void skl_wm_level_from_reg_val(u32 val,
 					     struct skl_wm_level *level)
 {
 	level->plane_en = val & PLANE_WM_EN;
@@ -5602,7 +5599,7 @@ void skl_pipe_wm_get_hw_state(struct intel_crtc *crtc,
 	enum pipe pipe = crtc->pipe;
 	int level, max_level;
 	enum plane_id plane_id;
-	uint32_t val;
+	u32 val;
 
 	max_level = ilk_wm_max_level(dev_priv);
 
@@ -5714,7 +5711,7 @@ static void ilk_pipe_wm_get_hw_state(struct intel_crtc *crtc)
 static void g4x_read_wm_values(struct drm_i915_private *dev_priv,
 			       struct g4x_wm_values *wm)
 {
-	uint32_t tmp;
+	u32 tmp;
 
 	tmp = I915_READ(DSPFW1);
 	wm->sr.plane = _FW_WM(tmp, SR);
@@ -5741,7 +5738,7 @@ static void vlv_read_wm_values(struct drm_i915_private *dev_priv,
 			       struct vlv_wm_values *wm)
 {
 	enum pipe pipe;
-	uint32_t tmp;
+	u32 tmp;
 
 	for_each_pipe(dev_priv, pipe) {
 		tmp = I915_READ(VLV_DDL(pipe));
@@ -8626,7 +8623,7 @@ static void g4x_disable_trickle_feed(struct drm_i915_private *dev_priv)
 
 static void ilk_init_clock_gating(struct drm_i915_private *dev_priv)
 {
-	uint32_t dspclk_gate = ILK_VRHUNIT_CLOCK_GATE_DISABLE;
+	u32 dspclk_gate = ILK_VRHUNIT_CLOCK_GATE_DISABLE;
 
 	/*
 	 * Required for FBC
@@ -8698,7 +8695,7 @@ static void ilk_init_clock_gating(struct drm_i915_private *dev_priv)
 static void cpt_init_clock_gating(struct drm_i915_private *dev_priv)
 {
 	int pipe;
-	uint32_t val;
+	u32 val;
 
 	/*
 	 * On Ibex Peak and Cougar Point, we need to disable clock
@@ -8733,7 +8730,7 @@ static void cpt_init_clock_gating(struct drm_i915_private *dev_priv)
 
 static void gen6_check_mch_setup(struct drm_i915_private *dev_priv)
 {
-	uint32_t tmp;
+	u32 tmp;
 
 	tmp = I915_READ(MCH_SSKPD);
 	if ((tmp & MCH_SSKPD_WM0_MASK) != MCH_SSKPD_WM0_VAL)
@@ -8743,7 +8740,7 @@ static void gen6_check_mch_setup(struct drm_i915_private *dev_priv)
 
 static void gen6_init_clock_gating(struct drm_i915_private *dev_priv)
 {
-	uint32_t dspclk_gate = ILK_VRHUNIT_CLOCK_GATE_DISABLE;
+	u32 dspclk_gate = ILK_VRHUNIT_CLOCK_GATE_DISABLE;
 
 	I915_WRITE(ILK_DSPCLK_GATE_D, dspclk_gate);
 
@@ -8837,7 +8834,7 @@ static void gen6_init_clock_gating(struct drm_i915_private *dev_priv)
 
 static void gen7_setup_fixed_func_scheduler(struct drm_i915_private *dev_priv)
 {
-	uint32_t reg = I915_READ(GEN7_FF_THREAD_MODE);
+	u32 reg = I915_READ(GEN7_FF_THREAD_MODE);
 
 	/*
 	 * WaVSThreadDispatchOverride:ivb,vlv
@@ -8873,7 +8870,7 @@ static void lpt_init_clock_gating(struct drm_i915_private *dev_priv)
 static void lpt_suspend_hw(struct drm_i915_private *dev_priv)
 {
 	if (HAS_PCH_LPT_LP(dev_priv)) {
-		uint32_t val = I915_READ(SOUTH_DSPCLK_GATE_D);
+		u32 val = I915_READ(SOUTH_DSPCLK_GATE_D);
 
 		val &= ~PCH_LP_PARTITION_LEVEL_DISABLE;
 		I915_WRITE(SOUTH_DSPCLK_GATE_D, val);
@@ -9111,7 +9108,7 @@ static void hsw_init_clock_gating(struct drm_i915_private *dev_priv)
 
 static void ivb_init_clock_gating(struct drm_i915_private *dev_priv)
 {
-	uint32_t snpcr;
+	u32 snpcr;
 
 	I915_WRITE(ILK_DSPCLK_GATE_D, ILK_VRHUNIT_CLOCK_GATE_DISABLE);
 
@@ -9320,7 +9317,7 @@ static void chv_init_clock_gating(struct drm_i915_private *dev_priv)
 
 static void g4x_init_clock_gating(struct drm_i915_private *dev_priv)
 {
-	uint32_t dspclk_gate;
+	u32 dspclk_gate;
 
 	I915_WRITE(RENCLK_GATE_D1, 0);
 	I915_WRITE(RENCLK_GATE_D2, VF_UNIT_CLOCK_GATE_DISABLE |
@@ -9570,7 +9567,7 @@ void intel_init_pm(struct drm_i915_private *dev_priv)
 
 static inline int gen6_check_mailbox_status(struct drm_i915_private *dev_priv)
 {
-	uint32_t flags =
+	u32 flags =
 		I915_READ_FW(GEN6_PCODE_MAILBOX) & GEN6_PCODE_ERROR_MASK;
 
 	switch (flags) {
@@ -9593,7 +9590,7 @@ static inline int gen6_check_mailbox_status(struct drm_i915_private *dev_priv)
 
 static inline int gen7_check_mailbox_status(struct drm_i915_private *dev_priv)
 {
-	uint32_t flags =
+	u32 flags =
 		I915_READ_FW(GEN6_PCODE_MAILBOX) & GEN6_PCODE_ERROR_MASK;
 
 	switch (flags) {
