@@ -21,7 +21,7 @@ struct simple_card_data {
 		struct asoc_simple_dai *cpu_dai;
 		struct asoc_simple_dai *codec_dai;
 		struct snd_soc_dai_link_component codecs; /* single codec */
-		struct snd_soc_dai_link_component platform;
+		struct snd_soc_dai_link_component platforms;
 		struct asoc_simple_card_data adata;
 		struct snd_soc_codec_conf *codec_conf;
 		unsigned int mclk_fs;
@@ -631,7 +631,8 @@ static int asoc_simple_card_probe(struct platform_device *pdev)
 	for (i = 0; i < lnum; i++) {
 		dai_link[i].codecs	= &dai_props[i].codecs;
 		dai_link[i].num_codecs	= 1;
-		dai_link[i].platform	= &dai_props[i].platform;
+		dai_link[i].platforms	= &dai_props[i].platforms;
+		dai_link[i].num_platforms = 1;
 	}
 
 	priv->dai_props			= dai_props;
@@ -686,7 +687,7 @@ static int asoc_simple_card_probe(struct platform_device *pdev)
 		codecs->name		= cinfo->codec;
 		codecs->dai_name	= cinfo->codec_dai.name;
 
-		platform		= dai_link->platform;
+		platform		= dai_link->platforms;
 		platform->name		= cinfo->platform;
 
 		card->name		= (cinfo->card) ? cinfo->card : cinfo->name;
