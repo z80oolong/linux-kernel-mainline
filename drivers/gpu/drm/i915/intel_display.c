@@ -14500,7 +14500,7 @@ static bool has_edp_a(struct drm_i915_private *dev_priv)
 	return true;
 }
 
-static bool intel_crt_present(struct drm_i915_private *dev_priv)
+static bool intel_ddi_crt_present(struct drm_i915_private *dev_priv)
 {
 	if (INTEL_GEN(dev_priv) >= 9)
 		return false;
@@ -14508,15 +14508,12 @@ static bool intel_crt_present(struct drm_i915_private *dev_priv)
 	if (IS_HSW_ULT(dev_priv) || IS_BDW_ULT(dev_priv))
 		return false;
 
-	if (IS_CHERRYVIEW(dev_priv))
-		return false;
-
 	if (HAS_PCH_LPT_H(dev_priv) &&
 	    I915_READ(SFUSE_STRAP) & SFUSE_STRAP_CRT_DISABLED)
 		return false;
 
 	/* DDI E can't be used if DDI A requires 4 lanes */
-	if (HAS_DDI(dev_priv) && I915_READ(DDI_BUF_CTL(PORT_A)) & DDI_A_4_LANES)
+	if (I915_READ(DDI_BUF_CTL(PORT_A)) & DDI_A_4_LANES)
 		return false;
 
 	if (!dev_priv->vbt.int_crt_support)
@@ -14578,9 +14575,6 @@ static void intel_setup_outputs(struct drm_i915_private *dev_priv)
 	 */
 	intel_lvds_init(dev_priv);
 
-	if (intel_crt_present(dev_priv))
-		intel_crt_init(dev_priv);
-
 	if (IS_ICELAKE(dev_priv)) {
 		intel_ddi_init(dev_priv, PORT_A);
 		intel_ddi_init(dev_priv, PORT_B);
@@ -14610,6 +14604,9 @@ static void intel_setup_outputs(struct drm_i915_private *dev_priv)
 		vlv_dsi_init(dev_priv);
 	} else if (HAS_DDI(dev_priv)) {
 		int found;
+
+		if (intel_ddi_crt_present(dev_priv))
+			intel_crt_init(dev_priv);
 
 		/*
 		 * Haswell uses DDI functions to detect digital outputs.
@@ -14642,6 +14639,10 @@ static void intel_setup_outputs(struct drm_i915_private *dev_priv)
 
 	} else if (HAS_PCH_SPLIT(dev_priv)) {
 		int found;
+
+		if (dev_priv->vbt.int_crt_support)
+			intel_crt_init(dev_priv);
+
 		dpd_is_edp = intel_dp_is_port_edp(dev_priv, PORT_D);
 
 		if (has_edp_a(dev_priv))
@@ -14669,6 +14670,9 @@ static void intel_setup_outputs(struct drm_i915_private *dev_priv)
 			intel_dp_init(dev_priv, PCH_DP_D, PORT_D);
 	} else if (IS_VALLEYVIEW(dev_priv) || IS_CHERRYVIEW(dev_priv)) {
 		bool has_edp, has_port;
+
+		if (IS_VALLEYVIEW(dev_priv) && dev_priv->vbt.int_crt_support)
+			intel_crt_init(dev_priv);
 
 		/*
 		 * The DP_DETECTED bit is the latched state of the DDC
@@ -14712,8 +14716,14 @@ static void intel_setup_outputs(struct drm_i915_private *dev_priv)
 		}
 
 		vlv_dsi_init(dev_priv);
-	} else if (!IS_GEN(dev_priv, 2) && !IS_PINEVIEW(dev_priv)) {
+	} else if (IS_PINEVIEW(dev_priv)) {
+		if (dev_priv->vbt.int_crt_support)
+			intel_crt_init(dev_priv);
+	} else if (IS_GEN_RANGE(dev_priv, 3, 4)) {
 		bool found = false;
+
+		if (dev_priv->vbt.int_crt_support)
+			intel_crt_init(dev_priv);
 
 		if (I915_READ(GEN3_SDVOB) & SDVO_DETECTED) {
 			DRM_DEBUG_KMS("probing SDVOB\n");
@@ -14746,8 +14756,12 @@ static void intel_setup_outputs(struct drm_i915_private *dev_priv)
 
 		if (IS_G4X(dev_priv) && (I915_READ(DP_D) & DP_DETECTED))
 			intel_dp_init(dev_priv, DP_D, PORT_D);
-	} else if (IS_GEN(dev_priv, 2))
+	} else if (IS_GEN(dev_priv, 2)) {
+		if (dev_priv->vbt.int_crt_support)
+			intel_crt_init(dev_priv);
+
 		intel_dvo_init(dev_priv);
+	}
 
 	if (SUPPORTS_TV(dev_priv))
 		intel_tv_init(dev_priv);
