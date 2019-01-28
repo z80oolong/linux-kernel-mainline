@@ -130,6 +130,13 @@ struct i915_request {
 	struct i915_sched_node sched;
 	struct i915_dependency dep;
 
+	/*
+	 * A convenience pointer to the current breadcrumb value stored in
+	 * the HW status page (or our timeline's local equivalent). The full
+	 * path would be rq->hw_context->ring->timeline->hwsp_seqno.
+	 */
+	const u32 *hwsp_seqno;
+
 	/**
 	 * GEM sequence number associated with this request on the
 	 * global execution timeline. It is zero when the request is not
@@ -280,10 +287,11 @@ long i915_request_wait(struct i915_request *rq,
 #define I915_WAIT_ALL		BIT(3) /* used by i915_gem_object_wait() */
 #define I915_WAIT_FOR_IDLE_BOOST BIT(4)
 
-static inline bool intel_engine_has_started(struct intel_engine_cs *engine,
-					    u32 seqno);
-static inline bool intel_engine_has_completed(struct intel_engine_cs *engine,
-					      u32 seqno);
+static inline bool i915_request_signaled(const struct i915_request *rq)
+{
+	/* The request may live longer than its HWSP, so check flags first! */
+	return test_bit(DMA_FENCE_FLAG_SIGNALED_BIT, &rq->fence.flags);
+}
 
 /**
  * Returns true if seq1 is later than seq2.
@@ -291,6 +299,35 @@ static inline bool intel_engine_has_completed(struct intel_engine_cs *engine,
 static inline bool i915_seqno_passed(u32 seq1, u32 seq2)
 {
 	return (s32)(seq1 - seq2) >= 0;
+}
+
+static inline u32 __hwsp_seqno(const struct i915_request *rq)
+{
+	return READ_ONCE(*rq->hwsp_seqno);
+}
+
+/**
+ * hwsp_seqno - the current breadcrumb value in the HW status page
+ * @rq: the request, to chase the relevant HW status page
+ *
+ * The emphasis in naming here is that hwsp_seqno() is not a property of the
+ * request, but an indication of the current HW state (associated with this
+ * request). Its value will change as the GPU executes more requests.
+ *
+ * Returns the current breadcrumb value in the associated HW status page (or
+ * the local timeline's equivalent) for this request. The request itself
+ * has the associated breadcrumb value of rq->fence.seqno, when the HW
+ * status page has that breadcrumb or later, this request is complete.
+ */
+static inline u32 hwsp_seqno(const struct i915_request *rq)
+{
+	u32 seqno;
+
+	rcu_read_lock(); /* the HWSP may be freed at runtime */
+	seqno = __hwsp_seqno(rq);
+	rcu_read_unlock();
+
+	return seqno;
 }
 
 /**
@@ -304,32 +341,23 @@ static inline bool i915_seqno_passed(u32 seq1, u32 seq2)
  */
 static inline bool i915_request_started(const struct i915_request *rq)
 {
-	u32 seqno;
+	if (i915_request_signaled(rq))
+		return true;
 
-	seqno = i915_request_global_seqno(rq);
-	if (!seqno) /* not yet submitted to HW */
-		return false;
-
-	return intel_engine_has_started(rq->engine, seqno);
-}
-
-static inline bool
-__i915_request_completed(const struct i915_request *rq, u32 seqno)
-{
-	GEM_BUG_ON(!seqno);
-	return intel_engine_has_completed(rq->engine, seqno) &&
-		seqno == i915_request_global_seqno(rq);
+	return i915_seqno_passed(hwsp_seqno(rq), rq->fence.seqno - 1);
 }
 
 static inline bool i915_request_completed(const struct i915_request *rq)
 {
-	u32 seqno;
+	if (i915_request_signaled(rq))
+		return true;
 
-	seqno = i915_request_global_seqno(rq);
-	if (!seqno)
-		return false;
+	return i915_seqno_passed(hwsp_seqno(rq), rq->fence.seqno);
+}
 
-	return __i915_request_completed(rq, seqno);
+static inline void i915_request_mark_complete(struct i915_request *rq)
+{
+	rq->hwsp_seqno = (u32 *)&rq->fence.seqno; /* decouple from HWSP */
 }
 
 void i915_retire_requests(struct drm_i915_private *i915);
