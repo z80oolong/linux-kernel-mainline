@@ -85,6 +85,9 @@ ccm
 ccwgroup
 ceph
 cfb
+cfbcopyarea
+cfbfillrect
+cfbimgblt
 ch
 chacha20_generic
 chacha20poly1305
@@ -171,6 +174,9 @@ dp83848
 dp83867
 dp83tc811
 drbd
+drm
+drm_kms_helper
+drm_panel_orientation_quirks
 drop_monitor
 dummy
 dummy_stm
@@ -214,6 +220,7 @@ esp6_offload
 et1011c
 failover
 faulty
+fb_sys_fops
 fcoe
 fcrypt
 fixed_phy
@@ -239,6 +246,10 @@ gre
 gtp
 hangcheck-timer
 hmcdrv
+i2c-algo-bit
+i2c-core
+i2c-dev
+i2c-mux
 ib_cm
 ib_core
 ib_ipoib
@@ -737,6 +748,9 @@ stm_heartbeat
 stp
 sunrpc
 switchtec
+syscopyarea
+sysfillrect
+sysimgblt
 tap
 tape
 tape_34xx
@@ -782,6 +796,7 @@ tpm_vtpm_proxy
 ts_bm
 ts_fsm
 ts_kmp
+ttm
 tunnel4
 tunnel6
 twofish_common
@@ -805,9 +820,11 @@ vhost
 vhost_net
 vhost_scsi
 vhost_vsock
+virtio-gpu
 virtio-rng
 virtio_blk
 virtio_crypto
+virtio_input
 virtio_net
 virtio_scsi
 vitesse
