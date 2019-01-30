@@ -188,6 +188,8 @@ struct intel_device_info {
 	struct color_luts {
 		u16 degamma_lut_size;
 		u16 gamma_lut_size;
+		u32 degamma_lut_tests;
+		u32 gamma_lut_tests;
 	} color;
 };
 
