@@ -216,6 +216,19 @@ static struct reg_map rsi_caracalla_reg_db[MAX_REG_COUNTRIES] = {
 };
 #endif
 
+static int rsi_validate_mac_addr(struct rsi_common *common, u8 *addr_t)
+{
+	u8 addr[ETH_ALEN] = {0};
+
+	if (!memcmp(addr, addr_t, ETH_ALEN)) {
+		ven_rsi_dbg(ERR_ZONE, "%s: MAC addr is NULL\n", __func__);
+		return -1;
+	} else if (memcmp(common->mac_addr, addr_t, ETH_ALEN)) {
+		memcpy(common->mac_addr, addr_t, ETH_ALEN);
+	}
+	return 0;
+}
+
 struct ieee80211_vif *rsi_get_vif(struct rsi_hw *adapter, u8 *mac)
 {
 	u8 i;
@@ -375,6 +388,8 @@ static int rsi_mac80211_hw_scan_start(struct ieee80211_hw *hw,
 	/* Scan already in progress. So return */
 	if (common->bgscan_en || common->scan_in_prog)
 		return -EBUSY;
+	if (rsi_validate_mac_addr(common, vif->addr))
+		return -ENODEV;
 
 	cancel_work_sync(&common->scan_work);
 	mutex_lock(&common->mutex);
@@ -553,6 +568,13 @@ static void rsi_mac80211_tx(struct ieee80211_hw *hw,
 	struct ieee80211_hdr *wlh = (struct ieee80211_hdr *)skb->data;
 	struct ieee80211_vif *vif = adapter->vifs[adapter->sc_nvifs - 1];
 	struct ieee80211_bss_conf *bss = &adapter->vifs[0]->bss_conf;
+
+#ifndef CONFIG_VEN_RSI_P2P
+	if (rsi_validate_mac_addr(common, wlh->addr2)) {
+		ieee80211_free_txskb(common->priv->hw, skb);
+		return;
+	}
+#endif
 
 #ifdef CONFIG_VEN_RSI_WOW
 	if (common->wow_flags & RSI_WOW_ENABLED) {
