@@ -1,0 +1,30 @@
+drm drm-fixes f0e7ce1eef5854584dfb59b3824a67edee37580f
+	Merge tag 'drm-msm-fixes-2019-01-24' of git://people.freedesktop.org/~robclark/linux into drm-fixes
+drm-misc drm-misc-fixes b14e945bda8ae227d1bf2b1837c0c4a61721cd1a
+	drm/sun4i: tcon: Prepare and enable TCON channel 0 clock at init
+drm-intel drm-intel-fixes f17b5f06cb92ef2250513a1e154c47b78df07d40
+	Linux 5.0-rc4
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 74b7d6a91311766ab6c94f6be21bd423021ca95e
+	Merge branch 'for-upstream/mali-dp' of git://linux-arm.org/linux-ld into drm-next
+drm-misc drm-misc-next-fixes c75ff001f4fe21a8c9f15aad799a8949aea109f7
+	drm: Put damage blob when destroy plane state
+drm-intel drm-intel-next-fixes bfeffd155283772bbe78c6a05dec7c0128ee500c
+	Linux 5.0-rc1
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next ba9877e2361c46cae3841181aea61e55fc2309b9
+	drm/bridge: dw-hdmi: add support for YUV420 output
+drm-intel drm-intel-next-queued 1b4fd5d38c633344bca57c1dd874c49474c94462
+	Merge tag 'gvt-next-2019-02-01' of https://github.com/intel/gvt-linux into drm-intel-next-queued
+drm-intel drm-intel-next d54e5f76d8fe025fa557857d826515116d124a90
+	drm/i915: Update DRIVER_DATE to 20190129
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 305a0ade180981686eec1f92aa6252a7c6ebb1cf
+	ALSA: hda - Serialize codec registrations
+sound-upstream for-next 0b6a2c9cf4a00f54a0916499ece8a5cf3cced385
+	ALSA: isa: Avoid passing NULL to memory allocators
+drm-intel topic/core-for-CI e3a9af5b306dbedfb2a8d84676269ad39473d644
+	net/phy: Debugging for https://bugzilla.kernel.org/show_bug.cgi?id=202321
