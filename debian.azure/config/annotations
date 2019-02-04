@@ -8626,15 +8626,23 @@ CONFIG_BLK_SED_OPAL                             policy<{'amd64': 'y', 'arm64': '
 CONFIG_BLK_DEV_THROTTLING                       note<CGROUP disk consumption control>
 
 # Menu: Enable the block layer >> IO Schedulers
-CONFIG_IOSCHED_DEADLINE                         policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y', 'ppc64el': 'y', 's390x': 'y'}>
-CONFIG_IOSCHED_CFQ                              policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y', 'ppc64el': 'y', 's390x': 'y'}>
-CONFIG_CFQ_GROUP_IOSCHED                        policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y', 'ppc64el': 'y', 's390x': 'y'}>
-CONFIG_MQ_IOSCHED_DEADLINE                      policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'ppc64el': 'm', 's390x': 'm'}>
-CONFIG_MQ_IOSCHED_KYBER                         policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'ppc64el': 'm', 's390x': 'm'}>
-CONFIG_IOSCHED_BFQ                              policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'ppc64el': 'm', 's390x': 'm'}>
-CONFIG_BFQ_GROUP_IOSCHED                        policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y', 'ppc64el': 'y', 's390x': 'y'}>
+CONFIG_IOSCHED_NOOP                             policy<{'amd64': 'y'}>
+CONFIG_IOSCHED_DEADLINE                         policy<{'amd64': 'm'}>
+CONFIG_IOSCHED_CFQ                              policy<{'amd64': 'm'}>
+CONFIG_CFQ_GROUP_IOSCHED                        policy<{'amd64': 'y'}>
+CONFIG_MQ_IOSCHED_DEADLINE                      policy<{'amd64': 'm'}>
+CONFIG_MQ_IOSCHED_KYBER                         policy<{'amd64': 'm'}>
+CONFIG_IOSCHED_BFQ                              policy<{'amd64': 'm'}>
+CONFIG_BFQ_GROUP_IOSCHED                        policy<{'amd64': 'y'}>
 #
-CONFIG_MQ_IOSCHED_DEADLINE                      flag<REVIEW>
+CONFIG_IOSCHED_NOOP                             mark<ENFORCED> note<LP#1813211>
+CONFIG_IOSCHED_DEADLINE                         mark<ENFORCED> note<LP#1813211>
+CONFIG_IOSCHED_CFQ                              mark<ENFORCED> note<LP#1813211>
+CONFIG_CFQ_GROUP_IOSCHED                        mark<ENFORCED> note<LP#1813211>
+CONFIG_MQ_IOSCHED_DEADLINE                      mark<ENFORCED> note<LP#1813211>
+CONFIG_MQ_IOSCHED_KYBER                         mark<ENFORCED> note<LP#1813211>
+CONFIG_IOSCHED_BFQ                              mark<ENFORCED> note<LP#1813211>
+CONFIG_BFQ_GROUP_IOSCHED                        mark<ENFORCED> note<LP#1813211>
 
 # Menu: Enable the block layer >> IO Schedulers >> Default I/O scheduler
 CONFIG_DEFAULT_DEADLINE                         policy<{'amd64': 'n', 'arm64': 'n', 'armhf': 'n', 'i386': 'n', 'ppc64el': 'n', 's390x': 'n'}>

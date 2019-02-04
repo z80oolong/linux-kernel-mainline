@@ -7,6 +7,11 @@ arch/powerpc/platforms/powernv/opal-prd.ko
 arch/s390/*
 arch/x86/kvm/kvm-amd.ko
 arch/x86/kvm/kvm-intel.ko
+block/bfq.ko
+block/cfq-iosched.ko
+block/deadline-iosched.ko
+block/kyber-iosched.ko
+block/mq-deadline.ko
 crypto/*
 drivers/acpi/*
 drivers/ata/acard-ahci.ko
