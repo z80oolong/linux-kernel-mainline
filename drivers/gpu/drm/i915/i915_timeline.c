@@ -33,6 +33,7 @@ void i915_timeline_init(struct drm_i915_private *i915,
 
 	spin_lock_init(&timeline->lock);
 
+	init_request_active(&timeline->barrier, NULL);
 	init_request_active(&timeline->last_request, NULL);
 	INIT_LIST_HEAD(&timeline->requests);
 
@@ -69,6 +70,7 @@ void i915_timelines_park(struct drm_i915_private *i915)
 void i915_timeline_fini(struct i915_timeline *timeline)
 {
 	GEM_BUG_ON(!list_empty(&timeline->requests));
+	GEM_BUG_ON(i915_gem_active_isset(&timeline->barrier));
 
 	i915_syncmap_free(&timeline->sync);
 
@@ -88,6 +90,25 @@ i915_timeline_create(struct drm_i915_private *i915, const char *name)
 	kref_init(&timeline->kref);
 
 	return timeline;
+}
+
+int i915_timeline_set_barrier(struct i915_timeline *tl, struct i915_request *rq)
+{
+	struct i915_request *old;
+	int err;
+
+	lockdep_assert_held(&rq->i915->drm.struct_mutex);
+
+	/* Must maintain ordering wrt existing barriers */
+	old = i915_gem_active_raw(&tl->barrier, &rq->i915->drm.struct_mutex);
+	if (old) {
+		err = i915_request_await_dma_fence(rq, &old->fence);
+		if (err)
+			return err;
+	}
+
+	i915_gem_active_set(&tl->barrier, rq);
+	return 0;
 }
 
 void __i915_timeline_free(struct kref *kref)
