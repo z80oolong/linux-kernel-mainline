@@ -328,6 +328,9 @@ intel_context_init(struct intel_context *ce,
 		   struct intel_engine_cs *engine)
 {
 	ce->gem_context = ctx;
+
+	/* Use the whole device by default */
+	ce->sseu = intel_device_default_sseu(ctx->i915);
 }
 
 static struct i915_gem_context *
