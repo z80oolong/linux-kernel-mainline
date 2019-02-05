@@ -104,4 +104,6 @@ void intel_lr_context_resume(struct drm_i915_private *dev_priv);
 
 void intel_execlists_set_default_submission(struct intel_engine_cs *engine);
 
+u32 gen8_make_rpcs(struct drm_i915_private *i915, struct intel_sseu *ctx_sseu);
+
 #endif /* _INTEL_LRC_H_ */
