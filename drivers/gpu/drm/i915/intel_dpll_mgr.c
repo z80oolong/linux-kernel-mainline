@@ -1329,8 +1329,7 @@ static bool skl_ddi_hdmi_pll_dividers(struct intel_crtc_state *crtc_state)
 }
 
 static bool
-skl_ddi_dp_set_dpll_hw_state(struct intel_crtc_state *crtc_state,
-			     struct intel_dpll_hw_state *dpll_hw_state)
+skl_ddi_dp_set_dpll_hw_state(struct intel_crtc_state *crtc_state)
 {
 	u32 ctrl1;
 
@@ -1361,7 +1360,11 @@ skl_ddi_dp_set_dpll_hw_state(struct intel_crtc_state *crtc_state,
 		break;
 	}
 
-	dpll_hw_state->ctrl1 = ctrl1;
+	memset(&crtc_state->dpll_hw_state, 0,
+	       sizeof(crtc_state->dpll_hw_state));
+
+	crtc_state->dpll_hw_state.ctrl1 = ctrl1;
+
 	return true;
 }
 
@@ -1371,9 +1374,6 @@ skl_get_dpll(struct intel_crtc_state *crtc_state,
 {
 	struct intel_shared_dpll *pll;
 	bool bret;
-	struct intel_dpll_hw_state dpll_hw_state;
-
-	memset(&dpll_hw_state, 0, sizeof(dpll_hw_state));
 
 	if (intel_crtc_has_type(crtc_state, INTEL_OUTPUT_HDMI)) {
 		bret = skl_ddi_hdmi_pll_dividers(crtc_state);
@@ -1382,12 +1382,11 @@ skl_get_dpll(struct intel_crtc_state *crtc_state,
 			return NULL;
 		}
 	} else if (intel_crtc_has_dp_encoder(crtc_state)) {
-		bret = skl_ddi_dp_set_dpll_hw_state(crtc_state, &dpll_hw_state);
+		bret = skl_ddi_dp_set_dpll_hw_state(crtc_state);
 		if (!bret) {
 			DRM_DEBUG_KMS("Could not set DP dpll HW state.\n");
 			return NULL;
 		}
-		crtc_state->dpll_hw_state = dpll_hw_state;
 	} else {
 		return NULL;
 	}
