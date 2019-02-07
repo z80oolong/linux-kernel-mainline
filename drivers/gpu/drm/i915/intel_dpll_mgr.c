@@ -241,11 +241,11 @@ out:
 }
 
 static struct intel_shared_dpll *
-intel_find_shared_dpll(struct intel_crtc *crtc,
-		       struct intel_crtc_state *crtc_state,
+intel_find_shared_dpll(struct intel_crtc_state *crtc_state,
 		       enum intel_dpll_id range_min,
 		       enum intel_dpll_id range_max)
 {
+	struct intel_crtc *crtc = to_intel_crtc(crtc_state->base.crtc);
 	struct drm_i915_private *dev_priv = to_i915(crtc->base.dev);
 	struct intel_shared_dpll *pll, *unused_pll = NULL;
 	struct intel_shared_dpll_state *shared_dpll;
@@ -433,7 +433,7 @@ ibx_get_dpll(struct intel_crtc *crtc, struct intel_crtc_state *crtc_state,
 			      crtc->base.base.id, crtc->base.name,
 			      pll->info->name);
 	} else {
-		pll = intel_find_shared_dpll(crtc, crtc_state,
+		pll = intel_find_shared_dpll(crtc_state,
 					     DPLL_ID_PCH_PLL_A,
 					     DPLL_ID_PCH_PLL_B);
 	}
@@ -771,7 +771,7 @@ static struct intel_shared_dpll *hsw_ddi_hdmi_get_dpll(int clock,
 
 	crtc_state->dpll_hw_state.wrpll = val;
 
-	pll = intel_find_shared_dpll(crtc, crtc_state,
+	pll = intel_find_shared_dpll(crtc_state,
 				     DPLL_ID_WRPLL1, DPLL_ID_WRPLL2);
 
 	if (!pll)
@@ -831,7 +831,7 @@ hsw_get_dpll(struct intel_crtc *crtc, struct intel_crtc_state *crtc_state,
 		crtc_state->dpll_hw_state.spll =
 			SPLL_PLL_ENABLE | SPLL_PLL_FREQ_1350MHz | SPLL_PLL_SSC;
 
-		pll = intel_find_shared_dpll(crtc, crtc_state,
+		pll = intel_find_shared_dpll(crtc_state,
 					     DPLL_ID_SPLL, DPLL_ID_SPLL);
 	} else {
 		return NULL;
@@ -1396,11 +1396,11 @@ skl_get_dpll(struct intel_crtc *crtc, struct intel_crtc_state *crtc_state,
 	}
 
 	if (intel_crtc_has_type(crtc_state, INTEL_OUTPUT_EDP))
-		pll = intel_find_shared_dpll(crtc, crtc_state,
+		pll = intel_find_shared_dpll(crtc_state,
 					     DPLL_ID_SKL_DPLL0,
 					     DPLL_ID_SKL_DPLL0);
 	else
-		pll = intel_find_shared_dpll(crtc, crtc_state,
+		pll = intel_find_shared_dpll(crtc_state,
 					     DPLL_ID_SKL_DPLL1,
 					     DPLL_ID_SKL_DPLL3);
 	if (!pll)
@@ -2369,7 +2369,7 @@ cnl_get_dpll(struct intel_crtc *crtc, struct intel_crtc_state *crtc_state,
 		return NULL;
 	}
 
-	pll = intel_find_shared_dpll(crtc, crtc_state,
+	pll = intel_find_shared_dpll(crtc_state,
 				     DPLL_ID_SKL_DPLL0,
 				     DPLL_ID_SKL_DPLL2);
 	if (!pll) {
@@ -2849,7 +2849,7 @@ icl_get_dpll(struct intel_crtc *crtc, struct intel_crtc_state *crtc_state,
 
 	crtc_state->dpll_hw_state = pll_state;
 
-	pll = intel_find_shared_dpll(crtc, crtc_state, min, max);
+	pll = intel_find_shared_dpll(crtc_state, min, max);
 	if (!pll) {
 		DRM_DEBUG_KMS("No PLL selected\n");
 		return NULL;
