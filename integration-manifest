@@ -1,0 +1,30 @@
+drm drm-fixes 78eb1ca47589f0cd9db2ceb28b60434e8d512131
+	Merge branch 'vmwgfx-fixes-5.0-2' of git://people.freedesktop.org/~thomash/linux into drm-fixes
+drm-misc drm-misc-fixes 6297388e1eddd2f1345cea5892156223995bcf2d
+	drm/omap: dsi: Hack-fix DSI bus flags
+drm-intel drm-intel-fixes d028a646e84b9b131e4ff2cb5bbdd3825d141028
+	drm/i915: Try to sanitize bogus DPLL state left over by broken SNB BIOSen
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 2cc3b81dfa7f7de0d647e7f1473de811eef8b0de
+	Merge tag 'drm-intel-next-2019-02-02' of git://anongit.freedesktop.org/drm/drm-intel into drm-next
+drm-misc drm-misc-next-fixes c75ff001f4fe21a8c9f15aad799a8949aea109f7
+	drm: Put damage blob when destroy plane state
+drm-intel drm-intel-next-fixes bfeffd155283772bbe78c6a05dec7c0128ee500c
+	Linux 5.0-rc1
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 1eb6ea4a820291107d1192df7d279f344ee2053f
+	drm/vc4: Use struct_size() in kzalloc()
+drm-intel drm-intel-next-queued 6cbb55c086b4f23ad100f34cdeab496c4e99e0a6
+	drm/i915: Don't send hotplug in intel_dp_check_mst_status()
+drm-intel drm-intel-next 46c0cd8c562bc3e4a99cbaa4ba0904b6871b7b4b
+	drm/i915: Update DRIVER_DATE to 20190202
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus c97617a81a7616d49bc3700959e08c6c6f447093
+	ALSA: hda/ca0132 - Fix build error without CONFIG_PCI
+sound-upstream for-next 6ce1d63ed7210e7120070297976460f868c36314
+	ALSA: core: Don't allow NULL device for memory allocation
+drm-intel topic/core-for-CI e3a9af5b306dbedfb2a8d84676269ad39473d644
+	net/phy: Debugging for https://bugzilla.kernel.org/show_bug.cgi?id=202321
