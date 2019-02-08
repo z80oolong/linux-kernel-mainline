@@ -1,0 +1,30 @@
+drm drm-fixes dada163c5eab43adf2c7595bc6d562748e1eb69e
+	Merge tag 'drm-misc-fixes-2019-02-07' of git://anongit.freedesktop.org/drm/drm-misc into drm-fixes
+drm-misc drm-misc-fixes 6297388e1eddd2f1345cea5892156223995bcf2d
+	drm/omap: dsi: Hack-fix DSI bus flags
+drm-intel drm-intel-fixes d028a646e84b9b131e4ff2cb5bbdd3825d141028
+	drm/i915: Try to sanitize bogus DPLL state left over by broken SNB BIOSen
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 1e92a2261acf48a1db4d5b9ec0437190e59c24f3
+	Merge tag 'exynos-drm-next-for-v5.1' of git://git.kernel.org/pub/scm/linux/kernel/git/daeinki/drm-exynos into drm-next
+drm-misc drm-misc-next-fixes c75ff001f4fe21a8c9f15aad799a8949aea109f7
+	drm: Put damage blob when destroy plane state
+drm-intel drm-intel-next-fixes bfeffd155283772bbe78c6a05dec7c0128ee500c
+	Linux 5.0-rc1
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next e3b01f0d576ad23cad65ecd3680827c10fbad6b5
+	drm: remove drmP.h from drm_modeset_helper.h
+drm-intel drm-intel-next-queued 23ec9f52e522fab993c39ab4b74b275dee6c7cda
+	drm/i915/psr: Execute the default PSR code path when setting i915_edp_psr_debug
+drm-intel drm-intel-next c09d39166d8a3f3788680b32dbb0a40a70de32e2
+	drm/i915: Update DRIVER_DATE to 20190207
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 2bc16b9f3223d049b57202ee702fcb5b9b507019
+	ALSA: usb-audio: Fix implicit fb endpoint setup by quirk
+sound-upstream for-next c64a9d6270ee1a2f2cf86ad8e4824a564e873d9f
+	Merge branch 'topic/memory-device-fixes' into for-next
+drm-intel topic/core-for-CI e3a9af5b306dbedfb2a8d84676269ad39473d644
+	net/phy: Debugging for https://bugzilla.kernel.org/show_bug.cgi?id=202321
