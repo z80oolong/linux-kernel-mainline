@@ -254,12 +254,11 @@ static inline bool need_preempt(const struct intel_engine_cs *engine,
 }
 
 __maybe_unused static inline bool
-assert_priority_queue(const struct intel_engine_execlists *execlists,
-		      const struct i915_request *prev,
+assert_priority_queue(const struct i915_request *prev,
 		      const struct i915_request *next)
 {
-	if (!prev)
-		return true;
+	const struct intel_engine_execlists *execlists =
+		&prev->engine->execlists;
 
 	/*
 	 * Without preemption, the prev may refer to the still active element
@@ -564,6 +563,17 @@ static bool can_merge_ctx(const struct intel_context *prev,
 	return true;
 }
 
+static bool can_merge_rq(const struct i915_request *prev,
+			 const struct i915_request *next)
+{
+	GEM_BUG_ON(!assert_priority_queue(prev, next));
+
+	if (!can_merge_ctx(prev->hw_context, next->hw_context))
+		return false;
+
+	return true;
+}
+
 static void port_assign(struct execlist_port *port, struct i915_request *rq)
 {
 	GEM_BUG_ON(rq == port_request(port));
@@ -716,8 +726,6 @@ static void execlists_dequeue(struct intel_engine_cs *engine)
 		int i;
 
 		priolist_for_each_request_consume(rq, rn, p, i) {
-			GEM_BUG_ON(!assert_priority_queue(execlists, last, rq));
-
 			/*
 			 * Can we combine this request with the current port?
 			 * It has to be the same context/ringbuffer and not
@@ -729,14 +737,21 @@ static void execlists_dequeue(struct intel_engine_cs *engine)
 			 * second request, and so we never need to tell the
 			 * hardware about the first.
 			 */
-			if (last &&
-			    !can_merge_ctx(rq->hw_context, last->hw_context)) {
+			if (last && !can_merge_rq(last, rq)) {
 				/*
 				 * If we are on the second port and cannot
 				 * combine this request with the last, then we
 				 * are done.
 				 */
 				if (port == last_port)
+					goto done;
+
+				/*
+				 * We must not populate both ELSP[] with the
+				 * same LRCA, i.e. we must submit 2 different
+				 * contexts if we submit 2 ELSP.
+				 */
+				if (last->hw_context == rq->hw_context)
 					goto done;
 
 				/*
@@ -750,7 +765,6 @@ static void execlists_dequeue(struct intel_engine_cs *engine)
 				    ctx_single_port_submission(rq->hw_context))
 					goto done;
 
-				GEM_BUG_ON(last->hw_context == rq->hw_context);
 
 				if (submit)
 					port_assign(port, last);
@@ -790,8 +804,7 @@ done:
 	 * request triggering preemption on the next dequeue (or subsequent
 	 * interrupt for secondary ports).
 	 */
-	execlists->queue_priority_hint =
-		port != execlists->port ? rq_prio(last) : INT_MIN;
+	execlists->queue_priority_hint = queue_prio(execlists);
 
 	if (submit) {
 		port_assign(port, last);
@@ -1266,8 +1279,6 @@ static int __context_pin(struct i915_gem_context *ctx, struct i915_vma *vma)
 	return i915_vma_pin(vma, 0, 0, flags);
 }
 
-static u32 make_rpcs(struct drm_i915_private *dev_priv);
-
 static void
 __execlists_update_reg_state(struct intel_engine_cs *engine,
 			     struct intel_context *ce)
@@ -1281,7 +1292,8 @@ __execlists_update_reg_state(struct intel_engine_cs *engine,
 
 	/* RPCS */
 	if (engine->class == RENDER_CLASS)
-		regs[CTX_R_PWR_CLK_STATE + 1] = make_rpcs(engine->i915);
+		regs[CTX_R_PWR_CLK_STATE + 1] = gen8_make_rpcs(engine->i915,
+							       &ce->sseu);
 }
 
 static struct intel_context *
@@ -1388,6 +1400,10 @@ static int gen8_emit_init_breadcrumb(struct i915_request *rq)
 	*cs++ = rq->fence.seqno - 1;
 
 	intel_ring_advance(rq, cs);
+
+	/* Record the updated position of the request's payload */
+	rq->infix = intel_ring_offset(rq, cs);
+
 	return 0;
 }
 
@@ -1879,6 +1895,23 @@ static void execlists_reset_prepare(struct intel_engine_cs *engine)
 	spin_unlock_irqrestore(&engine->timeline.lock, flags);
 }
 
+static bool lrc_regs_ok(const struct i915_request *rq)
+{
+	const struct intel_ring *ring = rq->ring;
+	const u32 *regs = rq->hw_context->lrc_reg_state;
+
+	/* Quick spot check for the common signs of context corruption */
+
+	if (regs[CTX_RING_BUFFER_CONTROL + 1] !=
+	    (RING_CTL_SIZE(ring->size) | RING_VALID))
+		return false;
+
+	if (regs[CTX_RING_BUFFER_START + 1] != i915_ggtt_offset(ring->vma))
+		return false;
+
+	return true;
+}
+
 static void execlists_reset(struct intel_engine_cs *engine, bool stalled)
 {
 	struct intel_engine_execlists * const execlists = &engine->execlists;
@@ -1914,6 +1947,21 @@ static void execlists_reset(struct intel_engine_cs *engine, bool stalled)
 		goto out_unlock;
 
 	/*
+	 * If this request hasn't started yet, e.g. it is waiting on a
+	 * semaphore, we need to avoid skipping the request or else we
+	 * break the signaling chain. However, if the context is corrupt
+	 * the request will not restart and we will be stuck with a wedged
+	 * device. It is quite often the case that if we issue a reset
+	 * while the GPU is loading the context image, that the context
+	 * image becomes corrupt.
+	 *
+	 * Otherwise, if we have not started yet, the request should replay
+	 * perfectly and we do not need to flag the result as being erroneous.
+	 */
+	if (!i915_request_started(rq) && lrc_regs_ok(rq))
+		goto out_unlock;
+
+	/*
 	 * If the request was innocent, we leave the request in the ELSP
 	 * and will try to replay it on restarting. The context image may
 	 * have been corrupted by the reset, in which case we may have
@@ -1925,7 +1973,7 @@ static void execlists_reset(struct intel_engine_cs *engine, bool stalled)
 	 * image back to the expected values to skip over the guilty request.
 	 */
 	i915_reset_request(rq, stalled);
-	if (!stalled)
+	if (!stalled && lrc_regs_ok(rq))
 		goto out_unlock;
 
 	/*
@@ -1943,8 +1991,8 @@ static void execlists_reset(struct intel_engine_cs *engine, bool stalled)
 		       engine->context_size - PAGE_SIZE);
 	}
 
-	/* Move the RING_HEAD onto the breadcrumb, past the hanging batch */
-	rq->ring->head = intel_ring_wrap(rq->ring, rq->postfix);
+	/* Rerun the request; its payload has been neutered (if guilty). */
+	rq->ring->head = intel_ring_wrap(rq->ring, rq->head);
 	intel_ring_update_space(rq->ring);
 
 	execlists_init_reg_state(regs, rq->gem_context, engine, rq->ring);
@@ -2431,20 +2479,48 @@ int logical_xcs_ring_init(struct intel_engine_cs *engine)
 	return logical_ring_init(engine);
 }
 
-static u32
-make_rpcs(struct drm_i915_private *dev_priv)
+u32 gen8_make_rpcs(struct drm_i915_private *i915, struct intel_sseu *req_sseu)
 {
-	bool subslice_pg = RUNTIME_INFO(dev_priv)->sseu.has_subslice_pg;
-	u8 slices = hweight8(RUNTIME_INFO(dev_priv)->sseu.slice_mask);
-	u8 subslices = hweight8(RUNTIME_INFO(dev_priv)->sseu.subslice_mask[0]);
+	const struct sseu_dev_info *sseu = &RUNTIME_INFO(i915)->sseu;
+	bool subslice_pg = sseu->has_subslice_pg;
+	struct intel_sseu ctx_sseu;
+	u8 slices, subslices;
 	u32 rpcs = 0;
 
 	/*
 	 * No explicit RPCS request is needed to ensure full
 	 * slice/subslice/EU enablement prior to Gen9.
 	*/
-	if (INTEL_GEN(dev_priv) < 9)
+	if (INTEL_GEN(i915) < 9)
 		return 0;
+
+	/*
+	 * If i915/perf is active, we want a stable powergating configuration
+	 * on the system.
+	 *
+	 * We could choose full enablement, but on ICL we know there are use
+	 * cases which disable slices for functional, apart for performance
+	 * reasons. So in this case we select a known stable subset.
+	 */
+	if (!i915->perf.oa.exclusive_stream) {
+		ctx_sseu = *req_sseu;
+	} else {
+		ctx_sseu = intel_device_default_sseu(i915);
+
+		if (IS_GEN(i915, 11)) {
+			/*
+			 * We only need subslice count so it doesn't matter
+			 * which ones we select - just turn off low bits in the
+			 * amount of half of all available subslices per slice.
+			 */
+			ctx_sseu.subslice_mask =
+				~(~0 << (hweight8(ctx_sseu.subslice_mask) / 2));
+			ctx_sseu.slice_mask = 0x1;
+		}
+	}
+
+	slices = hweight8(ctx_sseu.slice_mask);
+	subslices = hweight8(ctx_sseu.subslice_mask);
 
 	/*
 	 * Since the SScount bitfield in GEN8_R_PWR_CLK_STATE is only three bits
@@ -2471,7 +2547,9 @@ make_rpcs(struct drm_i915_private *dev_priv)
 	 * subslices are enabled, or a count between one and four on the first
 	 * slice.
 	 */
-	if (IS_GEN(dev_priv, 11) && slices == 1 && subslices >= 4) {
+	if (IS_GEN(i915, 11) &&
+	    slices == 1 &&
+	    subslices > min_t(u8, 4, hweight8(sseu->subslice_mask[0]) / 2)) {
 		GEM_BUG_ON(subslices & 1);
 
 		subslice_pg = false;
@@ -2484,10 +2562,10 @@ make_rpcs(struct drm_i915_private *dev_priv)
 	 * must make an explicit request through RPCS for full
 	 * enablement.
 	*/
-	if (RUNTIME_INFO(dev_priv)->sseu.has_slice_pg) {
+	if (sseu->has_slice_pg) {
 		u32 mask, val = slices;
 
-		if (INTEL_GEN(dev_priv) >= 11) {
+		if (INTEL_GEN(i915) >= 11) {
 			mask = GEN11_RPCS_S_CNT_MASK;
 			val <<= GEN11_RPCS_S_CNT_SHIFT;
 		} else {
@@ -2512,18 +2590,16 @@ make_rpcs(struct drm_i915_private *dev_priv)
 		rpcs |= GEN8_RPCS_ENABLE | GEN8_RPCS_SS_CNT_ENABLE | val;
 	}
 
-	if (RUNTIME_INFO(dev_priv)->sseu.has_eu_pg) {
+	if (sseu->has_eu_pg) {
 		u32 val;
 
-		val = RUNTIME_INFO(dev_priv)->sseu.eu_per_subslice <<
-		      GEN8_RPCS_EU_MIN_SHIFT;
+		val = ctx_sseu.min_eus_per_subslice << GEN8_RPCS_EU_MIN_SHIFT;
 		GEM_BUG_ON(val & ~GEN8_RPCS_EU_MIN_MASK);
 		val &= GEN8_RPCS_EU_MIN_MASK;
 
 		rpcs |= val;
 
-		val = RUNTIME_INFO(dev_priv)->sseu.eu_per_subslice <<
-		      GEN8_RPCS_EU_MAX_SHIFT;
+		val = ctx_sseu.max_eus_per_subslice << GEN8_RPCS_EU_MAX_SHIFT;
 		GEM_BUG_ON(val & ~GEN8_RPCS_EU_MAX_MASK);
 		val &= GEN8_RPCS_EU_MAX_MASK;
 
