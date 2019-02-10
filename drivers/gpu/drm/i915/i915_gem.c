@@ -100,47 +100,6 @@ static void i915_gem_info_remove_obj(struct drm_i915_private *dev_priv,
 	spin_unlock(&dev_priv->mm.object_stat_lock);
 }
 
-static int
-i915_gem_wait_for_error(struct i915_gpu_error *error)
-{
-	int ret;
-
-	might_sleep();
-
-	/*
-	 * Only wait 10 seconds for the gpu reset to complete to avoid hanging
-	 * userspace. If it takes that long something really bad is going on and
-	 * we should simply try to bail out and fail as gracefully as possible.
-	 */
-	ret = wait_event_interruptible_timeout(error->reset_queue,
-					       !i915_reset_backoff(error),
-					       I915_RESET_TIMEOUT);
-	if (ret == 0) {
-		DRM_ERROR("Timed out waiting for the gpu reset to complete\n");
-		return -EIO;
-	} else if (ret < 0) {
-		return ret;
-	} else {
-		return 0;
-	}
-}
-
-int i915_mutex_lock_interruptible(struct drm_device *dev)
-{
-	struct drm_i915_private *dev_priv = to_i915(dev);
-	int ret;
-
-	ret = i915_gem_wait_for_error(&dev_priv->gpu_error);
-	if (ret)
-		return ret;
-
-	ret = mutex_lock_interruptible(&dev->struct_mutex);
-	if (ret)
-		return ret;
-
-	return 0;
-}
-
 static u32 __i915_gem_park(struct drm_i915_private *i915)
 {
 	intel_wakeref_t wakeref;
@@ -1681,6 +1640,16 @@ i915_gem_sw_finish_ioctl(struct drm_device *dev, void *data,
 	return 0;
 }
 
+static inline bool
+__vma_matches(struct vm_area_struct *vma, struct file *filp,
+	      unsigned long addr, unsigned long size)
+{
+	if (vma->vm_file != filp)
+		return false;
+
+	return vma->vm_start == addr && (vma->vm_end - vma->vm_start) == size;
+}
+
 /**
  * i915_gem_mmap_ioctl - Maps the contents of an object, returning the address
  *			 it is mapped to.
@@ -1730,6 +1699,9 @@ i915_gem_mmap_ioctl(struct drm_device *dev, void *data,
 	addr = vm_mmap(obj->base.filp, 0, args->size,
 		       PROT_READ | PROT_WRITE, MAP_SHARED,
 		       args->offset);
+	if (IS_ERR_VALUE(addr))
+		goto err;
+
 	if (args->flags & I915_MMAP_WC) {
 		struct mm_struct *mm = current->mm;
 		struct vm_area_struct *vma;
@@ -1739,23 +1711,28 @@ i915_gem_mmap_ioctl(struct drm_device *dev, void *data,
 			return -EINTR;
 		}
 		vma = find_vma(mm, addr);
-		if (vma)
+		if (vma && __vma_matches(vma, obj->base.filp, addr, args->size))
 			vma->vm_page_prot =
 				pgprot_writecombine(vm_get_page_prot(vma->vm_flags));
 		else
 			addr = -ENOMEM;
 		up_write(&mm->mmap_sem);
+		if (IS_ERR_VALUE(addr))
+			goto err;
 
 		/* This may race, but that's ok, it only gets set */
 		WRITE_ONCE(obj->frontbuffer_ggtt_origin, ORIGIN_CPU);
 	}
 	i915_gem_object_put(obj);
-	if (IS_ERR((void *)addr))
-		return addr;
 
 	args->addr_ptr = (u64)addr;
 
 	return 0;
+
+err:
+	i915_gem_object_put(obj);
+
+	return addr;
 }
 
 static unsigned int tile_row_pages(const struct drm_i915_gem_object *obj)
@@ -1869,6 +1846,7 @@ vm_fault_t i915_gem_fault(struct vm_fault *vmf)
 	intel_wakeref_t wakeref;
 	struct i915_vma *vma;
 	pgoff_t page_offset;
+	int srcu;
 	int ret;
 
 	/* Sanity check that we allow writing into this object */
@@ -1908,7 +1886,6 @@ vm_fault_t i915_gem_fault(struct vm_fault *vmf)
 		goto err_unlock;
 	}
 
-
 	/* Now pin it into the GTT as needed */
 	vma = i915_gem_object_ggtt_pin(obj, NULL, 0, 0,
 				       PIN_MAPPABLE |
@@ -1946,9 +1923,15 @@ vm_fault_t i915_gem_fault(struct vm_fault *vmf)
 	if (ret)
 		goto err_unpin;
 
+	srcu = i915_reset_trylock(dev_priv);
+	if (srcu < 0) {
+		ret = srcu;
+		goto err_unpin;
+	}
+
 	ret = i915_vma_pin_fence(vma);
 	if (ret)
-		goto err_unpin;
+		goto err_reset;
 
 	/* Finally, remap it using the new GTT offset */
 	ret = remap_io_mapping(area,
@@ -1969,6 +1952,8 @@ vm_fault_t i915_gem_fault(struct vm_fault *vmf)
 
 err_fence:
 	i915_vma_unpin_fence(vma);
+err_reset:
+	i915_reset_unlock(dev_priv, srcu);
 err_unpin:
 	__i915_vma_unpin(vma);
 err_unlock:
@@ -3020,7 +3005,7 @@ static void assert_kernel_context_is_current(struct drm_i915_private *i915)
 
 	GEM_BUG_ON(i915->gt.active_requests);
 	for_each_engine(engine, i915, id) {
-		GEM_BUG_ON(__i915_gem_active_peek(&engine->timeline.last_request));
+		GEM_BUG_ON(__i915_active_request_peek(&engine->timeline.last_request));
 		GEM_BUG_ON(engine->last_retired_context !=
 			   to_intel_context(i915->kernel_context, engine));
 	}
@@ -3266,7 +3251,7 @@ wait_for_timelines(struct drm_i915_private *i915,
 	list_for_each_entry(tl, &gt->active_list, link) {
 		struct i915_request *rq;
 
-		rq = i915_gem_active_get_unlocked(&tl->last_request);
+		rq = i915_active_request_get_unlocked(&tl->last_request);
 		if (!rq)
 			continue;
 
@@ -4167,7 +4152,8 @@ out:
 }
 
 static void
-frontbuffer_retire(struct i915_gem_active *active, struct i915_request *request)
+frontbuffer_retire(struct i915_active_request *active,
+		   struct i915_request *request)
 {
 	struct drm_i915_gem_object *obj =
 		container_of(active, typeof(*obj), frontbuffer_write);
@@ -4194,7 +4180,8 @@ void i915_gem_object_init(struct drm_i915_gem_object *obj,
 	obj->resv = &obj->__builtin_resv;
 
 	obj->frontbuffer_ggtt_origin = ORIGIN_GTT;
-	init_request_active(&obj->frontbuffer_write, frontbuffer_retire);
+	i915_active_request_init(&obj->frontbuffer_write,
+				 NULL, frontbuffer_retire);
 
 	obj->mm.madv = I915_MADV_WILLNEED;
 	INIT_RADIX_TREE(&obj->mm.get_page.radix, GFP_KERNEL | __GFP_NOWARN);
@@ -5324,6 +5311,7 @@ int i915_gem_init_early(struct drm_i915_private *dev_priv)
 	init_waitqueue_head(&dev_priv->gpu_error.wait_queue);
 	init_waitqueue_head(&dev_priv->gpu_error.reset_queue);
 	mutex_init(&dev_priv->gpu_error.wedge_mutex);
+	init_srcu_struct(&dev_priv->gpu_error.reset_backoff_srcu);
 
 	atomic_set(&dev_priv->mm.bsd_engine_dispatch_index, 0);
 
@@ -5355,6 +5343,8 @@ void i915_gem_cleanup_early(struct drm_i915_private *dev_priv)
 	GEM_BUG_ON(!llist_empty(&dev_priv->mm.free_list));
 	GEM_BUG_ON(atomic_read(&dev_priv->mm.free_count));
 	WARN_ON(dev_priv->mm.object_count);
+
+	cleanup_srcu_struct(&dev_priv->gpu_error.reset_backoff_srcu);
 
 	kmem_cache_destroy(dev_priv->priorities);
 	kmem_cache_destroy(dev_priv->dependencies);
