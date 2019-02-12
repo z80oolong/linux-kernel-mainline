@@ -1,0 +1,32 @@
+drm drm-fixes d13937116f1e82bf508a6325111b322c30c85eb9
+	Linux 5.0-rc6
+drm-misc drm-misc-fixes 7fd56e0260a22c0cfaf9adb94a2427b76e239dd0
+	drm/vkms: Fix license inconsistent
+drm-intel drm-intel-fixes 16eb0f34cdf4cf04cd92762c7a79f98aa51e053f
+	drm/i915/opregion: rvda is relative from opregion base in opregion 2.1+
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 16065fcdd19ddb9e093192914ac863884f308766
+	drm/virtio: do NOT reuse resource ids
+drm-misc drm-misc-next-fixes 6649a95d35d850e417f125821a803ca7889c713c
+	drm/komeda: fix build with drm_modeset_helper.h update
+drm-intel drm-intel-next-fixes bfeffd155283772bbe78c6a05dec7c0128ee500c
+	Linux 5.0-rc1
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 129716dbc2b67b71d61168038a4ca96c814577e4
+	drm/v3d: Update top-level kerneldoc for the addition of TFU.
+drm-intel drm-intel-next-queued b3b0391af2afa783841fb70eaa715b8a79a17d99
+	drm/i915: Detect potential i915_reset_trylock() lockups
+drm-intel drm-intel-next c09d39166d8a3f3788680b32dbb0a40a70de32e2
+	drm/i915: Update DRIVER_DATE to 20190207
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 00a399cad1a063e7665f06b6497a807db20441fd
+	ALSA: pcm: Revert capture stream behavior change in blocking mode
+sound-upstream for-next d9c0b2afe820fa3b3f8258a659daee2cc71ca3ef
+	ALSA: PCM: check if ops are defined before suspending PCM
+drm-intel topic/core-for-CI 22356cc0fd46bb51892e64918335b5d0b96c75df
+	HACK: drm/i915/opregion: ICL should have opregion 2.1+ and relative rvda
+drm-intel topic/component-typed 8857c7d065e900a0b3829c97634c99501b606541
+	i915/snd_hdac: I915 subcomponent for the snd_hdac
