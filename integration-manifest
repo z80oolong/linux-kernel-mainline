@@ -1,0 +1,32 @@
+drm drm-fixes cd4c5a48741056266ff19b2516e5355b5a01abf3
+	Merge tag 'imx-drm-fixes-2019-02-12' of git://git.pengutronix.de/pza/linux into drm-fixes
+drm-misc drm-misc-fixes 7fd56e0260a22c0cfaf9adb94a2427b76e239dd0
+	drm/vkms: Fix license inconsistent
+drm-intel drm-intel-fixes 16eb0f34cdf4cf04cd92762c7a79f98aa51e053f
+	drm/i915/opregion: rvda is relative from opregion base in opregion 2.1+
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 16065fcdd19ddb9e093192914ac863884f308766
+	drm/virtio: do NOT reuse resource ids
+drm-misc drm-misc-next-fixes 37406a60fac7de336dec331a8707a94462ac5a5e
+	drm: Merge __drm_atomic_helper_disable_all() into drm_atomic_helper_disable_all()
+drm-intel drm-intel-next-fixes bfeffd155283772bbe78c6a05dec7c0128ee500c
+	Linux 5.0-rc1
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 129716dbc2b67b71d61168038a4ca96c814577e4
+	drm/v3d: Update top-level kerneldoc for the addition of TFU.
+drm-intel drm-intel-next-queued 5e0b6697651b3e6f0dd31d1e320a1a29b787f1b7
+	drm/i915: Assert that VED and ISP are power gated
+drm-intel drm-intel-next c09d39166d8a3f3788680b32dbb0a40a70de32e2
+	drm/i915: Update DRIVER_DATE to 20190207
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 00a399cad1a063e7665f06b6497a807db20441fd
+	ALSA: pcm: Revert capture stream behavior change in blocking mode
+sound-upstream for-next 932a81519572156a88dbc2349d183c603446f9c4
+	ALSA: pcm: Comment why read blocks when PCM is not running
+drm-intel topic/core-for-CI 22356cc0fd46bb51892e64918335b5d0b96c75df
+	HACK: drm/i915/opregion: ICL should have opregion 2.1+ and relative rvda
+drm-intel topic/component-typed 8857c7d065e900a0b3829c97634c99501b606541
+	i915/snd_hdac: I915 subcomponent for the snd_hdac
