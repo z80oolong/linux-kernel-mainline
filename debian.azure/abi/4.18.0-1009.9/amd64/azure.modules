@@ -220,6 +220,7 @@ cfbcopyarea
 cfbfillrect
 cfbimgblt
 cfg80211
+cfq-iosched
 ch
 chacha20-x86_64
 chacha20_generic
@@ -289,6 +290,7 @@ dccp
 dccp_diag
 dccp_ipv4
 dccp_ipv6
+deadline-iosched
 decnet
 defxx
 dell-smbios
