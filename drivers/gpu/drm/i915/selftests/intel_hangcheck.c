@@ -56,6 +56,8 @@ static int hang_init(struct hang *h, struct drm_i915_private *i915)
 	if (IS_ERR(h->ctx))
 		return PTR_ERR(h->ctx);
 
+	GEM_BUG_ON(i915_gem_context_is_bannable(h->ctx));
+
 	h->hws = i915_gem_object_create_internal(i915, PAGE_SIZE);
 	if (IS_ERR(h->hws)) {
 		err = PTR_ERR(h->hws);
@@ -242,6 +244,12 @@ hang_create_request(struct hang *h, struct intel_engine_cs *engine)
 	*batch++ = MI_BATCH_BUFFER_END; /* not reached */
 	i915_gem_chipset_flush(h->i915);
 
+	if (rq->engine->emit_init_breadcrumb) {
+		err = rq->engine->emit_init_breadcrumb(rq);
+		if (err)
+			goto cancel_rq;
+	}
+
 	flags = 0;
 	if (INTEL_GEN(vm->i915) <= 5)
 		flags |= I915_DISPATCH_SECURE;
@@ -393,10 +401,8 @@ static int igt_wedged_reset(void *arg)
 
 	i915_gem_set_wedged(i915);
 
-	mutex_lock(&i915->drm.struct_mutex);
 	GEM_BUG_ON(!i915_terminally_wedged(&i915->gpu_error));
 	i915_reset(i915, ALL_ENGINES, NULL);
-	mutex_unlock(&i915->drm.struct_mutex);
 
 	intel_runtime_pm_put(i915, wakeref);
 	igt_global_reset_unlock(i915);
@@ -1039,8 +1045,6 @@ static int __igt_reset_evict_vma(struct drm_i915_private *i915,
 
 	/* Check that we can recover an unbind stuck on a hanging request */
 
-	igt_global_reset_lock(i915);
-
 	mutex_lock(&i915->drm.struct_mutex);
 	err = hang_init(&h, i915);
 	if (err)
@@ -1138,7 +1142,9 @@ static int __igt_reset_evict_vma(struct drm_i915_private *i915,
 	}
 
 out_reset:
+	igt_global_reset_lock(i915);
 	fake_hangcheck(rq->i915, intel_engine_flag(rq->engine));
+	igt_global_reset_unlock(i915);
 
 	if (tsk) {
 		struct igt_wedge_me w;
@@ -1159,7 +1165,6 @@ fini:
 	hang_fini(&h);
 unlock:
 	mutex_unlock(&i915->drm.struct_mutex);
-	igt_global_reset_unlock(i915);
 
 	if (i915_terminally_wedged(&i915->gpu_error))
 		return -EIO;
