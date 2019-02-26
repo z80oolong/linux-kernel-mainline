@@ -1,0 +1,32 @@
+drm drm-fixes 019276ed65f364de27b929da4e083bb86ce7d1ef
+	Merge branch 'drm-fixes-5.0' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+drm-misc drm-misc-fixes 04b9c48851582aa0971b7d4e9d42c872b8acd0e2
+	drm/bochs: Fix the ID mismatch error
+drm-intel drm-intel-fixes 5908e6b738e3357af42c10e1183753c70a0117a9
+	Linux 5.0-rc8
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next fbac3c48fa6b4cfa43eaae39d5a53269bff7ec5f
+	Merge branch 'drm-next-5.1' of git://people.freedesktop.org/~agd5f/linux into drm-next
+drm-misc drm-misc-next-fixes 37406a60fac7de336dec331a8707a94462ac5a5e
+	drm: Merge __drm_atomic_helper_disable_all() into drm_atomic_helper_disable_all()
+drm-intel drm-intel-next-fixes 96e0adb4af421d0c835854ba765ad36678086bd2
+	drm/i915/opregion: rvda is relative from opregion base in opregion 2.1+
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 979a1bb6ba5a7baefb5125d624d553f66a7a8dae
+	drm/panel: Add Ronbo RB070D30 panel
+drm-intel drm-intel-next-queued 69e89032b2a5e35e5bf0ff6372776f4bd830c2a3
+	drm/i915: Include infoframes in the crtc state dump
+drm-intel drm-intel-next 47ed55a9bb9e284d46d6f2489e32a53b59152809
+	drm/i915: Update DRIVER_DATE to 20190220
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 268836649c07e0d38866006b5e94294b5bbc9806
+	Merge tag 'asoc-fix-v5.0-rc6' of git://git.kernel.org/pub/scm/linux/kernel/git/broonie/sound into for-linus
+sound-upstream for-next f97a0944a72b26a2bece72516294e112a890f98a
+	ALSA: firewire-motu: fix construction of PCM frame for capture direction
+drm-intel topic/core-for-CI 3660afea17ab832585b54af23c7625baeb5225c3
+	mm: Don't let userspace spam allocations warnings
+drm-intel topic/mei-hdcp fa301ad9fa8f6f738b9c22da3ede7824e3286693
+	misc/mei/hdcp: Component framework for I915 Interface
