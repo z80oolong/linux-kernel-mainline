@@ -86,8 +86,6 @@ static struct mock_request *first_request(struct mock_engine *engine)
 static void advance(struct mock_request *request)
 {
 	list_del_init(&request->link);
-	intel_engine_write_global_seqno(request->base.engine,
-					request->base.global_seqno);
 	i915_request_mark_complete(&request->base);
 	GEM_BUG_ON(!i915_request_completed(&request->base));
 
@@ -198,7 +196,6 @@ static void mock_submit_request(struct i915_request *request)
 	unsigned long flags;
 
 	i915_request_submit(request);
-	GEM_BUG_ON(!request->global_seqno);
 
 	spin_lock_irqsave(&engine->hw_lock, flags);
 	list_add_tail(&mock->link, &engine->hw_queue);
@@ -278,7 +275,6 @@ void mock_engine_flush(struct intel_engine_cs *engine)
 
 void mock_engine_reset(struct intel_engine_cs *engine)
 {
-	intel_engine_write_global_seqno(engine, 0);
 }
 
 void mock_engine_free(struct intel_engine_cs *engine)
