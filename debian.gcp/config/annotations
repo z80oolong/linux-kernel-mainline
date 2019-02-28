@@ -4,42 +4,81 @@
 
 include "../../debian.master/config/annotations"
 
-# Menu: Device Drivers >> PTP clock support
+# Menu: Device Drivers >> Block devices
+CONFIG_BLK_DEV_FD                               policy<{'amd64': 'n'}>
+#
+CONFIG_BLK_DEV_FD                               flag<ENFORCE> note<LP:1729673>
+
+# Menu: Device Drivers >> I2C support >> I2C support >> I2C Hardware Bus support
+CONFIG_I2C_AMD_MP2				policy<{'amd64': 'n'}>
+#
+CONFIG_I2C_AMD_MP2				flag<ENFORCE> note<not relevant for gcp>
+
+# Menu: Device Drivers >> Network device support >> Wireless LAN >> Atheros/Qualcomm devices
+CONFIG_WCN36XX_SNAPDRAGON_HACKS			policy<{'amd64': 'n'}>
+#
+CONFIG_WCN36XX_SNAPDRAGON_HACKS			flag<ENFORCE> note<not relevant for gcp>
+
+# Menu: Device Drivers >> PTP clock support >> PTP clock support
 CONFIG_DP83640_PHY                              policy<{'amd64': 'n'}>
 #
+CONFIG_DP83640_PHY                              mark<ENFORCE> note<LP:1785816> note<not relevant for gcp>
 
 # Menu: Device Drivers >> SCSI device support >> SCSI device support >> SCSI low-level drivers
 CONFIG_SCSI_VIRTIO                              policy<{'amd64': 'y'}>
 #
-CONFIG_SCSI_VIRTIO                              note<tech preview of new feature>
+CONFIG_SCSI_VIRTIO                              flag<ENFORCE> note<LP:1669657> note<tech preview of new feature>
+
+# Menu: Device Drivers >> X86 Platform Specific Device Drivers
+CONFIG_DELL_UART_BACKLIGHT			policy<{'amd64': 'n'}>
+CONFIG_DELL_SMBIOS_SMM				policy<{'amd64': 'n'}>
+#
+CONFIG_DELL_UART_BACKLIGHT			flag<ENFORCE> note<not relevant for gcp>
+CONFIG_DELL_SMBIOS_SMM				flag<ENFORCE> note<not relevant for gcp>
 
 # Menu: Kernel hacking
 CONFIG_PANIC_ON_OOPS                            policy<{'amd64': 'y'}>
 #
-CONFIG_PANIC_ON_OOPS                            note<keep working if at all possible>
+CONFIG_PANIC_ON_OOPS  				flag<ENFORCE> note<initial packaging> note<keep working if at all possible>
 
 # Menu: Kernel hacking >> Debug Lockups and Hangs
 CONFIG_BOOTPARAM_HARDLOCKUP_PANIC               policy<{'amd64': 'y'}>
 CONFIG_BOOTPARAM_SOFTLOCKUP_PANIC               policy<{'amd64': 'y'}>
 #
+CONFIG_BOOTPARAM_HARDLOCKUP_PANIC               flag<ENFORCE> note<initial packaging>
+CONFIG_BOOTPARAM_SOFTLOCKUP_PANIC               flag<ENFORCE> note<initial packaging>
+
+# Menu: Library routines
+CONFIG_RAID6_PQ_DEFAULT_ALG			policy<'amd64': 'avx2x4'>
+CONFIG_RAID6_PQ_DEFAULT_ALG_BOOL		policy<'amd64': 'y'>
+#
+CONFIG_RAID6_PQ_DEFAULT_ALG			mark<ENFORCE> note<LP:1812728>
+CONFIG_RAID6_PQ_DEFAULT_ALG_BOOL		mark<ENFORCE> note<LP:1812728>
+
+# Menu: Networking support >> Bluetooth subsystem support >> Bluetooth device drivers
+CONFIG_BT_QCOMSMD_HACK				policy<{'amd64': 'n'}>
+#
+CONFIG_BT_QCOMSMD_HACK				flag<ENFORCE> note<not relevant for gcp>
 
 # Menu: Networking support >> Networking options
 CONFIG_NETWORK_PHY_TIMESTAMPING                 policy<{'amd64': 'n'}>
 #
+CONFIG_NETWORK_PHY_TIMESTAMPING			flag<ENFORCE> note<LP:1785816> note<not relevant for gcp>
 
 # Menu: Networking support >> Networking options >> Network packet filtering framework (Netfilter) >> Core Netfilter Configuration
 CONFIG_NETFILTER_NETLINK_QUEUE                  policy<{'amd64': 'y'}>
 CONFIG_NETFILTER_NETLINK_LOG                    policy<{'amd64': 'y'}>
 #
+CONFIG_NETFILTER_NETLINK_QUEUE                  flag<ENFORCE> note<initial packaging>
+CONFIG_NETFILTER_NETLINK_LOG                    flag<ENFORCE> note<initial packaging>
 
 # Menu: Networking support >> Networking options >> Network packet filtering framework (Netfilter) >> Core Netfilter Configuration >> Netfilter connection tracking support
 CONFIG_NF_CONNTRACK                             policy<{'amd64': 'y'}>
 CONFIG_NF_CONNTRACK_PROCFS                      policy<{'amd64': 'y'}>
 CONFIG_NF_CT_NETLINK                            policy<{'amd64': 'y'}>
 #
+CONFIG_NF_CONNTRACK                             flag<ENFORCE> note<initial packaging>
+CONFIG_NF_CONNTRACK_PROCFS                      flag<ENFORCE> note<initial packaging>
+CONFIG_NF_CT_NETLINK                            flag<ENFORCE> note<initial packaging>
 CONFIG_NF_CONNTRACK_PROCFS                      flag<DEPRECATED>
-
-# Menu: Device Drivers >> Block devices
-CONFIG_BLK_DEV_FD                               policy<{'amd64': 'n'}>
-CONFIG_BLK_DEV_FD                               note<LP:1729673>
 
