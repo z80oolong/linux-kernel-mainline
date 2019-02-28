@@ -3060,7 +3060,7 @@ CONFIG_SERIAL_IPOCTAL                           policy<{'amd64': 'm', 'arm64': '
 
 # Menu: Device Drivers >> InfiniBand support
 CONFIG_INFINIBAND                               policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'ppc64el': 'm', 's390x': 'm'}>
-CONFIG_INFINIBAND_USER_MAD                      policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'ppc64el': 'm', 's390x': 'm'}>
+CONFIG_INFINIBAND_USER_MAD                      policy<{'amd64': 'y'}>
 CONFIG_INFINIBAND_USER_ACCESS                   policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'ppc64el': 'm', 's390x': 'm'}>
 CONFIG_INFINIBAND_EXP_USER_ACCESS               policy<{'amd64': 'n', 'arm64': 'n', 'armhf': 'n', 'i386': 'n', 'ppc64el': 'n', 's390x': 'n'}>
 CONFIG_INFINIBAND_ON_DEMAND_PAGING              policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y', 'ppc64el': 'y', 's390x': 'y'}>
@@ -3082,9 +3082,9 @@ CONFIG_INFINIBAND_USNIC                         policy<{'amd64': 'm', 'i386': 'm
 CONFIG_INFINIBAND_HNS                           policy<{'arm64': 'm'}>
 CONFIG_INFINIBAND_HNS_HIP06                     policy<{'arm64': 'm'}>
 CONFIG_INFINIBAND_HNS_HIP08                     policy<{'arm64': 'm'}>
-CONFIG_INFINIBAND_IPOIB                         policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'ppc64el': 'm', 's390x': 'm'}>
+CONFIG_INFINIBAND_IPOIB                         policy<{'amd64': 'y'}>
 CONFIG_INFINIBAND_IPOIB_CM                      policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y', 'ppc64el': 'y', 's390x': 'y'}>
-CONFIG_INFINIBAND_IPOIB_DEBUG                   policy<{'amd64': 'n', 'arm64': 'n', 'armhf': 'n', 'i386': 'n', 'ppc64el': 'n', 's390x': 'n'}>
+CONFIG_INFINIBAND_IPOIB_DEBUG                   policy<{'amd64': 'y'}>
 CONFIG_INFINIBAND_SRP                           policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'ppc64el': 'm', 's390x': 'm'}>
 CONFIG_INFINIBAND_SRPT                          policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'ppc64el': 'm', 's390x': 'm'}>
 CONFIG_INFINIBAND_ISER                          policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'ppc64el': 'm', 's390x': 'm'}>
@@ -3100,6 +3100,9 @@ CONFIG_INFINIBAND_BNXT_RE                       policy<{'amd64': 'm', 'arm64': '
 #
 CONFIG_MLX4_INFINIBAND                          mark<ENFORCED> note<LP:1759656>
 CONFIG_MLX5_INFINIBAND                          mark<ENFORCED> note<LP:1759656>
+CONFIG_INFINIBAND_USER_MAD                      note<LP:1818141> note<LP:1798185> mark<ENFORCED>
+CONFIG_INFINIBAND_IPOIB                         note<LP:1818141> note<LP:1798185> mark<ENFORCED>
+CONFIG_INFINIBAND_IPOIB_DEBUG                   note<LP:1818141> note<LP:1798185> mark<ENFORCED>
 
 # Menu: Device Drivers >> Input device support
 
