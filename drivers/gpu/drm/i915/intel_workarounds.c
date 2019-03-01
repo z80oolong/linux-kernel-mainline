@@ -876,26 +876,22 @@ void intel_gt_init_workarounds(struct drm_i915_private *i915)
 
 	wa_init_start(wal, "GT");
 
-	if (INTEL_GEN(i915) < 8)
-		return;
-	else if (IS_BROADWELL(i915))
-		return;
-	else if (IS_CHERRYVIEW(i915))
-		return;
-	else if (IS_SKYLAKE(i915))
-		skl_gt_workarounds_init(i915);
-	else if (IS_BROXTON(i915))
-		bxt_gt_workarounds_init(i915);
-	else if (IS_KABYLAKE(i915))
-		kbl_gt_workarounds_init(i915);
-	else if (IS_GEMINILAKE(i915))
-		glk_gt_workarounds_init(i915);
-	else if (IS_COFFEELAKE(i915))
-		cfl_gt_workarounds_init(i915);
+	if (IS_ICELAKE(i915))
+		icl_gt_workarounds_init(i915);
 	else if (IS_CANNONLAKE(i915))
 		cnl_gt_workarounds_init(i915);
-	else if (IS_ICELAKE(i915))
-		icl_gt_workarounds_init(i915);
+	else if (IS_COFFEELAKE(i915))
+		cfl_gt_workarounds_init(i915);
+	else if (IS_GEMINILAKE(i915))
+		glk_gt_workarounds_init(i915);
+	else if (IS_KABYLAKE(i915))
+		kbl_gt_workarounds_init(i915);
+	else if (IS_BROXTON(i915))
+		bxt_gt_workarounds_init(i915);
+	else if (IS_SKYLAKE(i915))
+		skl_gt_workarounds_init(i915);
+	else if (INTEL_GEN(i915) <= 8)
+		return;
 	else
 		MISSING_CASE(INTEL_GEN(i915));
 
@@ -1072,26 +1068,22 @@ void intel_engine_init_whitelist(struct intel_engine_cs *engine)
 
 	wa_init_start(w, "whitelist");
 
-	if (INTEL_GEN(i915) < 8)
-		return;
-	else if (IS_BROADWELL(i915))
-		return;
-	else if (IS_CHERRYVIEW(i915))
-		return;
-	else if (IS_SKYLAKE(i915))
-		skl_whitelist_build(w);
-	else if (IS_BROXTON(i915))
-		bxt_whitelist_build(w);
-	else if (IS_KABYLAKE(i915))
-		kbl_whitelist_build(w);
-	else if (IS_GEMINILAKE(i915))
-		glk_whitelist_build(w);
-	else if (IS_COFFEELAKE(i915))
-		cfl_whitelist_build(w);
+	if (IS_ICELAKE(i915))
+		icl_whitelist_build(w);
 	else if (IS_CANNONLAKE(i915))
 		cnl_whitelist_build(w);
-	else if (IS_ICELAKE(i915))
-		icl_whitelist_build(w);
+	else if (IS_COFFEELAKE(i915))
+		cfl_whitelist_build(w);
+	else if (IS_GEMINILAKE(i915))
+		glk_whitelist_build(w);
+	else if (IS_KABYLAKE(i915))
+		kbl_whitelist_build(w);
+	else if (IS_BROXTON(i915))
+		bxt_whitelist_build(w);
+	else if (IS_SKYLAKE(i915))
+		skl_whitelist_build(w);
+	else if (INTEL_GEN(i915) <= 8)
+		return;
 	else
 		MISSING_CASE(INTEL_GEN(i915));
 
