@@ -1,30 +1,30 @@
-linux-snapdragon-edge (4.15.0-1048.51) bionic; urgency=medium
+linux-snapdragon (4.15.0-1048.51) bionic; urgency=medium
 
   * Dummy entry
 
  -- Paolo Pisati <paolo.pisati@canonical.com>  Fri, 08 Feb 2019 09:40:36 +0100
 
-linux-snapdragon-edge (4.15.0-1047.50) bionic; urgency=medium
+linux-snapdragon (4.15.0-1047.50) bionic; urgency=medium
 
   * Miscellaneous upstream changes
     - make ignore and ignore.modules empty files
 
  -- Paolo Pisati <paolo.pisati@canonical.com>  Thu, 07 Feb 2019 13:01:49 +0100
 
-linux-snapdragon-edge (4.15.0-1046.49) bionic; urgency=medium
+linux-snapdragon (4.15.0-1046.49) bionic; urgency=medium
 
   * Miscellaneous upstream changes
     - debian/rules.d/4-checks.mk: debug
 
  -- Paolo Pisati <paolo.pisati@canonical.com>  Thu, 07 Feb 2019 08:28:43 +0100
 
-linux-snapdragon-edge (4.15.0-1045.48) bionic; urgency=medium
+linux-snapdragon (4.15.0-1045.48) bionic; urgency=medium
 
   * Rebase on Ubuntu-4.15.0-45.48
 
  -- Paolo Pisati <paolo.pisati@canonical.com>  Tue, 05 Feb 2019 16:24:42 +0000
 
-linux-snapdragon-edge (4.15.0-1044.47) bionic; urgency=medium
+linux-snapdragon (4.15.0-1044.47) bionic; urgency=medium
 
   * Initial release.
 
