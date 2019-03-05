@@ -331,6 +331,9 @@ enum plane_id {
 	PLANE_SPRITE0,
 	PLANE_SPRITE1,
 	PLANE_SPRITE2,
+	PLANE_SPRITE3,
+	PLANE_SPRITE4,
+	PLANE_SPRITE5,
 	PLANE_CURSOR,
 	I915_MAX_PLANES,
 };
@@ -577,6 +580,30 @@ struct i915_hotplug {
 	     (__i)++) \
 		for_each_if (crtc)
 
+#define for_each_oldnew_intel_crtc_in_state(__state, crtc, old_crtc_state, new_crtc_state, __i) \
+	for ((__i) = 0; \
+	     (__i) < (__state)->base.dev->mode_config.num_crtc && \
+		     ((crtc) = to_intel_crtc((__state)->base.crtcs[__i].ptr), \
+		      (old_crtc_state) = to_intel_crtc_state((__state)->base.crtcs[__i].old_state), \
+		      (new_crtc_state) = to_intel_crtc_state((__state)->base.crtcs[__i].new_state), 1); \
+	     (__i)++) \
+		for_each_if (crtc)
+
+#define for_each_old_intel_plane_in_state(__state, plane, old_plane_state, __i) \
+	for ((__i) = 0; \
+	     (__i) < (__state)->base.dev->mode_config.num_total_plane && \
+		     ((plane) = to_intel_plane((__state)->base.planes[__i].ptr), \
+		      (old_plane_state) = to_intel_plane_state((__state)->base.planes[__i].old_state), 1); \
+	     (__i)++) \
+		for_each_if (plane)
+
+#define for_each_new_intel_plane_in_state(__state, plane, new_plane_state, __i) \
+	for ((__i) = 0; \
+	     (__i) < (__state)->base.dev->mode_config.num_total_plane && \
+		     ((plane) = to_intel_plane((__state)->base.planes[__i].ptr), \
+		      (new_plane_state) = to_intel_plane_state((__state)->base.planes[__i].new_state), 1); \
+	     (__i)++) \
+		for_each_if (plane)
 
 #define for_each_oldnew_intel_plane_in_state(__state, plane, old_plane_state, new_plane_state, __i) \
 	for ((__i) = 0; \
@@ -1864,11 +1891,10 @@ static inline bool skl_ddb_entry_equal(const struct skl_ddb_entry *e1,
 }
 
 struct skl_ddb_allocation {
-	struct skl_ddb_entry plane[I915_MAX_PIPES][I915_MAX_PLANES]; /* packed/uv */
-	struct skl_ddb_entry y_plane[I915_MAX_PIPES][I915_MAX_PLANES];
+	u8 enabled_slices; /* GEN11 has configurable 2 slices */
 };
 
-struct skl_wm_values {
+struct skl_ddb_values {
 	unsigned dirty_pipes;
 	struct skl_ddb_allocation ddb;
 };
@@ -1883,6 +1909,7 @@ struct skl_wm_level {
 struct skl_wm_params {
 	bool x_tiled, y_tiled;
 	bool rc_surface;
+	bool is_planar;
 	uint32_t width;
 	uint8_t cpp;
 	uint32_t plane_pixel_rate;
@@ -1891,6 +1918,7 @@ struct skl_wm_params {
 	uint_fixed_16_16_t plane_blocks_per_line;
 	uint_fixed_16_16_t y_tile_minimum;
 	uint32_t linetime_us;
+	uint32_t dbuf_block_size;
 };
 
 /*
@@ -2534,7 +2562,7 @@ struct drm_i915_private {
 		/* current hardware state */
 		union {
 			struct ilk_wm_values hw;
-			struct skl_wm_values skl_hw;
+			struct skl_ddb_values skl_hw;
 			struct vlv_wm_values vlv;
 			struct g4x_wm_values g4x;
 		};
@@ -2555,6 +2583,19 @@ struct drm_i915_private {
 		 */
 		bool distrust_bios_wm;
 	} wm;
+
+	struct dram_info {
+		bool valid;
+		bool is_16gb_dimm;
+		u8 num_channels;
+		enum dram_rank {
+			I915_DRAM_RANK_INVALID = 0,
+			I915_DRAM_RANK_SINGLE,
+			I915_DRAM_RANK_DUAL
+		} rank;
+		u32 bandwidth_kbps;
+		bool symmetric_memory;
+	} dram_info;
 
 	struct i915_runtime_pm runtime_pm;
 
@@ -2758,6 +2799,15 @@ struct drm_i915_private {
 	 * NOTE: This is the dri1/ums dungeon, don't add stuff here. Your patch
 	 * will be rejected. Instead look for a better place.
 	 */
+};
+
+struct dram_channel_info {
+	struct info {
+		u8 size, width;
+		enum dram_rank rank;
+	} l_info, s_info;
+	enum dram_rank rank;
+	bool is_16gb_dimm;
 };
 
 static inline struct drm_i915_private *to_i915(const struct drm_device *dev)
@@ -3182,7 +3232,7 @@ intel_info(const struct drm_i915_private *dev_priv)
 
 #define HAS_FW_BLC(dev_priv) 	(INTEL_GEN(dev_priv) > 2)
 #define HAS_FBC(dev_priv)	((dev_priv)->info.has_fbc)
-#define HAS_CUR_FBC(dev_priv)	(!HAS_GMCH_DISPLAY(dev_priv) && INTEL_INFO(dev_priv)->gen >= 7)
+#define HAS_CUR_FBC(dev_priv)	(!HAS_GMCH_DISPLAY(dev_priv) && INTEL_GEN(dev_priv) >= 7)
 
 #define HAS_IPS(dev_priv)	(IS_HSW_ULT(dev_priv) || IS_BROADWELL(dev_priv))
 
