@@ -303,6 +303,8 @@ skl_update_plane(struct intel_plane *plane,
 		I915_WRITE_FW(PLANE_POS(pipe, plane_id), (crtc_y << 16) | crtc_x);
 	}
 
+	skl_write_plane_wm(plane, crtc_state);
+
 	I915_WRITE_FW(PLANE_CTL(pipe, plane_id), plane_ctl);
 	I915_WRITE_FW(PLANE_SURF(pipe, plane_id),
 		      intel_plane_ggtt_offset(plane_state) + surf_addr);
@@ -312,7 +314,8 @@ skl_update_plane(struct intel_plane *plane,
 }
 
 void
-skl_disable_plane(struct intel_plane *plane, struct intel_crtc *crtc)
+skl_disable_plane(struct intel_plane *plane,
+		  const struct intel_crtc_state *crtc_state)
 {
 	struct drm_i915_private *dev_priv = to_i915(plane->base.dev);
 	enum plane_id plane_id = plane->id;
@@ -320,6 +323,8 @@ skl_disable_plane(struct intel_plane *plane, struct intel_crtc *crtc)
 	unsigned long irqflags;
 
 	spin_lock_irqsave(&dev_priv->uncore.lock, irqflags);
+
+	skl_write_plane_wm(plane, crtc_state);
 
 	I915_WRITE_FW(PLANE_CTL(pipe, plane_id), 0);
 
@@ -554,7 +559,8 @@ vlv_update_plane(struct intel_plane *plane,
 }
 
 static void
-vlv_disable_plane(struct intel_plane *plane, struct intel_crtc *crtc)
+vlv_disable_plane(struct intel_plane *plane,
+		  const struct intel_crtc_state *crtc_state)
 {
 	struct drm_i915_private *dev_priv = to_i915(plane->base.dev);
 	enum pipe pipe = plane->pipe;
@@ -712,7 +718,8 @@ ivb_update_plane(struct intel_plane *plane,
 }
 
 static void
-ivb_disable_plane(struct intel_plane *plane, struct intel_crtc *crtc)
+ivb_disable_plane(struct intel_plane *plane,
+		  const struct intel_crtc_state *crtc_state)
 {
 	struct drm_i915_private *dev_priv = to_i915(plane->base.dev);
 	enum pipe pipe = plane->pipe;
@@ -863,7 +870,8 @@ g4x_update_plane(struct intel_plane *plane,
 }
 
 static void
-g4x_disable_plane(struct intel_plane *plane, struct intel_crtc *crtc)
+g4x_disable_plane(struct intel_plane *plane,
+		  const struct intel_crtc_state *crtc_state)
 {
 	struct drm_i915_private *dev_priv = to_i915(plane->base.dev);
 	enum pipe pipe = plane->pipe;
