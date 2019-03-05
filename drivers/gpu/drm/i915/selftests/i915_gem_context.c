@@ -556,7 +556,7 @@ static int igt_ctx_exec(void *arg)
 		ncontexts++;
 	}
 	pr_info("Submitted %lu contexts (across %u engines), filling %lu dwords\n",
-		ncontexts, RUNTIME_INFO(i915)->num_rings, ndwords);
+		ncontexts, RUNTIME_INFO(i915)->num_engines, ndwords);
 
 	dw = 0;
 	list_for_each_entry(obj, &objects, st_link) {
@@ -923,7 +923,7 @@ __igt_ctx_sseu(struct drm_i915_private *i915,
 	       unsigned int flags)
 {
 	struct intel_sseu default_sseu = intel_device_default_sseu(i915);
-	struct intel_engine_cs *engine = i915->engine[RCS];
+	struct intel_engine_cs *engine = i915->engine[RCS0];
 	struct drm_i915_gem_object *obj;
 	struct i915_gem_context *ctx;
 	struct intel_sseu pg_sseu;
@@ -967,6 +967,7 @@ __igt_ctx_sseu(struct drm_i915_private *i915,
 		ret = PTR_ERR(ctx);
 		goto out_unlock;
 	}
+	i915_gem_context_clear_bannable(ctx); /* to reset and beyond! */
 
 	obj = i915_gem_object_create_internal(i915, PAGE_SIZE);
 	if (IS_ERR(obj)) {
@@ -1125,7 +1126,7 @@ static int igt_ctx_readonly(void *arg)
 		}
 	}
 	pr_info("Submitted %lu dwords (across %u engines)\n",
-		ndwords, RUNTIME_INFO(i915)->num_rings);
+		ndwords, RUNTIME_INFO(i915)->num_engines);
 
 	dw = 0;
 	list_for_each_entry(obj, &objects, st_link) {
@@ -1458,7 +1459,7 @@ static int igt_vm_isolation(void *arg)
 		count += this;
 	}
 	pr_info("Checked %lu scratch offsets across %d engines\n",
-		count, RUNTIME_INFO(i915)->num_rings);
+		count, RUNTIME_INFO(i915)->num_engines);
 
 out_rpm:
 	intel_runtime_pm_put(i915, wakeref);
@@ -1631,7 +1632,7 @@ int i915_gem_context_live_selftests(struct drm_i915_private *dev_priv)
 		SUBTEST(igt_vm_isolation),
 	};
 
-	if (i915_terminally_wedged(&dev_priv->gpu_error))
+	if (i915_terminally_wedged(dev_priv))
 		return 0;
 
 	return i915_subtests(tests, dev_priv);
