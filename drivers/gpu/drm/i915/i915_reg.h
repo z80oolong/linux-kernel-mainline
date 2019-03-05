@@ -6428,6 +6428,9 @@ enum {
 
 #define _PLANE_BUF_CFG_1_B			0x7127c
 #define _PLANE_BUF_CFG_2_B			0x7137c
+#define  SKL_DDB_ENTRY_MASK			0x3FF
+#define  ICL_DDB_ENTRY_MASK			0x7FF
+#define  DDB_ENTRY_END_SHIFT			16
 #define _PLANE_BUF_CFG_1(pipe)	\
 	_PIPE(pipe, _PLANE_BUF_CFG_1_A, _PLANE_BUF_CFG_1_B)
 #define _PLANE_BUF_CFG_2(pipe)	\
@@ -8692,6 +8695,54 @@ enum skl_power_gate {
 #define  DC_STATE_DEBUG                  _MMIO(0x45520)
 #define  DC_STATE_DEBUG_MASK_CORES	(1<<0)
 #define  DC_STATE_DEBUG_MASK_MEMORY_UP	(1<<1)
+
+#define BXT_P_CR_MC_BIOS_REQ_0_0_0	_MMIO(MCHBAR_MIRROR_BASE_SNB + 0x7114)
+#define  BXT_REQ_DATA_MASK			0x3F
+#define  BXT_DRAM_CHANNEL_ACTIVE_SHIFT		12
+#define  BXT_DRAM_CHANNEL_ACTIVE_MASK		(0xF << 12)
+#define  BXT_MEMORY_FREQ_MULTIPLIER_HZ		133333333
+
+#define BXT_D_CR_DRP0_DUNIT8			0x1000
+#define BXT_D_CR_DRP0_DUNIT9			0x1200
+#define  BXT_D_CR_DRP0_DUNIT_START		8
+#define  BXT_D_CR_DRP0_DUNIT_END		11
+#define BXT_D_CR_DRP0_DUNIT(x)	_MMIO(MCHBAR_MIRROR_BASE_SNB + \
+				      _PIPE((x) - 8, BXT_D_CR_DRP0_DUNIT8,\
+						 BXT_D_CR_DRP0_DUNIT9))
+#define  BXT_DRAM_RANK_MASK			0x3
+#define  BXT_DRAM_RANK_SINGLE			0x1
+#define  BXT_DRAM_RANK_DUAL			0x3
+#define  BXT_DRAM_WIDTH_MASK			(0x3 << 4)
+#define  BXT_DRAM_WIDTH_SHIFT			4
+#define  BXT_DRAM_WIDTH_X8			(0x0 << 4)
+#define  BXT_DRAM_WIDTH_X16			(0x1 << 4)
+#define  BXT_DRAM_WIDTH_X32			(0x2 << 4)
+#define  BXT_DRAM_WIDTH_X64			(0x3 << 4)
+#define  BXT_DRAM_SIZE_MASK			(0x7 << 6)
+#define  BXT_DRAM_SIZE_SHIFT			6
+#define  BXT_DRAM_SIZE_4GB			(0x0 << 6)
+#define  BXT_DRAM_SIZE_6GB			(0x1 << 6)
+#define  BXT_DRAM_SIZE_8GB			(0x2 << 6)
+#define  BXT_DRAM_SIZE_12GB			(0x3 << 6)
+#define  BXT_DRAM_SIZE_16GB			(0x4 << 6)
+
+#define SKL_MEMORY_FREQ_MULTIPLIER_HZ		266666666
+#define SKL_MC_BIOS_DATA_0_0_0_MCHBAR_PCU	_MMIO(MCHBAR_MIRROR_BASE_SNB + 0x5E04)
+#define  SKL_REQ_DATA_MASK			(0xF << 0)
+
+#define SKL_MAD_DIMM_CH0_0_0_0_MCHBAR_MCMAIN	_MMIO(MCHBAR_MIRROR_BASE_SNB + 0x500C)
+#define SKL_MAD_DIMM_CH1_0_0_0_MCHBAR_MCMAIN	_MMIO(MCHBAR_MIRROR_BASE_SNB + 0x5010)
+#define  SKL_DRAM_S_SHIFT			16
+#define  SKL_DRAM_SIZE_MASK			0x3F
+#define  SKL_DRAM_WIDTH_MASK			(0x3 << 8)
+#define  SKL_DRAM_WIDTH_SHIFT			8
+#define  SKL_DRAM_WIDTH_X8			(0x0 << 8)
+#define  SKL_DRAM_WIDTH_X16			(0x1 << 8)
+#define  SKL_DRAM_WIDTH_X32			(0x2 << 8)
+#define  SKL_DRAM_RANK_MASK			(0x1 << 10)
+#define  SKL_DRAM_RANK_SHIFT			10
+#define  SKL_DRAM_RANK_SINGLE			(0x0 << 10)
+#define  SKL_DRAM_RANK_DUAL			(0x1 << 10)
 
 /* Please see hsw_read_dcomp() and hsw_write_dcomp() before using this register,
  * since on HSW we can't write to it using I915_WRITE. */
