@@ -141,6 +141,10 @@
 #define KHz(x) (1000 * (x))
 #define MHz(x) KHz(1000 * (x))
 
+#define KBps(x) (1000 * (x))
+#define MBps(x) KBps(1000 * (x))
+#define GBps(x) ((u64)1000 * MBps((x)))
+
 /*
  * Display related stuff
  */
@@ -410,7 +414,7 @@ struct intel_atomic_state {
 	bool skip_intermediate_wm;
 
 	/* Gen9+ only */
-	struct skl_wm_values wm_results;
+	struct skl_ddb_values wm_results;
 
 	struct i915_sw_fence commit_ready;
 
@@ -453,6 +457,26 @@ struct intel_plane_state {
 	 *     update_scaler_plane.
 	 */
 	int scaler_id;
+
+	/*
+	 * linked_plane:
+	 *
+	 * ICL planar formats require 2 planes that are updated as pairs.
+	 * This member is used to make sure the other plane is also updated
+	 * when required, and for update_slave() to find the correct
+	 * plane_state to pass as argument.
+	 */
+	struct intel_plane *linked_plane;
+
+	/*
+	 * slave:
+	 * If set don't update use the linked plane's state for updating
+	 * this plane during atomic commit with the update_slave() callback.
+	 *
+	 * It's also used by the watermark code to ignore wm calculations on
+	 * this plane. They're calculated by the linked plane's wm code.
+	 */
+	u32 slave;
 
 	struct drm_intel_sprite_colorkey ckey;
 };
@@ -522,7 +546,9 @@ struct intel_pipe_wm {
 
 struct skl_plane_wm {
 	struct skl_wm_level wm[8];
+	struct skl_wm_level uv_wm[8];
 	struct skl_wm_level trans_wm;
+	bool is_planar;
 };
 
 struct skl_pipe_wm {
@@ -587,6 +613,8 @@ struct intel_crtc_wm_state {
 			/* gen9+ only needs 1-step wm programming */
 			struct skl_pipe_wm optimal;
 			struct skl_ddb_entry ddb;
+			struct skl_ddb_entry plane_ddb_y[I915_MAX_PLANES];
+			struct skl_ddb_entry plane_ddb_uv[I915_MAX_PLANES];
 		} skl;
 
 		struct {
@@ -795,6 +823,10 @@ struct intel_crtc_state {
 
 	/* bitmask of visible planes (enum plane_id) */
 	u8 active_planes;
+	u8 nv12_planes;
+
+	/* bitmask of planes that will be updated during the commit */
+	u8 update_planes;
 
 	/* HDMI scrambling status */
 	bool hdmi_scrambling;
@@ -874,8 +906,11 @@ struct intel_plane {
 	void (*update_plane)(struct intel_plane *plane,
 			     const struct intel_crtc_state *crtc_state,
 			     const struct intel_plane_state *plane_state);
+	void (*update_slave)(struct intel_plane *plane,
+			     const struct intel_crtc_state *crtc_state,
+			     const struct intel_plane_state *plane_state);
 	void (*disable_plane)(struct intel_plane *plane,
-			      struct intel_crtc *crtc);
+			      const struct intel_crtc_state *crtc_state);
 	bool (*get_hw_state)(struct intel_plane *plane);
 	int (*check_plane)(struct intel_plane *plane,
 			   struct intel_crtc_state *crtc_state,
@@ -1204,6 +1239,27 @@ hdmi_to_dig_port(struct intel_hdmi *intel_hdmi)
 }
 
 static inline struct intel_plane_state *
+intel_atomic_get_plane_state(struct intel_atomic_state *state,
+				 struct intel_plane *plane)
+{
+	struct drm_plane_state *ret =
+		drm_atomic_get_plane_state(&state->base, &plane->base);
+
+	if (IS_ERR(ret))
+		return ERR_CAST(ret);
+
+	return to_intel_plane_state(ret);
+}
+
+static inline struct intel_plane_state *
+intel_atomic_get_old_plane_state(struct intel_atomic_state *state,
+				 struct intel_plane *plane)
+{
+	return to_intel_plane_state(drm_atomic_get_old_plane_state(&state->base,
+								   &plane->base));
+}
+
+static inline struct intel_plane_state *
 intel_atomic_get_new_plane_state(struct intel_atomic_state *state,
 				 struct intel_plane *plane)
 {
@@ -1522,6 +1578,7 @@ u32 skl_plane_stride(const struct drm_framebuffer *fb, int plane,
 		     unsigned int rotation);
 int skl_check_plane_surface(struct intel_plane_state *plane_state);
 int i9xx_check_plane_surface(struct intel_plane_state *plane_state);
+int skl_format_to_fourcc(int format, bool rgb_order, bool alpha);
 
 /* intel_csr.c */
 void intel_csr_ucode_init(struct drm_i915_private *);
@@ -1808,6 +1865,8 @@ bool intel_display_power_get_if_enabled(struct drm_i915_private *dev_priv,
 					enum intel_display_power_domain domain);
 void intel_display_power_put(struct drm_i915_private *dev_priv,
 			     enum intel_display_power_domain domain);
+void icl_dbuf_slices_update(struct drm_i915_private *dev_priv,
+			    u8 req_slices);
 
 static inline void
 assert_rpm_device_not_suspended(struct drm_i915_private *dev_priv)
@@ -1904,6 +1963,9 @@ void g4x_wm_get_hw_state(struct drm_device *dev);
 void vlv_wm_get_hw_state(struct drm_device *dev);
 void ilk_wm_get_hw_state(struct drm_device *dev);
 void skl_wm_get_hw_state(struct drm_device *dev);
+void skl_pipe_ddb_get_hw_state(struct intel_crtc *crtc,
+			       struct skl_ddb_entry *ddb_y,
+			       struct skl_ddb_entry *ddb_uv);
 void skl_ddb_get_hw_state(struct drm_i915_private *dev_priv,
 			  struct skl_ddb_allocation *ddb /* out */);
 void skl_pipe_wm_get_hw_state(struct drm_crtc *crtc,
@@ -1915,10 +1977,13 @@ int intel_enable_sagv(struct drm_i915_private *dev_priv);
 int intel_disable_sagv(struct drm_i915_private *dev_priv);
 bool skl_wm_level_equals(const struct skl_wm_level *l1,
 			 const struct skl_wm_level *l2);
-bool skl_ddb_allocation_overlaps(struct drm_i915_private *dev_priv,
-				 const struct skl_ddb_entry **entries,
-				 const struct skl_ddb_entry *ddb,
-				 int ignore);
+bool skl_ddb_allocation_overlaps(const struct skl_ddb_entry *ddb,
+				 const struct skl_ddb_entry entries[],
+				 int num_entries, int ignore_idx);
+void skl_write_plane_wm(struct intel_plane *plane,
+			const struct intel_crtc_state *crtc_state);
+void skl_write_cursor_wm(struct intel_plane *plane,
+			 const struct intel_crtc_state *crtc_state);
 bool ilk_disable_lp_wm(struct drm_device *dev);
 int sanitize_rc6_option(struct drm_i915_private *dev_priv, int enable_rc6);
 int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
@@ -1947,8 +2012,18 @@ void intel_pipe_update_end(struct intel_crtc_state *new_crtc_state);
 void skl_update_plane(struct intel_plane *plane,
 		      const struct intel_crtc_state *crtc_state,
 		      const struct intel_plane_state *plane_state);
-void skl_disable_plane(struct intel_plane *plane, struct intel_crtc *crtc);
+void skl_disable_plane(struct intel_plane *plane,
+		       const struct intel_crtc_state *crtc_state);
 bool skl_plane_get_hw_state(struct intel_plane *plane);
+
+static inline bool icl_is_nv12_y_plane(enum plane_id id)
+{
+	/* Don't need to do a gen check, these planes are only available on gen11 */
+	if (id == PLANE_SPRITE4 || id == PLANE_SPRITE5)
+		return true;
+
+	return false;
+}
 
 /* intel_tv.c */
 void intel_tv_init(struct drm_i915_private *dev_priv);
@@ -1999,17 +2074,6 @@ intel_atomic_get_existing_crtc_state(struct drm_atomic_state *state,
 		return NULL;
 }
 
-static inline struct intel_plane_state *
-intel_atomic_get_existing_plane_state(struct drm_atomic_state *state,
-				      struct intel_plane *plane)
-{
-	struct drm_plane_state *plane_state;
-
-	plane_state = drm_atomic_get_existing_plane_state(state, &plane->base);
-
-	return to_intel_plane_state(plane_state);
-}
-
 int intel_atomic_setup_scalers(struct drm_i915_private *dev_priv,
 			       struct intel_crtc *intel_crtc,
 			       struct intel_crtc_state *crtc_state);
@@ -2020,6 +2084,10 @@ struct drm_plane_state *intel_plane_duplicate_state(struct drm_plane *plane);
 void intel_plane_destroy_state(struct drm_plane *plane,
 			       struct drm_plane_state *state);
 extern const struct drm_plane_helper_funcs intel_plane_helper_funcs;
+void intel_update_planes_on_crtc(struct intel_atomic_state *old_state,
+				 struct intel_crtc *crtc,
+				 struct intel_crtc_state *old_crtc_state,
+				 struct intel_crtc_state *new_crtc_state);
 int intel_plane_atomic_check_with_state(const struct intel_crtc_state *old_crtc_state,
 					struct intel_crtc_state *crtc_state,
 					const struct intel_plane_state *old_plane_state,
