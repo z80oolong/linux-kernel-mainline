@@ -179,6 +179,7 @@ intel_crtc_duplicate_state(struct drm_crtc *crtc)
 	crtc_state->fifo_changed = false;
 	crtc_state->wm.need_postvbl_update = false;
 	crtc_state->fb_bits = 0;
+	crtc_state->update_planes = 0;
 
 	return &crtc_state->base;
 }
@@ -224,6 +225,7 @@ int intel_atomic_setup_scalers(struct drm_i915_private *dev_priv,
 	struct intel_crtc_scaler_state *scaler_state =
 		&crtc_state->scaler_state;
 	struct drm_atomic_state *drm_state = crtc_state->base.state;
+	struct intel_atomic_state *intel_state = to_intel_atomic_state(drm_state);
 	int num_scalers_need;
 	int i, j;
 
@@ -301,8 +303,8 @@ int intel_atomic_setup_scalers(struct drm_i915_private *dev_priv,
 				continue;
 			}
 
-			plane_state = intel_atomic_get_existing_plane_state(drm_state,
-									    intel_plane);
+			plane_state = intel_atomic_get_new_plane_state(intel_state,
+								       intel_plane);
 			scaler_id = &plane_state->scaler_id;
 		}
 
