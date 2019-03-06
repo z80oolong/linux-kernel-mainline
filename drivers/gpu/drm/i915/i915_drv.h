@@ -2039,7 +2039,7 @@ struct dram_dimm_info {
 };
 
 struct dram_channel_info {
-	struct dram_dimm_info l_info, s_info;
+	struct dram_dimm_info dimm_l, dimm_s;
 	u8 ranks;
 	bool is_16gb_dimm;
 };
