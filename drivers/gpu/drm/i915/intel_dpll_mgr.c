@@ -2865,16 +2865,6 @@ icl_get_dpll(struct intel_crtc *crtc, struct intel_crtc_state *crtc_state,
 	return pll;
 }
 
-static i915_reg_t icl_pll_id_to_enable_reg(enum intel_dpll_id id)
-{
-	if (intel_dpll_is_combophy(id))
-		return CNL_DPLL_ENABLE(id);
-	else if (id == DPLL_ID_ICL_TBTPLL)
-		return TBT_PLL_ENABLE;
-
-	return MG_PLL_ENABLE(icl_pll_id_to_tc_port(id));
-}
-
 static bool mg_pll_get_hw_state(struct drm_i915_private *dev_priv,
 				struct intel_shared_dpll *pll,
 				struct intel_dpll_hw_state *hw_state)
@@ -2936,7 +2926,8 @@ out:
 
 static bool icl_pll_get_hw_state(struct drm_i915_private *dev_priv,
 				 struct intel_shared_dpll *pll,
-				 struct intel_dpll_hw_state *hw_state)
+				 struct intel_dpll_hw_state *hw_state,
+				 i915_reg_t enable_reg)
 {
 	const enum intel_dpll_id id = pll->info->id;
 	u32 val;
@@ -2946,7 +2937,7 @@ static bool icl_pll_get_hw_state(struct drm_i915_private *dev_priv,
 	if (!intel_display_power_get_if_enabled(dev_priv, POWER_DOMAIN_PLLS))
 		return false;
 
-	val = I915_READ(icl_pll_id_to_enable_reg(id));
+	val = I915_READ(enable_reg);
 	if (!(val & PLL_ENABLE))
 		goto out;
 
@@ -2957,6 +2948,21 @@ static bool icl_pll_get_hw_state(struct drm_i915_private *dev_priv,
 out:
 	intel_display_power_put(dev_priv, POWER_DOMAIN_PLLS);
 	return ret;
+}
+
+static bool combo_pll_get_hw_state(struct drm_i915_private *dev_priv,
+				   struct intel_shared_dpll *pll,
+				   struct intel_dpll_hw_state *hw_state)
+{
+	return icl_pll_get_hw_state(dev_priv, pll, hw_state,
+				    CNL_DPLL_ENABLE(pll->info->id));
+}
+
+static bool tbt_pll_get_hw_state(struct drm_i915_private *dev_priv,
+				 struct intel_shared_dpll *pll,
+				 struct intel_dpll_hw_state *hw_state)
+{
+	return icl_pll_get_hw_state(dev_priv, pll, hw_state, TBT_PLL_ENABLE);
 }
 
 static void icl_dpll_write(struct drm_i915_private *dev_priv,
@@ -3058,7 +3064,7 @@ static void icl_pll_enable(struct drm_i915_private *dev_priv,
 static void combo_pll_enable(struct drm_i915_private *dev_priv,
 			     struct intel_shared_dpll *pll)
 {
-	i915_reg_t enable_reg = icl_pll_id_to_enable_reg(pll->info->id);
+	i915_reg_t enable_reg = CNL_DPLL_ENABLE(pll->info->id);
 
 	icl_pll_power_enable(dev_priv, pll, enable_reg);
 
@@ -3071,6 +3077,24 @@ static void combo_pll_enable(struct drm_i915_private *dev_priv,
 	 */
 
 	icl_pll_enable(dev_priv, pll, enable_reg);
+
+	/* DVFS post sequence would be here. See the comment above. */
+}
+
+static void tbt_pll_enable(struct drm_i915_private *dev_priv,
+			   struct intel_shared_dpll *pll)
+{
+	icl_pll_power_enable(dev_priv, pll, TBT_PLL_ENABLE);
+
+	icl_dpll_write(dev_priv, pll);
+
+	/*
+	 * DVFS pre sequence would be here, but in our driver the cdclk code
+	 * paths should already be setting the appropriate voltage, hence we do
+	 * nothing here.
+	 */
+
+	icl_pll_enable(dev_priv, pll, TBT_PLL_ENABLE);
 
 	/* DVFS post sequence would be here. See the comment above. */
 }
@@ -3136,9 +3160,13 @@ static void icl_pll_disable(struct drm_i915_private *dev_priv,
 static void combo_pll_disable(struct drm_i915_private *dev_priv,
 			      struct intel_shared_dpll *pll)
 {
-	i915_reg_t enable_reg = icl_pll_id_to_enable_reg(pll->info->id);
+	icl_pll_disable(dev_priv, pll, CNL_DPLL_ENABLE(pll->info->id));
+}
 
-	icl_pll_disable(dev_priv, pll, enable_reg);
+static void tbt_pll_disable(struct drm_i915_private *dev_priv,
+			    struct intel_shared_dpll *pll)
+{
+	icl_pll_disable(dev_priv, pll, TBT_PLL_ENABLE);
 }
 
 static void mg_pll_disable(struct drm_i915_private *dev_priv,
@@ -3172,10 +3200,16 @@ static void icl_dump_hw_state(struct drm_i915_private *dev_priv,
 		      hw_state->mg_pll_tdc_coldst_bias);
 }
 
-static const struct intel_shared_dpll_funcs icl_pll_funcs = {
+static const struct intel_shared_dpll_funcs combo_pll_funcs = {
 	.enable = combo_pll_enable,
 	.disable = combo_pll_disable,
-	.get_hw_state = icl_pll_get_hw_state,
+	.get_hw_state = combo_pll_get_hw_state,
+};
+
+static const struct intel_shared_dpll_funcs tbt_pll_funcs = {
+	.enable = tbt_pll_enable,
+	.disable = tbt_pll_disable,
+	.get_hw_state = tbt_pll_get_hw_state,
 };
 
 static const struct intel_shared_dpll_funcs mg_pll_funcs = {
@@ -3185,9 +3219,9 @@ static const struct intel_shared_dpll_funcs mg_pll_funcs = {
 };
 
 static const struct dpll_info icl_plls[] = {
-	{ "DPLL 0",   &icl_pll_funcs, DPLL_ID_ICL_DPLL0,  0 },
-	{ "DPLL 1",   &icl_pll_funcs, DPLL_ID_ICL_DPLL1,  0 },
-	{ "TBT PLL",  &icl_pll_funcs, DPLL_ID_ICL_TBTPLL, 0 },
+	{ "DPLL 0",   &combo_pll_funcs, DPLL_ID_ICL_DPLL0,  0 },
+	{ "DPLL 1",   &combo_pll_funcs, DPLL_ID_ICL_DPLL1,  0 },
+	{ "TBT PLL",  &tbt_pll_funcs, DPLL_ID_ICL_TBTPLL, 0 },
 	{ "MG PLL 1", &mg_pll_funcs, DPLL_ID_ICL_MGPLL1, 0 },
 	{ "MG PLL 2", &mg_pll_funcs, DPLL_ID_ICL_MGPLL2, 0 },
 	{ "MG PLL 3", &mg_pll_funcs, DPLL_ID_ICL_MGPLL3, 0 },
