@@ -4076,12 +4076,12 @@ static const struct rate_control_ops rs_mvm_ops_drv = {
 };
 
 void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
-			  enum nl80211_band band, bool init)
+			  enum nl80211_band band)
 {
 	if (iwl_mvm_has_tlc_offload(mvm))
 		rs_fw_rate_init(mvm, sta, band);
 	else
-		rs_drv_rate_init(mvm, sta, band, init);
+		rs_drv_rate_init(mvm, sta, band);
 }
 
 int iwl_mvm_rate_control_register(void)
