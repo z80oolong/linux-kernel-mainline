@@ -9415,6 +9415,8 @@ EXPORT_SYMBOL vmlinux 0x00000000	napi_schedule_prep
 EXPORT_SYMBOL vmlinux 0x00000000	native_io_delay
 EXPORT_SYMBOL vmlinux 0x00000000	native_load_gs_index
 EXPORT_SYMBOL vmlinux 0x00000000	native_queued_spin_lock_slowpath
+EXPORT_SYMBOL vmlinux 0x00000000	native_restore_fl
+EXPORT_SYMBOL vmlinux 0x00000000	native_save_fl
 EXPORT_SYMBOL vmlinux 0x00000000	nd_btt_arena_is_valid
 EXPORT_SYMBOL vmlinux 0x00000000	nd_btt_probe
 EXPORT_SYMBOL vmlinux 0x00000000	nd_btt_version
