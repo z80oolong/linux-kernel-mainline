@@ -2484,8 +2484,9 @@ int hvnd_query_adaptor(struct hvnd_dev *nd_dev, struct hvnd_ucontext *uctx)
 	props->max_qp              = 16384;
 	props->max_qp_wr           = min(adap_info->max_recv_q_depth,
 					 adap_info->max_initiator_q_depth);
-	props->max_sge             = min(adap_info->max_initiator_sge,
+	props->max_send_sge        = min(adap_info->max_initiator_sge,
 					 adap_info->max_recv_sge);
+	props->max_recv_sge        = props->max_send_sge;
 	props->max_cq              = 0x1FFFF;
 	props->max_cqe             = adap_info->max_completion_q_depth;
 	props->max_mr              = 16384;

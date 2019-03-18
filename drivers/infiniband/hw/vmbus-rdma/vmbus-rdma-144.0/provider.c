@@ -331,14 +331,14 @@ static void debug_check(const char *func, int line)
 }
 
 static struct ib_ah *hvnd_ah_create(struct ib_pd *pd,
-				    struct rdma_ah_attr *ah_attr,
+				    struct rdma_ah_attr *ah_attr, u32 flags,
 				    struct ib_udata *udata)
 {
 	debug_check(__func__, __LINE__);
 	return ERR_PTR(-ENOSYS);
 }
 
-static int hvnd_ah_destroy(struct ib_ah *ah)
+static int hvnd_ah_destroy(struct ib_ah *ah, u32 flags)
 {
 	debug_check(__func__, __LINE__);
 	return -ENOSYS;
@@ -647,8 +647,9 @@ static int hvnd_query_device(struct ib_device *ibdev,
 	props->max_qp_wr           = min(adap_info->max_recv_q_depth,
 					 adap_info->max_initiator_q_depth);
 
-	props->max_sge             = min(adap_info->max_initiator_sge,
+	props->max_send_sge        = min(adap_info->max_initiator_sge,
 					 adap_info->max_recv_sge);
+	props->max_recv_sge        = props->max_send_sge;
 	props->max_cq              = 0x1FFFF;
 	props->max_cqe             = adap_info->max_completion_q_depth;
 	props->max_mr              = 16384;
@@ -1400,15 +1401,15 @@ static int hvnd_arm_cq(struct ib_cq *ibcq, enum ib_cq_notify_flags flags)
 	return 0;
 }
 
-static int hvnd_post_send(struct ib_qp *ibqp, struct ib_send_wr *wr,
-			  struct ib_send_wr **bad_wr)
+static int hvnd_post_send(struct ib_qp *ibqp, const struct ib_send_wr *wr,
+			  const struct ib_send_wr **bad_wr)
 {
 	debug_check(__func__, __LINE__);
 	return 0;
 }
 
-int hvnd_post_receive(struct ib_qp *ibqp, struct ib_recv_wr *wr,
-		      struct ib_recv_wr **bad_wr)
+int hvnd_post_receive(struct ib_qp *ibqp, const struct ib_recv_wr *wr,
+		      const struct ib_recv_wr **bad_wr)
 {
 	debug_check(__func__, __LINE__);
 	return 0;
@@ -2631,40 +2632,40 @@ int hvnd_register_device(struct hvnd_dev *dev, char *ip_addr, char *mac_addr)
 	memcpy(&dev->ibdev.node_guid, mac_addr, 6);
 	dev->ibdev.phys_port_cnt = 1; //dev->nports;
 	dev->ibdev.num_comp_vectors = 1;
-	dev->ibdev.query_device = hvnd_query_device;
-	dev->ibdev.query_port = hvnd_query_port;
-	dev->ibdev.get_link_layer = hvnd_get_link_layer;
-	dev->ibdev.query_pkey = hvnd_query_pkey;
-	dev->ibdev.query_gid = hvnd_query_gid;
-	dev->ibdev.alloc_ucontext = hvnd_alloc_ucontext;
-	dev->ibdev.dealloc_ucontext = hvnd_dealloc_ucontext;
-	dev->ibdev.mmap = hvnd_mmap;
-	dev->ibdev.alloc_pd = hvnd_allocate_pd;
-	dev->ibdev.dealloc_pd = hvnd_deallocate_pd;
-	dev->ibdev.create_ah = hvnd_ah_create;
-	dev->ibdev.destroy_ah = hvnd_ah_destroy;
-	dev->ibdev.create_qp = hvnd_ib_create_qp;
-	dev->ibdev.modify_qp = hvnd_ib_modify_qp;
-	dev->ibdev.query_qp = hvnd_ib_query_qp;
-	dev->ibdev.destroy_qp = hvnd_destroy_qp;
-	dev->ibdev.create_cq = hvnd_ib_create_cq;
-	dev->ibdev.destroy_cq = hvnd_ib_destroy_cq;
-	dev->ibdev.resize_cq = hvnd_resize_cq;
-	dev->ibdev.poll_cq = hvnd_poll_cq;
-	dev->ibdev.get_dma_mr = hvnd_get_dma_mr;
-	dev->ibdev.reg_user_mr = hvnd_reg_user_mr;
-	dev->ibdev.dereg_mr = hvnd_dereg_mr;
-	dev->ibdev.alloc_mw = hvnd_alloc_mw;
-	dev->ibdev.dealloc_mw = hvnd_dealloc_mw;
-	dev->ibdev.attach_mcast = hvnd_multicast_attach;
-	dev->ibdev.detach_mcast = hvnd_multicast_detach;
-	dev->ibdev.process_mad = hvnd_process_mad;
-	dev->ibdev.req_notify_cq = hvnd_arm_cq;
-	dev->ibdev.post_send = hvnd_post_send;
-	dev->ibdev.post_recv = hvnd_post_receive;
+	dev->ibdev.ops.query_device = hvnd_query_device;
+	dev->ibdev.ops.query_port = hvnd_query_port;
+	dev->ibdev.ops.get_link_layer = hvnd_get_link_layer;
+	dev->ibdev.ops.query_pkey = hvnd_query_pkey;
+	dev->ibdev.ops.query_gid = hvnd_query_gid;
+	dev->ibdev.ops.alloc_ucontext = hvnd_alloc_ucontext;
+	dev->ibdev.ops.dealloc_ucontext = hvnd_dealloc_ucontext;
+	dev->ibdev.ops.mmap = hvnd_mmap;
+	dev->ibdev.ops.alloc_pd = hvnd_allocate_pd;
+	dev->ibdev.ops.dealloc_pd = hvnd_deallocate_pd;
+	dev->ibdev.ops.create_ah = hvnd_ah_create;
+	dev->ibdev.ops.destroy_ah = hvnd_ah_destroy;
+	dev->ibdev.ops.create_qp = hvnd_ib_create_qp;
+	dev->ibdev.ops.modify_qp = hvnd_ib_modify_qp;
+	dev->ibdev.ops.query_qp = hvnd_ib_query_qp;
+	dev->ibdev.ops.destroy_qp = hvnd_destroy_qp;
+	dev->ibdev.ops.create_cq = hvnd_ib_create_cq;
+	dev->ibdev.ops.destroy_cq = hvnd_ib_destroy_cq;
+	dev->ibdev.ops.resize_cq = hvnd_resize_cq;
+	dev->ibdev.ops.poll_cq = hvnd_poll_cq;
+	dev->ibdev.ops.get_dma_mr = hvnd_get_dma_mr;
+	dev->ibdev.ops.reg_user_mr = hvnd_reg_user_mr;
+	dev->ibdev.ops.dereg_mr = hvnd_dereg_mr;
+	dev->ibdev.ops.alloc_mw = hvnd_alloc_mw;
+	dev->ibdev.ops.dealloc_mw = hvnd_dealloc_mw;
+	dev->ibdev.ops.attach_mcast = hvnd_multicast_attach;
+	dev->ibdev.ops.detach_mcast = hvnd_multicast_detach;
+	dev->ibdev.ops.process_mad = hvnd_process_mad;
+	dev->ibdev.ops.req_notify_cq = hvnd_arm_cq;
+	dev->ibdev.ops.post_send = hvnd_post_send;
+	dev->ibdev.ops.post_recv = hvnd_post_receive;
 	dev->ibdev.uverbs_abi_ver = MLX4_IB_UVERBS_ABI_VERSION;
 
-	dev->ibdev.get_port_immutable = hvnd_get_port_immutable;
+	dev->ibdev.ops.get_port_immutable = hvnd_get_port_immutable;
 
 	//DMA ops for mapping all possible addresses
 	dev->ibdev.dev.parent = &(dev->hvdev->device);
@@ -2685,8 +2686,7 @@ int hvnd_register_device(struct hvnd_dev *dev, char *ip_addr, char *mac_addr)
 	dev->ibdev.iwcm->rem_ref = hvnd_qp_rem_ref;
 	dev->ibdev.iwcm->get_qp = hvnd_get_qp;
 
-	strlcpy(dev->ibdev.name, "mlx4_%d", IB_DEVICE_NAME_MAX);
-	ret = ib_register_device(&dev->ibdev, NULL);
+	ret = ib_register_device(&dev->ibdev, "mlx4_%d", NULL);
 	if (ret) {
 		hvnd_error("ib_register_device failed ret=%d\n", ret);
 		goto bail1;

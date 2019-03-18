@@ -111,7 +111,7 @@ int hvnd_get_neigh_mac_addr(struct sockaddr *local, struct sockaddr *remote,
 	init_completion(&ctx.comp);
 
 	ret = rdma_resolve_ip(local, remote, &dev_addr, 1000,
-			      resolve_cb, &ctx);
+			      resolve_cb, false, &ctx);
 
 	if (ret) {
 		hvnd_error("rdma_resolve_ip failed ret=%d\n", ret);
