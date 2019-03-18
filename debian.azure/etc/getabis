@@ -8,7 +8,7 @@ repo_list=(
 	"http://ppa.launchpad.net/canonical-kernel-team/ppa/ubuntu/pool/main/l/linux-signed-azure"
 )
 
-package_prefixes linux-image linux-modules
+package_prefixes linux-image linux-modules linux-modules-extra
 
 getall amd64 azure
 
