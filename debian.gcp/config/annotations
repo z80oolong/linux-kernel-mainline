@@ -1,5 +1,5 @@
 # Menu: HEADER
-# FORMAT: 2
+# FORMAT: 3
 # ARCH: x86
 
 include "../../debian.master/config/annotations"
