@@ -4,6 +4,10 @@
 
 include "../../debian.master/config/annotations"
 
+# Menu: Device Drivers >> PTP clock support
+CONFIG_DP83640_PHY                              policy<{'amd64': 'n'}>
+#
+
 # Menu: Device Drivers >> SCSI device support >> SCSI device support >> SCSI low-level drivers
 CONFIG_SCSI_VIRTIO                              policy<{'amd64': 'y'}>
 #
@@ -17,6 +21,10 @@ CONFIG_PANIC_ON_OOPS                            note<keep working if at all poss
 # Menu: Kernel hacking >> Debug Lockups and Hangs
 CONFIG_BOOTPARAM_HARDLOCKUP_PANIC               policy<{'amd64': 'y'}>
 CONFIG_BOOTPARAM_SOFTLOCKUP_PANIC               policy<{'amd64': 'y'}>
+#
+
+# Menu: Networking support >> Networking options
+CONFIG_NETWORK_PHY_TIMESTAMPING                 policy<{'amd64': 'n'}>
 #
 
 # Menu: Networking support >> Networking options >> Network packet filtering framework (Netfilter) >> Core Netfilter Configuration
