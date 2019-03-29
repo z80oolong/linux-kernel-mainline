@@ -2087,8 +2087,8 @@ static int i915_llc(struct seq_file *m, void *data)
 	const bool edram = INTEL_GEN(dev_priv) > 8;
 
 	seq_printf(m, "LLC: %s\n", yesno(HAS_LLC(dev_priv)));
-	seq_printf(m, "%s: %lluMB\n", edram ? "eDRAM" : "eLLC",
-		   intel_uncore_edram_size(dev_priv)/1024/1024);
+	seq_printf(m, "%s: %uMB\n", edram ? "eDRAM" : "eLLC",
+		   dev_priv->edram_size_mb);
 
 	return 0;
 }
@@ -4786,7 +4786,10 @@ static int i915_dsc_fec_support_show(struct seq_file *m, void *data)
 		ret = drm_modeset_lock(&dev->mode_config.connection_mutex,
 				       &ctx);
 		if (ret) {
-			ret = -EINTR;
+			if (ret == -EDEADLK && !drm_modeset_backoff(&ctx)) {
+				try_again = true;
+				continue;
+			}
 			break;
 		}
 		crtc = connector->state->crtc;
