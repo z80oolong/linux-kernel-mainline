@@ -6,6 +6,6 @@ repo_list=(
 	"http://ppa.launchpad.net/canonical-kernel-team/ppa/ubuntu/pool/main/l/linux-snapdragon"
 )
 
-package_prefixes linux-image linux-modules
+package_prefixes linux-buildinfo
 
 getall arm64 snapdragon
