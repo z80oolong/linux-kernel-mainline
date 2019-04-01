@@ -113,6 +113,8 @@
 		[PIPE_C] = IVB_CURSOR_C_OFFSET, \
 	}
 
+#define ILK_COLORS \
+	.color = { .gamma_lut_size = 1024 }
 #define IVB_COLORS \
 	.color = { .degamma_lut_size = 512, .gamma_lut_size = 512 }
 #define CHV_COLORS \
@@ -317,6 +319,7 @@ static const struct intel_device_info intel_gm45_info = {
 	.has_rc6 = 0, \
 	I9XX_PIPE_OFFSETS, \
 	I9XX_CURSOR_OFFSETS, \
+	ILK_COLORS, \
 	GEN_DEFAULT_PAGE_SIZES
 
 static const struct intel_device_info intel_ironlake_d_info = {
@@ -344,6 +347,7 @@ static const struct intel_device_info intel_ironlake_m_info = {
 	.ppgtt = INTEL_PPGTT_ALIASING, \
 	I9XX_PIPE_OFFSETS, \
 	I9XX_CURSOR_OFFSETS, \
+	ILK_COLORS, \
 	GEN_DEFAULT_PAGE_SIZES
 
 #define SNB_D_PLATFORM \
