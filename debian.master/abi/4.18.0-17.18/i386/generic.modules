@@ -652,7 +652,6 @@ cdc_subset
 cdns-csi2rx
 cdns-csi2tx
 cec
-cec-gpio
 ceph
 cfag12864b
 cfag12864bfb
@@ -4656,6 +4655,7 @@ tef6862
 tehuti
 teles_cs
 teranetics
+test_bpf
 test_power
 tg3
 tgr192

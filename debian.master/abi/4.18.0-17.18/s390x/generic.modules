@@ -770,6 +770,7 @@ team_mode_loadbalance
 team_mode_random
 team_mode_roundrobin
 teranetics
+test_bpf
 tgr192
 tipc
 tls
