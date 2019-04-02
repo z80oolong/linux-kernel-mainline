@@ -1,5 +1,5 @@
 # arch	version		flavour		installedname			suffix	bdep
-amd64	-		generic		-				-	-
+amd64	-		oem-osp1	-				-	-
 
 i386	-		generic		-				-	-
 
