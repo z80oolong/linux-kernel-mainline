@@ -251,6 +251,10 @@ static void intel_detect_pch(struct drm_i915_private *dev_priv)
 				DRM_DEBUG_KMS("Found Cannon Lake LP PCH (CNP-LP)\n");
 				WARN_ON(!IS_CANNONLAKE(dev_priv) &&
 					!IS_COFFEELAKE(dev_priv));
+			} else if (id == INTEL_PCH_CMP_DEVICE_ID_TYPE) {
+				dev_priv->pch_type = PCH_CNP;
+				DRM_DEBUG_KMS("Found Comet Lake PCH (CMP)\n");
+				WARN_ON(!IS_COFFEELAKE(dev_priv));
 			} else if (id == INTEL_PCH_P2X_DEVICE_ID_TYPE ||
 				   id == INTEL_PCH_P3X_DEVICE_ID_TYPE ||
 				   (id == INTEL_PCH_QEMU_DEVICE_ID_TYPE &&
