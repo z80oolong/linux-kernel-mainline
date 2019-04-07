@@ -1,20 +1,54 @@
 #!/bin/bash -eu
 export LC_ALL=C.UTF-8
 
-# shellcheck disable=SC1091
-. debian/debian.env
+usage() {
+	cat << EOF
+Usage: ${P:-$(basename "$0")} [-h|--help] [-d|--dry-run] [-c|--include-config] [-s|--skip-master]
 
-# Parse args
-usage="$0 [-c] [-d] [-s]"$'\n\n'
-usage+="-c 			Include config changes in the closing commit."$'\n'
-usage+="-d 			Dry run (do not change files or commit)."$'\n'
-usage+="-s 			Skip master kernel changelog entries (used when bootstraping new kernels)."
-while getopts "cds" opt; do
-	case $opt in
-	c) commit_configs=1 ;;
-	d) dry_run=1 ;;
-	s) skip_master_entries=1 ;;
-	*) echo usage: "${usage}"; exit ;;
+Prepare the closing release commit. Include all the changelog entries
+in the current release, including the changes from the base
+kernel. Also close the changelog entry and check for config changes.
+
+Optional arguments:
+  -d, --dry-run         Perform a trial run with no changes made
+                        printing the commands instead.
+  -c, --include-config  Include config changes in the closing commit.
+  -s, --skip-master     Skip master kernel changelog entries (used when
+                        bootstraping new kernels).
+  -h, --help            Show this help message and exit.
+
+Examples:
+  Simply close a release:
+    \$ cranky close
+
+  Also include any config changes to the closing commit:
+    \$ cranky close -c
+
+EOF
+}
+
+dry_run=0
+commit_configs=0
+skip_master_entries=0
+while [ "$#" -gt 0 ]; do
+	case "$1" in
+		-h|--help)
+			usage
+			exit 0
+			;;
+		-d|--dry-run)
+			dry_run=1
+			;;
+		-c|--include-config)
+			commit_configs=1
+			;;
+		-s|--skip-master)
+			skip_master_entries=1
+			;;
+		*)
+			usage
+			exit 1
+			;;
 	esac
 	shift
 done
