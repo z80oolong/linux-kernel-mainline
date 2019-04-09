@@ -4648,6 +4648,7 @@ EXPORT_SYMBOL net/ceph/libceph 0x00000000	ceph_release_page_vector
 EXPORT_SYMBOL net/ceph/libceph 0x00000000	ceph_release_string
 EXPORT_SYMBOL net/ceph/libceph 0x00000000	ceph_str_hash
 EXPORT_SYMBOL net/ceph/libceph 0x00000000	ceph_str_hash_name
+EXPORT_SYMBOL net/ceph/libceph 0x00000000	ceph_wait_for_latest_osdmap
 EXPORT_SYMBOL net/ceph/libceph 0x00000000	ceph_zero_page_vector_range
 EXPORT_SYMBOL net/ceph/libceph 0x00000000	libceph_compatible
 EXPORT_SYMBOL net/ceph/libceph 0x00000000	osd_req_op_alloc_hint_init
@@ -14071,7 +14072,6 @@ EXPORT_SYMBOL_GPL drivers/net/wireless/mediatek/mt76/mt76 0x00000000	mt76_unregi
 EXPORT_SYMBOL_GPL drivers/net/wireless/mediatek/mt76/mt76 0x00000000	mt76_wake_tx_queue
 EXPORT_SYMBOL_GPL drivers/net/wireless/mediatek/mt76/mt76 0x00000000	mt76_wcid_alloc
 EXPORT_SYMBOL_GPL drivers/net/wireless/mediatek/mt76/mt76-usb 0x00000000	mt76u_alloc_queues
-EXPORT_SYMBOL_GPL drivers/net/wireless/mediatek/mt76/mt76-usb 0x00000000	mt76u_buf_alloc
 EXPORT_SYMBOL_GPL drivers/net/wireless/mediatek/mt76/mt76-usb 0x00000000	mt76u_buf_free
 EXPORT_SYMBOL_GPL drivers/net/wireless/mediatek/mt76/mt76-usb 0x00000000	mt76u_init
 EXPORT_SYMBOL_GPL drivers/net/wireless/mediatek/mt76/mt76-usb 0x00000000	mt76u_mcu_complete_urb
@@ -14959,6 +14959,7 @@ EXPORT_SYMBOL_GPL drivers/staging/comedi/comedi 0x00000000	comedi_buf_write_allo
 EXPORT_SYMBOL_GPL drivers/staging/comedi/comedi 0x00000000	comedi_buf_write_free
 EXPORT_SYMBOL_GPL drivers/staging/comedi/comedi 0x00000000	comedi_buf_write_samples
 EXPORT_SYMBOL_GPL drivers/staging/comedi/comedi 0x00000000	comedi_bytes_per_scan
+EXPORT_SYMBOL_GPL drivers/staging/comedi/comedi 0x00000000	comedi_bytes_per_scan_cmd
 EXPORT_SYMBOL_GPL drivers/staging/comedi/comedi 0x00000000	comedi_check_chanlist
 EXPORT_SYMBOL_GPL drivers/staging/comedi/comedi 0x00000000	comedi_dev_get_from_minor
 EXPORT_SYMBOL_GPL drivers/staging/comedi/comedi 0x00000000	comedi_dev_put
@@ -15225,6 +15226,7 @@ EXPORT_SYMBOL_GPL drivers/staging/speakup/speakup 0x00000000	synth_buffer_empty
 EXPORT_SYMBOL_GPL drivers/staging/speakup/speakup 0x00000000	synth_buffer_getc
 EXPORT_SYMBOL_GPL drivers/staging/speakup/speakup 0x00000000	synth_buffer_peek
 EXPORT_SYMBOL_GPL drivers/staging/speakup/speakup 0x00000000	synth_buffer_skip_nonlatin1
+EXPORT_SYMBOL_GPL drivers/staging/speakup/speakup 0x00000000	synth_current
 EXPORT_SYMBOL_GPL drivers/staging/speakup/speakup 0x00000000	synth_printf
 EXPORT_SYMBOL_GPL drivers/staging/speakup/speakup 0x00000000	synth_putwc
 EXPORT_SYMBOL_GPL drivers/staging/speakup/speakup 0x00000000	synth_putwc_s
@@ -18395,10 +18397,13 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	amd_df_indirect_read
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	amd_flush_garts
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	amd_get_nb_id
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	amd_get_nodes_per_socket
-EXPORT_SYMBOL_GPL vmlinux 0x00000000	amd_i2c_register_cb
-EXPORT_SYMBOL_GPL vmlinux 0x00000000	amd_mp2_connect
-EXPORT_SYMBOL_GPL vmlinux 0x00000000	amd_mp2_read
-EXPORT_SYMBOL_GPL vmlinux 0x00000000	amd_mp2_write
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	amd_mp2_bus_enable_set
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	amd_mp2_find_device
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	amd_mp2_process_event
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	amd_mp2_register_cb
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	amd_mp2_rw
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	amd_mp2_rw_timeout
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	amd_mp2_unregister_cb
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	amd_nb_has_feature
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	amd_nb_misc_ids
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	amd_nb_num
@@ -19033,6 +19038,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	cper_mem_err_type_str
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cper_next_record_id
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cper_severity_str
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cper_severity_to_aer
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	cppc_get_desired_perf
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cppc_get_perf_caps
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cppc_get_perf_ctrs
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cppc_get_transition_latency
@@ -19396,7 +19402,6 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	dev_pm_opp_get_max_transition_latency
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dev_pm_opp_get_max_volt_latency
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dev_pm_opp_get_opp_count
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dev_pm_opp_get_opp_table
-EXPORT_SYMBOL_GPL vmlinux 0x00000000	dev_pm_opp_get_regulator
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dev_pm_opp_get_sharing_cpus
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dev_pm_opp_get_suspend_opp_freq
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dev_pm_opp_get_voltage
@@ -19699,6 +19704,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	dma_get_any_slave_channel
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dma_get_required_mask
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dma_get_slave_caps
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dma_get_slave_channel
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	dma_max_mapping_size
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dma_release_channel
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dma_request_chan
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dma_request_chan_by_mask
@@ -22120,7 +22126,6 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	securityfs_remove
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	sed_ioctl
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	seg6_do_srh_encap
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	seg6_do_srh_inline
-EXPORT_SYMBOL_GPL vmlinux 0x00000000	selinux_is_enabled
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	serdev_controller_add
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	serdev_controller_alloc
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	serdev_controller_remove
