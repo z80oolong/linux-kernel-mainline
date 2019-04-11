@@ -1,0 +1,30 @@
+drm drm-fixes ffb5d6fe140d2ef79c2a91861fc18a4a7a1f510a
+	Merge tag 'drm-misc-fixes-2019-04-11' of git://anongit.freedesktop.org/drm/drm-misc into drm-fixes
+drm-misc drm-misc-fixes 1a07a94b47b1f528f39c3e6187b5eaf02efe44ea
+	drm/sun4i: tcon top: Fix NULL/invalid pointer dereference in sun8i_tcon_top_un/bind
+drm-intel drm-intel-fixes 3f5f5d534bd40b666cf37bbeeb48bfe6c2efc1e0
+	Merge tag 'gvt-fixes-2019-04-11' of https://github.com/intel/gvt-linux into drm-intel-fixes
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 14d2bd53a47a7e1cb3e03d00a6b952734cf90f3f
+	Merge tag 'drm-misc-next-2019-04-04' of git://anongit.freedesktop.org/drm/drm-misc into drm-next
+drm-misc drm-misc-next-fixes c34674a23d1e8674ac532bf3397333f24a41e7b2
+	drm/qxl: remove conflicting framebuffers earlier
+drm-intel drm-intel-next-fixes ca22f32a6296cbfa29de56328c8505560a18cfa8
+	drm/i915: Relax mmap VMA check
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next beb941b970fb129dae206050593d3e768859b146
+	virtio-gpu api: comment feature flags
+drm-intel drm-intel-next-queued 6fd3134ae3551d4802a04669c0f39f2f5c56f77d
+	drm/i915: Do not enable FEC without DSC
+drm-intel drm-intel-next 28d618e9ab86f26a31af0b235ced55beb3e343c8
+	drm/i915: Update DRIVER_DATE to 20190404
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 9b0dcd0e5a27958b57e3e390f63c098d63a055da
+	Merge tag 'asoc-fix-v5.1-rc4' of git://git.kernel.org/pub/scm/linux/kernel/git/broonie/sound into for-linus
+sound-upstream for-next f0654ba94e33699b295ce4f3dc73094db6209035
+	Revert "ALSA: seq: Protect in-kernel ioctl calls with mutex"
+drm-intel topic/core-for-CI b573fba52f339dc4fadef7282af4a9413fd6173d
+	ICL HACK: Disable ACPI idle driver
