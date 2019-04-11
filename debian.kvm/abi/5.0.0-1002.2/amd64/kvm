@@ -447,6 +447,7 @@ EXPORT_SYMBOL net/ceph/libceph 0x00000000	ceph_release_page_vector
 EXPORT_SYMBOL net/ceph/libceph 0x00000000	ceph_release_string
 EXPORT_SYMBOL net/ceph/libceph 0x00000000	ceph_str_hash
 EXPORT_SYMBOL net/ceph/libceph 0x00000000	ceph_str_hash_name
+EXPORT_SYMBOL net/ceph/libceph 0x00000000	ceph_wait_for_latest_osdmap
 EXPORT_SYMBOL net/ceph/libceph 0x00000000	ceph_zero_page_vector_range
 EXPORT_SYMBOL net/ceph/libceph 0x00000000	libceph_compatible
 EXPORT_SYMBOL net/ceph/libceph 0x00000000	osd_req_op_alloc_hint_init
@@ -6680,6 +6681,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	component_unbind_all
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cond_synchronize_rcu
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	console_drivers
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	copy_from_user_nmi
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	cppc_get_desired_perf
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cppc_get_perf_caps
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cppc_get_perf_ctrs
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cppc_get_transition_latency
@@ -7084,6 +7086,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	divider_recalc_rate
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	divider_ro_round_rate_parent
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	divider_round_rate_parent
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dma_get_required_mask
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	dma_max_mapping_size
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dmi_kobj
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dmi_match
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dmi_memdev_name
@@ -8689,7 +8692,6 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	securityfs_create_dir
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	securityfs_create_file
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	securityfs_create_symlink
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	securityfs_remove
-EXPORT_SYMBOL_GPL vmlinux 0x00000000	selinux_is_enabled
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	serial8250_clear_and_reinit_fifos
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	serial8250_do_get_mctrl
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	serial8250_do_set_divisor

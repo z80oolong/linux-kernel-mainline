@@ -310,6 +310,7 @@ sata_svw
 sata_uli
 sata_via
 sata_vsc
+shiftfs
 spl
 splat
 streebog_generic
