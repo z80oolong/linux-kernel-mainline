@@ -2092,6 +2092,7 @@ EXPORT_SYMBOL net/ceph/libceph 0x00000000	ceph_release_page_vector
 EXPORT_SYMBOL net/ceph/libceph 0x00000000	ceph_release_string
 EXPORT_SYMBOL net/ceph/libceph 0x00000000	ceph_str_hash
 EXPORT_SYMBOL net/ceph/libceph 0x00000000	ceph_str_hash_name
+EXPORT_SYMBOL net/ceph/libceph 0x00000000	ceph_wait_for_latest_osdmap
 EXPORT_SYMBOL net/ceph/libceph 0x00000000	ceph_zero_page_vector_range
 EXPORT_SYMBOL net/ceph/libceph 0x00000000	libceph_compatible
 EXPORT_SYMBOL net/ceph/libceph 0x00000000	osd_req_op_alloc_hint_init
@@ -3514,6 +3515,7 @@ EXPORT_SYMBOL vmlinux 0x00000000	acpi_lid_notifier_register
 EXPORT_SYMBOL vmlinux 0x00000000	acpi_lid_notifier_unregister
 EXPORT_SYMBOL vmlinux 0x00000000	acpi_lid_open
 EXPORT_SYMBOL vmlinux 0x00000000	acpi_load_table
+EXPORT_SYMBOL vmlinux 0x00000000	acpi_map_cpu
 EXPORT_SYMBOL vmlinux 0x00000000	acpi_map_pxm_to_online_node
 EXPORT_SYMBOL vmlinux 0x00000000	acpi_mark_gpe_for_wake
 EXPORT_SYMBOL vmlinux 0x00000000	acpi_mask_gpe
@@ -3569,6 +3571,7 @@ EXPORT_SYMBOL vmlinux 0x00000000	acpi_setup_gpe_for_wake
 EXPORT_SYMBOL vmlinux 0x00000000	acpi_tb_install_and_load_table
 EXPORT_SYMBOL vmlinux 0x00000000	acpi_tb_unload_table
 EXPORT_SYMBOL vmlinux 0x00000000	acpi_unload_parent_table
+EXPORT_SYMBOL vmlinux 0x00000000	acpi_unmap_cpu
 EXPORT_SYMBOL vmlinux 0x00000000	acpi_unregister_ioapic
 EXPORT_SYMBOL vmlinux 0x00000000	acpi_update_all_gpes
 EXPORT_SYMBOL vmlinux 0x00000000	acpi_video_backlight_string
@@ -3671,7 +3674,9 @@ EXPORT_SYMBOL vmlinux 0x00000000	arch_io_free_memtype_wc
 EXPORT_SYMBOL vmlinux 0x00000000	arch_io_reserve_memtype_wc
 EXPORT_SYMBOL vmlinux 0x00000000	arch_phys_wc_add
 EXPORT_SYMBOL vmlinux 0x00000000	arch_phys_wc_del
+EXPORT_SYMBOL vmlinux 0x00000000	arch_register_cpu
 EXPORT_SYMBOL vmlinux 0x00000000	arch_touch_nmi_watchdog
+EXPORT_SYMBOL vmlinux 0x00000000	arch_unregister_cpu
 EXPORT_SYMBOL vmlinux 0x00000000	argv_free
 EXPORT_SYMBOL vmlinux 0x00000000	argv_split
 EXPORT_SYMBOL vmlinux 0x00000000	arp_create
@@ -4025,6 +4030,7 @@ EXPORT_SYMBOL vmlinux 0x00000000	copy_user_generic_string
 EXPORT_SYMBOL vmlinux 0x00000000	copy_user_generic_unrolled
 EXPORT_SYMBOL vmlinux 0x00000000	cpu_all_bits
 EXPORT_SYMBOL vmlinux 0x00000000	cpu_core_map
+EXPORT_SYMBOL vmlinux 0x00000000	cpu_down
 EXPORT_SYMBOL vmlinux 0x00000000	cpu_dr7
 EXPORT_SYMBOL vmlinux 0x00000000	cpu_info
 EXPORT_SYMBOL vmlinux 0x00000000	cpu_khz
@@ -4770,6 +4776,7 @@ EXPORT_SYMBOL vmlinux 0x00000000	gen_pool_free
 EXPORT_SYMBOL vmlinux 0x00000000	gen_pool_set_algo
 EXPORT_SYMBOL vmlinux 0x00000000	gen_pool_virt_to_phys
 EXPORT_SYMBOL vmlinux 0x00000000	gen_replace_estimator
+EXPORT_SYMBOL vmlinux 0x00000000	generate_pm_trace
 EXPORT_SYMBOL vmlinux 0x00000000	generate_random_uuid
 EXPORT_SYMBOL vmlinux 0x00000000	generic_block_bmap
 EXPORT_SYMBOL vmlinux 0x00000000	generic_block_fiemap
@@ -6360,6 +6367,7 @@ EXPORT_SYMBOL vmlinux 0x00000000	padata_do_parallel
 EXPORT_SYMBOL vmlinux 0x00000000	padata_do_serial
 EXPORT_SYMBOL vmlinux 0x00000000	padata_free
 EXPORT_SYMBOL vmlinux 0x00000000	padata_register_cpumask_notifier
+EXPORT_SYMBOL vmlinux 0x00000000	padata_remove_cpu
 EXPORT_SYMBOL vmlinux 0x00000000	padata_set_cpumask
 EXPORT_SYMBOL vmlinux 0x00000000	padata_start
 EXPORT_SYMBOL vmlinux 0x00000000	padata_stop
@@ -6681,6 +6689,9 @@ EXPORT_SYMBOL vmlinux 0x00000000	pipe_unlock
 EXPORT_SYMBOL vmlinux 0x00000000	platform_thermal_notify
 EXPORT_SYMBOL vmlinux 0x00000000	pm_power_off
 EXPORT_SYMBOL vmlinux 0x00000000	pm_set_vt_switch
+EXPORT_SYMBOL vmlinux 0x00000000	pm_suspend
+EXPORT_SYMBOL vmlinux 0x00000000	pm_vt_switch_required
+EXPORT_SYMBOL vmlinux 0x00000000	pm_vt_switch_unregister
 EXPORT_SYMBOL vmlinux 0x00000000	pmem_sector_size
 EXPORT_SYMBOL vmlinux 0x00000000	pmem_should_map_pages
 EXPORT_SYMBOL vmlinux 0x00000000	pneigh_enqueue
@@ -7401,6 +7412,7 @@ EXPORT_SYMBOL vmlinux 0x00000000	set_phv_bit
 EXPORT_SYMBOL vmlinux 0x00000000	set_posix_acl
 EXPORT_SYMBOL vmlinux 0x00000000	set_security_override
 EXPORT_SYMBOL vmlinux 0x00000000	set_security_override_from_ctx
+EXPORT_SYMBOL vmlinux 0x00000000	set_trace_device
 EXPORT_SYMBOL vmlinux 0x00000000	set_user_nice
 EXPORT_SYMBOL vmlinux 0x00000000	set_user_sigmask
 EXPORT_SYMBOL vmlinux 0x00000000	set_wb_congested
@@ -7706,6 +7718,7 @@ EXPORT_SYMBOL vmlinux 0x00000000	sysctl_udp_mem
 EXPORT_SYMBOL vmlinux 0x00000000	sysctl_wmem_max
 EXPORT_SYMBOL vmlinux 0x00000000	sysfs_format_mac
 EXPORT_SYMBOL vmlinux 0x00000000	sysfs_streq
+EXPORT_SYMBOL vmlinux 0x00000000	system_entering_hibernation
 EXPORT_SYMBOL vmlinux 0x00000000	system_freezing_cnt
 EXPORT_SYMBOL vmlinux 0x00000000	system_state
 EXPORT_SYMBOL vmlinux 0x00000000	system_wq
@@ -8833,7 +8846,11 @@ EXPORT_SYMBOL_GPL drivers/ata/libahci_platform 0x00000000	ahci_platform_enable_r
 EXPORT_SYMBOL_GPL drivers/ata/libahci_platform 0x00000000	ahci_platform_get_resources
 EXPORT_SYMBOL_GPL drivers/ata/libahci_platform 0x00000000	ahci_platform_init_host
 EXPORT_SYMBOL_GPL drivers/ata/libahci_platform 0x00000000	ahci_platform_ops
+EXPORT_SYMBOL_GPL drivers/ata/libahci_platform 0x00000000	ahci_platform_resume
+EXPORT_SYMBOL_GPL drivers/ata/libahci_platform 0x00000000	ahci_platform_resume_host
 EXPORT_SYMBOL_GPL drivers/ata/libahci_platform 0x00000000	ahci_platform_shutdown
+EXPORT_SYMBOL_GPL drivers/ata/libahci_platform 0x00000000	ahci_platform_suspend
+EXPORT_SYMBOL_GPL drivers/ata/libahci_platform 0x00000000	ahci_platform_suspend_host
 EXPORT_SYMBOL_GPL drivers/ata/pata_platform 0x00000000	__pata_platform_probe
 EXPORT_SYMBOL_GPL drivers/auxdisplay/charlcd 0x00000000	charlcd_alloc
 EXPORT_SYMBOL_GPL drivers/auxdisplay/charlcd 0x00000000	charlcd_poke
@@ -9024,6 +9041,7 @@ EXPORT_SYMBOL_GPL drivers/hid/hid-sensor-hub 0x00000000	sensor_hub_register_call
 EXPORT_SYMBOL_GPL drivers/hid/hid-sensor-hub 0x00000000	sensor_hub_remove_callback
 EXPORT_SYMBOL_GPL drivers/hid/hid-sensor-hub 0x00000000	sensor_hub_set_feature
 EXPORT_SYMBOL_GPL drivers/hid/uhid 0x00000000	uhid_hid_driver
+EXPORT_SYMBOL_GPL drivers/hwmon/adt7x10 0x00000000	adt7x10_dev_pm_ops
 EXPORT_SYMBOL_GPL drivers/hwmon/adt7x10 0x00000000	adt7x10_probe
 EXPORT_SYMBOL_GPL drivers/hwmon/adt7x10 0x00000000	adt7x10_remove
 EXPORT_SYMBOL_GPL drivers/i2c/busses/i2c-designware-core 0x00000000	i2c_dw_prepare_clk
@@ -9611,6 +9629,8 @@ EXPORT_SYMBOL_GPL drivers/nvme/target/nvmet-fc 0x00000000	nvmet_fc_unregister_ta
 EXPORT_SYMBOL_GPL drivers/pci/switch/switchtec 0x00000000	switchtec_class
 EXPORT_SYMBOL_GPL drivers/pinctrl/intel/pinctrl-intel 0x00000000	intel_pinctrl_probe_by_hid
 EXPORT_SYMBOL_GPL drivers/pinctrl/intel/pinctrl-intel 0x00000000	intel_pinctrl_probe_by_uid
+EXPORT_SYMBOL_GPL drivers/pinctrl/intel/pinctrl-intel 0x00000000	intel_pinctrl_resume
+EXPORT_SYMBOL_GPL drivers/pinctrl/intel/pinctrl-intel 0x00000000	intel_pinctrl_suspend
 EXPORT_SYMBOL_GPL drivers/platform/x86/dell-smbios 0x00000000	dell_laptop_call_notifier
 EXPORT_SYMBOL_GPL drivers/platform/x86/dell-smbios 0x00000000	dell_laptop_register_notifier
 EXPORT_SYMBOL_GPL drivers/platform/x86/dell-smbios 0x00000000	dell_laptop_unregister_notifier
@@ -10255,6 +10275,8 @@ EXPORT_SYMBOL_GPL kernel/torture 0x00000000	torture_init_end
 EXPORT_SYMBOL_GPL kernel/torture 0x00000000	torture_kthread_stopping
 EXPORT_SYMBOL_GPL kernel/torture 0x00000000	torture_must_stop
 EXPORT_SYMBOL_GPL kernel/torture 0x00000000	torture_must_stop_irq
+EXPORT_SYMBOL_GPL kernel/torture 0x00000000	torture_offline
+EXPORT_SYMBOL_GPL kernel/torture 0x00000000	torture_online
 EXPORT_SYMBOL_GPL kernel/torture 0x00000000	torture_onoff_cleanup
 EXPORT_SYMBOL_GPL kernel/torture 0x00000000	torture_onoff_failures
 EXPORT_SYMBOL_GPL kernel/torture 0x00000000	torture_onoff_init
@@ -10380,6 +10402,8 @@ EXPORT_SYMBOL_GPL net/dsa/dsa_core 0x00000000	dsa_port_get_phy_strings
 EXPORT_SYMBOL_GPL net/dsa/dsa_core 0x00000000	dsa_port_phylink_mac_change
 EXPORT_SYMBOL_GPL net/dsa/dsa_core 0x00000000	dsa_register_switch
 EXPORT_SYMBOL_GPL net/dsa/dsa_core 0x00000000	dsa_switch_alloc
+EXPORT_SYMBOL_GPL net/dsa/dsa_core 0x00000000	dsa_switch_resume
+EXPORT_SYMBOL_GPL net/dsa/dsa_core 0x00000000	dsa_switch_suspend
 EXPORT_SYMBOL_GPL net/dsa/dsa_core 0x00000000	dsa_unregister_switch
 EXPORT_SYMBOL_GPL net/dsa/dsa_core 0x00000000	register_dsa_notifier
 EXPORT_SYMBOL_GPL net/dsa/dsa_core 0x00000000	register_switch_driver
@@ -11256,6 +11280,8 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	__clk_mux_determine_rate_closest
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__clocksource_register_scale
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__clocksource_update_freq_scale
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__compat_only_sysfs_link_entry_to_kobj
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	__context_tracking_enter
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	__context_tracking_exit
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__cookie_v4_check
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__cookie_v4_init_sequence
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__cookie_v6_check
@@ -11371,12 +11397,14 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	__platform_create_bundle
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__platform_driver_probe
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__platform_driver_register
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__platform_register_drivers
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	__pm_relax
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__pm_runtime_disable
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__pm_runtime_idle
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__pm_runtime_resume
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__pm_runtime_set_status
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__pm_runtime_suspend
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__pm_runtime_use_autosuspend
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	__pm_stay_awake
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__pneigh_lookup
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__put_net
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__put_task_struct
@@ -11420,6 +11448,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	__srcu_read_lock
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__srcu_read_unlock
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__strp_unpause
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__supported_pte_mask
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	__suspend_report_result
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__symbol_get
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__sync_filesystem
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__tc_indr_block_cb_register
@@ -11581,8 +11610,20 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_release_memory
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_scan_lock_acquire
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_scan_lock_release
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_set_modalias
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_subsys_complete
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_subsys_freeze
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_subsys_freeze_late
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_subsys_freeze_noirq
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_subsys_prepare
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_subsys_resume_early
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_subsys_resume_noirq
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_subsys_runtime_resume
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_subsys_runtime_suspend
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_subsys_suspend
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_subsys_suspend_late
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_subsys_suspend_noirq
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_subsys_thaw_noirq
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_target_system_state
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_unbind_one
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_unregister_gsi
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_walk_dep_device_list
@@ -12253,6 +12294,10 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	con_debug_enter
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	con_debug_leave
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cond_synchronize_rcu
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	console_drivers
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	context_tracking
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	context_tracking_enabled
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	context_tracking_enter
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	context_tracking_exit
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	copy_from_user_nmi
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	copy_reserved_iova
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpci_hp_register_bus
@@ -12268,6 +12313,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	cper_mem_err_type_str
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cper_next_record_id
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cper_severity_str
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cper_severity_to_aer
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	cppc_get_desired_perf
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cppc_get_perf_caps
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cppc_get_perf_ctrs
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cppc_get_transition_latency
@@ -12277,6 +12323,8 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpu_cgrp_subsys_enabled_key
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpu_cgrp_subsys_on_dfl_key
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpu_device_create
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpu_has_xfeatures
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpu_hotplug_disable
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpu_hotplug_enable
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpu_is_hotpluggable
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpu_subsys
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpu_up
@@ -12332,6 +12380,9 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpuidle_resume_and_unlock
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpuidle_unregister
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpuidle_unregister_device
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpuidle_unregister_driver
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpus_read_lock
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpus_read_trylock
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpus_read_unlock
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpuset_cgrp_subsys_enabled_key
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpuset_cgrp_subsys_on_dfl_key
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpuset_mem_spread_node
@@ -12612,7 +12663,6 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	dev_pm_opp_get_max_transition_latency
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dev_pm_opp_get_max_volt_latency
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dev_pm_opp_get_opp_count
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dev_pm_opp_get_opp_table
-EXPORT_SYMBOL_GPL vmlinux 0x00000000	dev_pm_opp_get_regulator
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dev_pm_opp_get_sharing_cpus
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dev_pm_opp_get_suspend_opp_freq
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dev_pm_opp_get_voltage
@@ -12693,11 +12743,13 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_get_match_data
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_get_named_child_node
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_get_next_child_node
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_get_phy_mode
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_init_wakeup
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_initialize
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_link_add
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_link_del
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_link_remove
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_move
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_pm_wait_for_dev
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_property_match_string
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_property_present
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_property_read_string
@@ -12716,6 +12768,8 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_remove_properties
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_rename
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_reprobe
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_set_of_node_from_dev
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_set_wakeup_capable
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_set_wakeup_enable
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_show_bool
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_show_int
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_show_ulong
@@ -12723,6 +12777,8 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_store_bool
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_store_int
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_store_ulong
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_unregister
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_wakeup_disable
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	device_wakeup_enable
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	devices_cgrp_subsys_enabled_key
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	devices_cgrp_subsys_on_dfl_key
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	devlink_alloc
@@ -12935,6 +12991,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	dma_get_any_slave_channel
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dma_get_required_mask
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dma_get_slave_caps
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dma_get_slave_channel
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	dma_max_mapping_size
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dma_release_channel
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dma_request_chan
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dma_request_chan_by_mask
@@ -12959,6 +13016,11 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	do_truncate
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	do_unbind_con_driver
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	do_unregister_con_driver
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	do_xdp_generic
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	dpm_for_each_dev
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	dpm_resume_end
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	dpm_resume_start
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	dpm_suspend_end
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	dpm_suspend_start
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	drain_workqueue
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	driver_attach
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	driver_create_file
@@ -13385,6 +13447,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	hash_algo_name
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	hash_digest_size
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	have_governor_per_policy
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	hest_disable
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	hibernation_set_ops
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	hmm_devmem_add
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	hmm_devmem_add_resource
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	housekeeping_affine
@@ -13918,6 +13981,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	load_direct_gdt
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	load_fixmap_gdt
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	local_apic_timer_c2_ok
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	local_touch_nmi
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	lock_system_sleep
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	locks_alloc_lock
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	locks_release_private
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	look_up_OID
@@ -14437,6 +14501,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	page_cache_sync_readahead
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	page_endio
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	page_is_ram
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	page_mkclean
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	page_poisoning_enabled
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	panic_timeout
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	param_ops_bool_enable_only
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	param_set_bool_enable_only
@@ -14792,15 +14857,36 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_clk_runtime_resume
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_clk_runtime_suspend
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_clk_suspend
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_freezing
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_generic_freeze
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_generic_freeze_late
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_generic_freeze_noirq
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_generic_poweroff
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_generic_poweroff_late
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_generic_poweroff_noirq
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_generic_restore
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_generic_restore_early
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_generic_restore_noirq
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_generic_resume
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_generic_resume_early
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_generic_resume_noirq
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_generic_runtime_resume
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_generic_runtime_suspend
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_generic_suspend
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_generic_suspend_late
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_generic_suspend_noirq
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_generic_thaw
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_generic_thaw_early
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_generic_thaw_noirq
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_genpd_add_device
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_genpd_add_subdomain
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_genpd_init
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_genpd_remove
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_genpd_remove_device
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_genpd_remove_subdomain
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_genpd_syscore_poweroff
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_genpd_syscore_poweron
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_power_off_prepare
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_print_active_wakeup_sources
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_qos_add_notifier
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_qos_add_request
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_qos_remove_notifier
@@ -14808,6 +14894,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_qos_remove_request
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_qos_request
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_qos_request_active
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_qos_update_request
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_relax
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_runtime_allow
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_runtime_autosuspend_expiration
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_runtime_barrier
@@ -14821,6 +14908,14 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_runtime_no_callbacks
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_runtime_set_autosuspend_delay
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_runtime_set_memalloc_noio
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_schedule_suspend
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_stay_awake
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_suspend_global_flags
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_suspend_target_state
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_suspend_via_s2idle
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_system_wakeup
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_trace_rtc_abused
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_wakeup_dev_event
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_wakeup_ws_event
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_wq
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pmc_atom_read
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pmc_atom_write
@@ -14918,6 +15013,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	raw_v6_hashinfo
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	rcu_all_qs
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	rcu_barrier
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	rcu_barrier_tasks
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	rcu_bind_current_to_nocb
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	rcu_cpu_stall_suppress
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	rcu_exp_batches_completed
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	rcu_expedite_gp
@@ -14965,6 +15061,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	register_oldmem_pfn_is_ram
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	register_oom_notifier
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	register_pernet_device
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	register_pernet_subsys
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	register_pm_notifier
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	register_switchdev_blocking_notifier
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	register_switchdev_notifier
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	register_syscore_ops
@@ -15122,6 +15219,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	reset_controller_register
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	reset_controller_unregister
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	reset_hung_task_detector
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	restore_online_page_callback
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	resume_device_irqs
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	rhashtable_destroy
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	rhashtable_free_and_destroy
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	rhashtable_init
@@ -15281,6 +15379,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	rtnl_put_cacheinfo
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	rtnl_register_module
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	rtnl_unregister
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	rtnl_unregister_all
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	s2idle_wake
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	sata_async_notification
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	sata_deb_timing_hotplug
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	sata_deb_timing_long
@@ -15392,7 +15491,6 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	securityfs_remove
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	sed_ioctl
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	seg6_do_srh_encap
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	seg6_do_srh_inline
-EXPORT_SYMBOL_GPL vmlinux 0x00000000	selinux_is_enabled
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	serial8250_clear_and_reinit_fifos
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	serial8250_do_get_mctrl
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	serial8250_do_set_divisor
@@ -15649,6 +15747,9 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	subsys_interface_register
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	subsys_interface_unregister
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	subsys_system_register
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	subsys_virtual_register
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	suspend_device_irqs
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	suspend_set_ops
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	suspend_valid_only_mem
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	swiotlb_max_segment
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	swiotlb_nr_tbl
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	switchdev_deferred_process
@@ -15674,6 +15775,8 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	syscon_node_to_regmap
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	syscon_regmap_lookup_by_compatible
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	syscon_regmap_lookup_by_pdevname
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	syscon_regmap_lookup_by_phandle
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	syscore_resume
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	syscore_suspend
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	sysctl_vfs_cache_pressure
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	sysfs_add_file_to_group
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	sysfs_add_link_to_group
@@ -15800,6 +15903,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	tpm_seal_trusted
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	tpm_send
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	tpm_tis_core_init
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	tpm_tis_remove
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	tpm_tis_resume
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	tpm_transmit_cmd
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	tpm_try_get_ops
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	tpm_unseal_trusted
@@ -15929,6 +16033,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	unix_outq_len
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	unix_peer_get
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	unix_socket_table
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	unix_table_lock
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	unlock_system_sleep
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	unmap_kernel_range
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	unmap_kernel_range_noflush
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	unregister_acpi_bus_type
@@ -15950,6 +16055,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	unregister_oldmem_pfn_is_ram
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	unregister_oom_notifier
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	unregister_pernet_device
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	unregister_pernet_subsys
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	unregister_pm_notifier
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	unregister_switchdev_blocking_notifier
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	unregister_switchdev_notifier
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	unregister_syscore_ops
@@ -16011,6 +16117,8 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	virtio_check_driver_offered_feature
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	virtio_config_changed
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	virtio_config_disable
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	virtio_config_enable
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	virtio_device_freeze
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	virtio_device_restore
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	virtio_finalize_features
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	virtqueue_add_inbuf
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	virtqueue_add_inbuf_ctx
@@ -16072,6 +16180,8 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	vring_interrupt
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	vring_new_virtqueue
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	vring_transport_features
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	vt_get_leds
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	vtime_guest_enter
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	vtime_guest_exit
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	vxlan_dev_create
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	vxlan_fdb_clear_offload
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	vxlan_fdb_find_uc
@@ -16080,6 +16190,14 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	wait_for_device_probe
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	wait_for_stable_page
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	wake_up_all_idle_cpus
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	wakeme_after_rcu
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	wakeup_source_add
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	wakeup_source_create
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	wakeup_source_destroy
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	wakeup_source_drop
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	wakeup_source_prepare
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	wakeup_source_register
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	wakeup_source_remove
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	wakeup_source_unregister
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	walk_iomem_res_desc
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	watchdog_init_timeout
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	watchdog_notify_pretimeout
