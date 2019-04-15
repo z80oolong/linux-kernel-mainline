@@ -169,19 +169,25 @@ static int hda_link_pcm_prepare(struct snd_pcm_substream *substream,
 				struct snd_soc_dai *dai)
 {
 	struct snd_soc_pcm_runtime *rtd = substream->private_data;
+	struct snd_soc_dpcm *dpcm;
 	struct snd_sof_dev *sdev =
 		snd_soc_component_get_drvdata(dai->component);
 	struct snd_sof_pcm *spcm;
 	int stream = substream->stream;
 
-	spcm = snd_sof_find_spcm_dai(sdev, rtd);
-	if (!spcm)
-		return -EINVAL;
+	for_each_dpcm_fe(rtd, stream, dpcm) {
+		spcm = snd_sof_find_spcm_dai(sdev, dpcm->fe);
+		if (!spcm)
+			return -EINVAL;
 
-	/* setup hw_params again only if resuming from system suspend */
-	if (!spcm->hw_params_upon_resume[stream])
-		return 0;
+		/* setup hw_params only if resuming from system suspend */
+		if (spcm->hw_params_upon_resume[stream])
+			goto params;
+	}
 
+	return 0;
+
+params:
 	dev_dbg(sdev->dev, "hda: prepare stream %d dir %d\n",
 		spcm->pcm.pcm_id, substream->stream);
 
