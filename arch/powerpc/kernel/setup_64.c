@@ -962,7 +962,7 @@ void setup_stf_barrier(void)
 		stf_barrier_enable(enable);
 }
 
-static bool init_fallback_flush(void)
+static bool __ref init_fallback_flush(void)
 {
 	u64 l1d_size, limit;
 	int cpu;
