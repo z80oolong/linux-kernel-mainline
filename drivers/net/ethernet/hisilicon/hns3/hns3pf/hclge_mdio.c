@@ -3,6 +3,7 @@
 
 #include <linux/etherdevice.h>
 #include <linux/kernel.h>
+#include <linux/marvell_phy.h>
 
 #include "hclge_cmd.h"
 #include "hclge_main.h"
@@ -207,6 +208,8 @@ int hclge_mac_connect_phy(struct hclge_dev *hdev)
 		return 0;
 
 	phydev->supported &= ~SUPPORTED_FIBRE;
+
+	phydev->dev_flags |= MARVELL_PHY_LED0_LINK_LED1_ACTIVE;
 
 	ret = phy_connect_direct(netdev, phydev,
 				 hclge_mac_adjust_link,
