@@ -2585,6 +2585,8 @@ IS_SUBPLATFORM(const struct drm_i915_private *i915,
 #define HAS_RC6p(dev_priv)		 (INTEL_INFO(dev_priv)->has_rc6p)
 #define HAS_RC6pp(dev_priv)		 (false) /* HW was never validated */
 
+#define HAS_RPS(dev_priv)	(INTEL_INFO(dev_priv)->has_rps)
+
 #define HAS_CSR(dev_priv)	(INTEL_INFO(dev_priv)->display.has_csr)
 
 #define HAS_RUNTIME_PM(dev_priv) (INTEL_INFO(dev_priv)->has_runtime_pm)
@@ -3005,7 +3007,7 @@ enum i915_mm_subclass { /* lockdep subclass for obj->mm.lock/struct_mutex */
 
 int __i915_gem_object_put_pages(struct drm_i915_gem_object *obj,
 				enum i915_mm_subclass subclass);
-void __i915_gem_object_invalidate(struct drm_i915_gem_object *obj);
+void __i915_gem_object_truncate(struct drm_i915_gem_object *obj);
 
 enum i915_map_type {
 	I915_MAP_WB = 0,
@@ -3266,11 +3268,12 @@ unsigned long i915_gem_shrink(struct drm_i915_private *i915,
 			      unsigned long target,
 			      unsigned long *nr_scanned,
 			      unsigned flags);
-#define I915_SHRINK_PURGEABLE 0x1
-#define I915_SHRINK_UNBOUND 0x2
-#define I915_SHRINK_BOUND 0x4
-#define I915_SHRINK_ACTIVE 0x8
-#define I915_SHRINK_VMAPS 0x10
+#define I915_SHRINK_PURGEABLE	BIT(0)
+#define I915_SHRINK_UNBOUND	BIT(1)
+#define I915_SHRINK_BOUND	BIT(2)
+#define I915_SHRINK_ACTIVE	BIT(3)
+#define I915_SHRINK_VMAPS	BIT(4)
+#define I915_SHRINK_WRITEBACK	BIT(5)
 unsigned long i915_gem_shrink_all(struct drm_i915_private *i915);
 void i915_gem_shrinker_register(struct drm_i915_private *i915);
 void i915_gem_shrinker_unregister(struct drm_i915_private *i915);

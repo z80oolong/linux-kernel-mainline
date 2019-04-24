@@ -647,7 +647,7 @@ i915_gem_create(struct drm_file *file,
 		return ret;
 
 	*handle_p = handle;
-	*size_p = obj->base.size;
+	*size_p = size;
 	return 0;
 }
 
@@ -2143,8 +2143,7 @@ i915_gem_mmap_gtt_ioctl(struct drm_device *dev, void *data,
 }
 
 /* Immediately discard the backing storage */
-static void
-i915_gem_object_truncate(struct drm_i915_gem_object *obj)
+void __i915_gem_object_truncate(struct drm_i915_gem_object *obj)
 {
 	i915_gem_object_free_mmap_offset(obj);
 
@@ -2159,28 +2158,6 @@ i915_gem_object_truncate(struct drm_i915_gem_object *obj)
 	shmem_truncate_range(file_inode(obj->base.filp), 0, (loff_t)-1);
 	obj->mm.madv = __I915_MADV_PURGED;
 	obj->mm.pages = ERR_PTR(-EFAULT);
-}
-
-/* Try to discard unwanted pages */
-void __i915_gem_object_invalidate(struct drm_i915_gem_object *obj)
-{
-	struct address_space *mapping;
-
-	lockdep_assert_held(&obj->mm.lock);
-	GEM_BUG_ON(i915_gem_object_has_pages(obj));
-
-	switch (obj->mm.madv) {
-	case I915_MADV_DONTNEED:
-		i915_gem_object_truncate(obj);
-	case __I915_MADV_PURGED:
-		return;
-	}
-
-	if (obj->base.filp == NULL)
-		return;
-
-	mapping = obj->base.filp->f_mapping,
-	invalidate_mapping_pages(mapping, 0, (loff_t)-1);
 }
 
 /*
@@ -4023,7 +4000,7 @@ i915_gem_madvise_ioctl(struct drm_device *dev, void *data,
 	/* if the object is no longer attached, discard its backing storage */
 	if (obj->mm.madv == I915_MADV_DONTNEED &&
 	    !i915_gem_object_has_pages(obj))
-		i915_gem_object_truncate(obj);
+		__i915_gem_object_truncate(obj);
 
 	args->retained = obj->mm.madv != __I915_MADV_PURGED;
 	mutex_unlock(&obj->mm.lock);
@@ -4842,6 +4819,23 @@ static void i915_gem_fini_scratch(struct drm_i915_private *i915)
 	i915_vma_unpin_and_release(&i915->gt.scratch, 0);
 }
 
+static int intel_engines_verify_workarounds(struct drm_i915_private *i915)
+{
+	struct intel_engine_cs *engine;
+	enum intel_engine_id id;
+	int err = 0;
+
+	if (!IS_ENABLED(CONFIG_DRM_I915_DEBUG_GEM))
+		return 0;
+
+	for_each_engine(engine, i915, id) {
+		if (intel_engine_verify_workarounds(engine, "load"))
+			err = -EIO;
+	}
+
+	return err;
+}
+
 int i915_gem_init(struct drm_i915_private *dev_priv)
 {
 	int ret;
@@ -4926,6 +4920,10 @@ int i915_gem_init(struct drm_i915_private *dev_priv)
 	 * FIXME: break up the workarounds and apply them at the right time!
 	 */
 	intel_init_clock_gating(dev_priv);
+
+	ret = intel_engines_verify_workarounds(dev_priv);
+	if (ret)
+		goto err_init_hw;
 
 	ret = __intel_engines_record_defaults(dev_priv);
 	if (ret)
