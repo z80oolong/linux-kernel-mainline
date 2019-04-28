@@ -1354,6 +1354,9 @@ int sof_load_pipeline_ipc(struct snd_sof_dev *sdev,
 		return ret;
 	}
 
+	if (sdev->enabled_cores_mask & (1 << pipeline->core))
+		return ret;/* core already enabled, return */
+
 	/* power up the core that this pipeline is scheduled on */
 	ret = snd_sof_dsp_core_power_up(sdev, 1 << pipeline->core);
 	if (ret < 0) {
@@ -2128,9 +2131,19 @@ static int sof_widget_unload(struct snd_soc_component *scomp,
 		}
 		break;
 	case snd_soc_dapm_scheduler:
+		pipeline = swidget->private;
+
+		/*
+		 * For core 0, we will power down it at PM ops.
+		 * For other cores, if it is already powered off, just return.
+		 * TODO: add ref counts for each core, only power off it when
+		 *	 ref counts is decreased by 0.
+		 */
+		if (!(sdev->enabled_cores_mask & (1 << pipeline->core)) ||
+		    !pipeline->core)
+			return 0;
 
 		/* power down the pipeline schedule core */
-		pipeline = swidget->private;
 		ret = snd_sof_dsp_core_power_down(sdev, 1 << pipeline->core);
 		if (ret < 0)
 			dev_err(sdev->dev, "error: powering down pipeline schedule core %d\n",
