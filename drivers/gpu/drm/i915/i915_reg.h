@@ -2870,6 +2870,7 @@ enum i915_power_well_id {
 #define GFX_FLSH_CNTL_GEN6	_MMIO(0x101008)
 #define   GFX_FLSH_CNTL_EN	(1 << 0)
 #define ECOSKPD		_MMIO(0x21d0)
+#define   ECO_CONSTANT_BUFFER_SR_DISABLE REG_BIT(4)
 #define   ECO_GATING_CX_ONLY	(1 << 3)
 #define   ECO_FLIP_DONE		(1 << 0)
 
@@ -5769,6 +5770,7 @@ enum {
 #define _PIPE_MISC_B			0x71030
 #define   PIPEMISC_YUV420_ENABLE	(1 << 27)
 #define   PIPEMISC_YUV420_MODE_FULL_BLEND (1 << 26)
+#define   PIPEMISC_HDR_MODE_PRECISION	(1 << 23) /* icl+ */
 #define   PIPEMISC_OUTPUT_COLORSPACE_YUV  (1 << 11)
 #define   PIPEMISC_DITHER_BPC_MASK	(7 << 5)
 #define   PIPEMISC_DITHER_8_BPC		(0 << 5)
