@@ -1,0 +1,30 @@
+drm drm-fixes 37624b58542fb9f2d9a70e6ea006ef8a5f66c30b
+	Linux 5.1-rc7
+drm-misc drm-misc-fixes ab042b824c11502bd39abfdfd4c7f285347d483a
+	Revert "drm/qxl: drop prime import/export callbacks"
+drm-intel drm-intel-fixes f5c58ba18ab8ea2169670ed880e4d31ed772ad10
+	drm/i915: Restore correct bxt_ddi_phy_calc_lane_lat_optim_mask() calculation
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 989eea61448f7b3b49161f1accf097848b305474
+	Merge branch 'linux-5.2' of git://github.com/skeggsb/linux into drm-next
+drm-misc drm-misc-next-fixes 761e473f6b23f206862d904a1a5fcbc012656b47
+	drm/gem: Fix sphinx warnings
+drm-intel drm-intel-next-fixes 9628e15ca9d5f7595ba886173e98a139d0a56cd1
+	drm/i915/icl: Whitelist GEN9_SLICE_COMMON_ECO_CHICKEN1
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next b3198c38f02d54a5e964258a2180d502abe6eaf0
+	drm/atomic-helper: Bump vblank timeout to 100 ms
+drm-intel drm-intel-next-queued dc76e5764a46ffb2e7f502a86b3288b5edcce191
+	drm/i915: Complete both freed-object passes before draining the workqueue
+drm-intel drm-intel-next ad2c467aa92e283e9e8009bb9eb29a5c6a2d1217
+	drm/i915: Update DRIVER_DATE to 20190417
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 3887c26c0e24d50a4d0ce20cf4726737cee1a2fd
+	ALSA: hda/realtek - Apply the fixup for ASUS Q325UAR
+sound-upstream for-next f495222e28275222ab6fd93813bd3d462e16d340
+	ALSA: hda - Register irq handler after the chip initialization
+drm-intel topic/core-for-CI 5172ea7b473b47bf94d78cabdce3dc8eb6c4e976
+	ICL HACK: Disable ACPI idle driver
