@@ -31,6 +31,7 @@
 #include <linux/reboot.h>
 #include <linux/slab.h>
 #include <linux/types.h>
+
 #include <asm/byteorder.h>
 
 #include <drm/drm_atomic_helper.h>
@@ -42,17 +43,24 @@
 #include <drm/i915_drm.h>
 
 #include "i915_drv.h"
+#include "intel_atomic.h"
 #include "intel_audio.h"
 #include "intel_connector.h"
 #include "intel_ddi.h"
 #include "intel_dp.h"
+#include "intel_dp_link_training.h"
+#include "intel_dp_mst.h"
 #include "intel_drv.h"
+#include "intel_fifo_underrun.h"
 #include "intel_hdcp.h"
 #include "intel_hdmi.h"
+#include "intel_hotplug.h"
 #include "intel_lspcon.h"
 #include "intel_lvds.h"
 #include "intel_panel.h"
 #include "intel_psr.h"
+#include "intel_sideband.h"
+#include "intel_vdsc.h"
 
 #define DP_DPRX_ESI_LEN 14
 
@@ -3148,12 +3156,12 @@ static void chv_post_disable_dp(struct intel_encoder *encoder,
 
 	intel_dp_link_down(encoder, old_crtc_state);
 
-	mutex_lock(&dev_priv->sb_lock);
+	vlv_dpio_get(dev_priv);
 
 	/* Assert data lane reset */
 	chv_data_lane_soft_reset(encoder, old_crtc_state, true);
 
-	mutex_unlock(&dev_priv->sb_lock);
+	vlv_dpio_put(dev_priv);
 }
 
 static void
