@@ -3,6 +3,7 @@
  * Copyright © 2018 Intel Corporation
  */
 
+#include "intel_combo_phy.h"
 #include "intel_drv.h"
 
 #define for_each_combo_port(__dev_priv, __port) \
@@ -201,6 +202,58 @@ static bool icl_combo_phy_verify_state(struct drm_i915_private *dev_priv,
 			     CL_POWER_DOWN_ENABLE, CL_POWER_DOWN_ENABLE);
 
 	return ret;
+}
+
+void intel_combo_phy_power_up_lanes(struct drm_i915_private *dev_priv,
+				    enum port port, bool is_dsi,
+				    int lane_count, bool lane_reversal)
+{
+	u8 lane_mask;
+	u32 val;
+
+	if (is_dsi) {
+		WARN_ON(lane_reversal);
+
+		switch (lane_count) {
+		case 1:
+			lane_mask = PWR_DOWN_LN_3_1_0;
+			break;
+		case 2:
+			lane_mask = PWR_DOWN_LN_3_1;
+			break;
+		case 3:
+			lane_mask = PWR_DOWN_LN_3;
+			break;
+		default:
+			MISSING_CASE(lane_count);
+			/* fall-through */
+		case 4:
+			lane_mask = PWR_UP_ALL_LANES;
+			break;
+		}
+	} else {
+		switch (lane_count) {
+		case 1:
+			lane_mask = lane_reversal ? PWR_DOWN_LN_2_1_0 :
+						    PWR_DOWN_LN_3_2_1;
+			break;
+		case 2:
+			lane_mask = lane_reversal ? PWR_DOWN_LN_1_0 :
+						    PWR_DOWN_LN_3_2;
+			break;
+		default:
+			MISSING_CASE(lane_count);
+			/* fall-through */
+		case 4:
+			lane_mask = PWR_UP_ALL_LANES;
+			break;
+		}
+	}
+
+	val = I915_READ(ICL_PORT_CL_DW10(port));
+	val &= ~PWR_DOWN_LN_MASK;
+	val |= lane_mask << PWR_DOWN_LN_SHIFT;
+	I915_WRITE(ICL_PORT_CL_DW10(port), val);
 }
 
 void icl_combo_phys_init(struct drm_i915_private *dev_priv)
