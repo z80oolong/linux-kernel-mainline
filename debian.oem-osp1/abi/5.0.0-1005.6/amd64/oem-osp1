@@ -5869,6 +5869,7 @@ EXPORT_SYMBOL ubuntu/vbox/vboxguest/vboxguest 0x00000000	VBoxGuest_g_pszRTAssert
 EXPORT_SYMBOL ubuntu/vbox/vboxguest/vboxguest 0x00000000	VBoxGuest_g_szRTAssertMsg1
 EXPORT_SYMBOL ubuntu/vbox/vboxguest/vboxguest 0x00000000	VBoxGuest_g_szRTAssertMsg2
 EXPORT_SYMBOL ubuntu/vbox/vboxguest/vboxguest 0x00000000	VBoxGuest_g_u32RTAssertLine
+EXPORT_SYMBOL ubuntu/vbox/vboxguest/vboxguest 0x00000000	VBoxGuest_rtR0MemObjLinuxVirtToPage
 EXPORT_SYMBOL vmlinux 0x00000000	EISA_bus
 EXPORT_SYMBOL vmlinux 0x00000000	IO_APIC_get_PCI_irq_vector
 EXPORT_SYMBOL vmlinux 0x00000000	I_BDEV
