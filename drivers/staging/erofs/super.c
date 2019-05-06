@@ -452,6 +452,7 @@ static int erofs_read_super(struct super_block *sb,
 	 */
 err_devname:
 	dput(sb->s_root);
+	sb->s_root = NULL;
 err_makeroot:
 err_isdir:
 	if (sb->s_root == NULL)
