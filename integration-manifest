@@ -1,0 +1,30 @@
+drm drm-fixes e93c9c99a629c61837d5a7fc2120cd2b6c70dbdd
+	Linux 5.1
+drm-misc drm-misc-fixes ab042b824c11502bd39abfdfd4c7f285347d483a
+	Revert "drm/qxl: drop prime import/export callbacks"
+drm-intel drm-intel-fixes f5c58ba18ab8ea2169670ed880e4d31ed772ad10
+	drm/i915: Restore correct bxt_ddi_phy_calc_lane_lat_optim_mask() calculation
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 422449238e9853458283beffed77562d4b40a2fa
+	Merge branch 'drm-next-5.2' of git://people.freedesktop.org/~agd5f/linux into drm-next
+drm-misc drm-misc-next-fixes b208146b0c8f84a1d6a3df0cfa45238e2190c8a2
+	drm/panfrost: Show stored feature registers
+drm-intel drm-intel-next-fixes 9628e15ca9d5f7595ba886173e98a139d0a56cd1
+	drm/i915/icl: Whitelist GEN9_SLICE_COMMON_ECO_CHICKEN1
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next fa2b7c21d9b974b5b1b4f63a02edeaf049054dba
+	drm/virtio: Remove redundant return type
+drm-intel drm-intel-next-queued 46034d2bb7c8d809e261bde6e2d7b73273a0ff36
+	drm/i915: Move the hsw/bdw pc8 code to intel_runtime_pm.c
+drm-intel drm-intel-next ad2c467aa92e283e9e8009bb9eb29a5c6a2d1217
+	drm/i915: Update DRIVER_DATE to 20190417
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 7f641e26a6df9269cb25dd7a4b0a91d6586ed441
+	ALSA: hda/hdmi - Consider eld_valid when reporting jack event
+sound-upstream for-next 7f641e26a6df9269cb25dd7a4b0a91d6586ed441
+	ALSA: hda/hdmi - Consider eld_valid when reporting jack event
+drm-intel topic/core-for-CI e42ab48f69c8d67d125767793f758f0442006c3a
+	RFC: soft/hardlookup: taint kernel
