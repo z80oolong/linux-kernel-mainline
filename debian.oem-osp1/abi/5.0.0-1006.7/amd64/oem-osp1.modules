@@ -4372,6 +4372,14 @@ snd-soc-wm8985
 snd-soc-xlnx-i2s
 snd-soc-xtfpga-i2s
 snd-soc-zx-aud96p22
+snd-sof
+snd-sof-intel-bdw
+snd-sof-intel-byt
+snd-sof-intel-hda
+snd-sof-intel-hda-common
+snd-sof-intel-hsw
+snd-sof-intel-ipc
+snd-sof-xtensa-dsp
 snd-sonicvibes
 snd-timer
 snd-trident
@@ -4413,6 +4421,8 @@ soc_ov9640
 soc_ov9740
 soc_rj54n1cb0c
 soc_tw9910
+sof-acpi-dev
+sof-pci-dev
 softdog
 softing
 softing_cs
