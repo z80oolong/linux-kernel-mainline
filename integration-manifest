@@ -1,0 +1,30 @@
+drm drm-fixes e93c9c99a629c61837d5a7fc2120cd2b6c70dbdd
+	Linux 5.1
+drm-misc drm-misc-fixes ab042b824c11502bd39abfdfd4c7f285347d483a
+	Revert "drm/qxl: drop prime import/export callbacks"
+drm-intel drm-intel-fixes f5c58ba18ab8ea2169670ed880e4d31ed772ad10
+	drm/i915: Restore correct bxt_ddi_phy_calc_lane_lat_optim_mask() calculation
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 30d62d4453e49f85dd17b2ba60bbb68b6593dba0
+	drm: add non-desktop quirk for Valve HMDs
+drm-misc drm-misc-next-fixes 15273ffd7efdf6e9f21c4e4beef6539229167343
+	drm/msm/a6xx: No zap shader is not an error
+drm-intel drm-intel-next-fixes 23372cce8fe7ee98a6458fd3d035a55b87f0c6fe
+	Merge tag 'gvt-next-fixes-2019-05-07' of https://github.com/intel/gvt-linux into drm-intel-next-fixes
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 3be2071004bf748ed39e54ccda85caaa774c7ccd
+	drm/panel: simple: Add FriendlyELEC HD702E 800x1280 LCD panel
+drm-intel drm-intel-next-queued 0152b3b3f49b36b0f1a1bf9f0353dc636f41d8f0
+	drm/i915: Seal races between async GPU cancellation, retirement and signaling
+drm-intel drm-intel-next ad2c467aa92e283e9e8009bb9eb29a5c6a2d1217
+	drm/i915: Update DRIVER_DATE to 20190417
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 89d8b8d60d97dbad45b93ccac0817fdfb1f65d88
+	Merge tag 'asoc-v5.2-4' of git://git.kernel.org/pub/scm/linux/kernel/git/broonie/sound into for-linus
+sound-upstream for-next 89d8b8d60d97dbad45b93ccac0817fdfb1f65d88
+	Merge tag 'asoc-v5.2-4' of git://git.kernel.org/pub/scm/linux/kernel/git/broonie/sound into for-linus
+drm-intel topic/core-for-CI e42ab48f69c8d67d125767793f758f0442006c3a
+	RFC: soft/hardlookup: taint kernel
