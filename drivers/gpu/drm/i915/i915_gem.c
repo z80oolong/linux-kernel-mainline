@@ -47,6 +47,8 @@
 #include <linux/pci.h>
 #include <linux/dma-buf.h>
 
+#include "intel_display.h"
+
 static void i915_gem_flush_free_objects(struct drm_i915_private *i915);
 
 static bool cpu_write_needs_clflush(struct drm_i915_gem_object *obj)
@@ -742,8 +744,31 @@ i915_gem_dumb_create(struct drm_file *file,
 		     struct drm_device *dev,
 		     struct drm_mode_create_dumb *args)
 {
+	int cpp = DIV_ROUND_UP(args->bpp, 8);
+	u32 format;
+
+	switch (cpp) {
+	case 1:
+		format = DRM_FORMAT_C8;
+		break;
+	case 2:
+		format = DRM_FORMAT_RGB565;
+		break;
+	case 4:
+		format = DRM_FORMAT_XRGB8888;
+		break;
+	default:
+		return -EINVAL;
+	}
+
 	/* have to work out size/pitch and return them */
-	args->pitch = ALIGN(args->width * DIV_ROUND_UP(args->bpp, 8), 64);
+	args->pitch = ALIGN(args->width * cpp, 64);
+
+	/* align stride to page size so that we can remap */
+	if (args->pitch > intel_plane_fb_max_stride(to_i915(dev), format,
+						    DRM_FORMAT_MOD_LINEAR))
+		args->pitch = ALIGN(args->pitch, 4096);
+
 	args->size = args->pitch * args->height;
 	return i915_gem_create(file, to_i915(dev),
 			       args->size, &args->handle);
