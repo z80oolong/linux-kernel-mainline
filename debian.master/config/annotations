@@ -569,7 +569,7 @@ CONFIG_VIRTIO_CONSOLE                           policy<{'amd64': 'y', 'arm64': '
 CONFIG_IBM_BSR                                  policy<{'powerpc-powerpc64-smp': 'm', 'ppc64el': 'm'}>
 CONFIG_NVRAM                                    policy<{'amd64': 'm', 'armhf': 'm', 'i386': 'm', 'powerpc-powerpc-e500mc': 'y', 'powerpc-powerpc-smp': 'y'}>
 CONFIG_DTLK                                     policy<{'i386': 'm'}>
-CONFIG_R3964                                    policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'powerpc': 'm', 'ppc64el': 'm', 's390x': 'n'}>
+CONFIG_R3964                                    policy<{'amd64': 'n', 'arm64': 'n', 'armhf': 'n', 'i386': 'n', 'powerpc': 'n', 'ppc64el': 'n', 's390x': 'n'}>
 CONFIG_APPLICOM                                 policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'powerpc': 'm', 'ppc64el': 'm', 's390x': 'n'}>
 CONFIG_SONYPI                                   policy<{'i386': 'm'}>
 CONFIG_MWAVE                                    policy<{'amd64': 'm', 'i386': 'm'}>
