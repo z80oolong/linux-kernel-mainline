@@ -1,0 +1,30 @@
+drm drm-fixes e93c9c99a629c61837d5a7fc2120cd2b6c70dbdd
+	Linux 5.1
+drm-misc drm-misc-fixes ab042b824c11502bd39abfdfd4c7f285347d483a
+	Revert "drm/qxl: drop prime import/export callbacks"
+drm-intel drm-intel-fixes f5c58ba18ab8ea2169670ed880e4d31ed772ad10
+	drm/i915: Restore correct bxt_ddi_phy_calc_lane_lat_optim_mask() calculation
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next c01ad0fe1d57dbdee6e2f77d2c21a64eb1537480
+	Merge branch 'drm-next-5.2' of git://people.freedesktop.org/~agd5f/linux into drm-next
+drm-misc drm-misc-next-fixes 197b23e9aeea04fce29b6753233fd07050bf6911
+	drm/panfrost: Add missing _fini() calls in panfrost_device_fini()
+drm-intel drm-intel-next-fixes c36beba6b296b3c05a0f29753b04775e5ae23886
+	drm/i915: Seal races between async GPU cancellation, retirement and signaling
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 094aa54f0f9e9185babebf95745d71b07a84321c
+	drm: Some ocd in drm_file.c
+drm-intel drm-intel-next-queued 190980187e2b66397da6eaec1d25b3e3272c2361
+	drm/i915: Check for no-op priority changes first
+drm-intel drm-intel-next ad2c467aa92e283e9e8009bb9eb29a5c6a2d1217
+	drm/i915: Update DRIVER_DATE to 20190417
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus ed180abba7f1fc3cf04ffa27767b1bcc8e8c842a
+	ALSA: hda: Fix race between creating and refreshing sysfs entries
+sound-upstream for-next ed180abba7f1fc3cf04ffa27767b1bcc8e8c842a
+	ALSA: hda: Fix race between creating and refreshing sysfs entries
+drm-intel topic/core-for-CI e42ab48f69c8d67d125767793f758f0442006c3a
+	RFC: soft/hardlookup: taint kernel
