@@ -4852,6 +4852,8 @@ static void alc_update_headset_mode(struct hda_codec *codec)
 	switch (new_headset_mode) {
 	case ALC_HEADSET_MODE_UNPLUGGED:
 		alc_headset_mode_unplugged(codec);
+		spec->current_headset_mode = ALC_HEADSET_MODE_UNKNOWN;
+		spec->current_headset_type = ALC_HEADSET_TYPE_UNKNOWN;
 		spec->gen.hp_jack_present = false;
 		break;
 	case ALC_HEADSET_MODE_HEADSET:
@@ -4894,8 +4896,6 @@ static void alc_update_headset_mode_hook(struct hda_codec *codec,
 static void alc_update_headset_jack_cb(struct hda_codec *codec,
 				       struct hda_jack_callback *jack)
 {
-	struct alc_spec *spec = codec->spec;
-	spec->current_headset_type = ALC_HEADSET_TYPE_UNKNOWN;
 	snd_hda_gen_hp_automute(codec, jack);
 }
 
@@ -4932,7 +4932,11 @@ static void alc_fixup_headset_mode(struct hda_codec *codec,
 		alc_probe_headset_mode(codec);
 		break;
 	case HDA_FIXUP_ACT_INIT:
-		spec->current_headset_mode = 0;
+		if (codec->core.dev.power.power_state.event == PM_EVENT_RESUME ||
+				codec->core.dev.power.power_state.event == PM_EVENT_RESTORE) {
+			spec->current_headset_mode = 0;
+			spec->current_headset_type = 0;
+		}
 		alc_update_headset_mode(codec);
 		break;
 	}
