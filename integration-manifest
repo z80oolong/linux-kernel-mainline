@@ -1,0 +1,30 @@
+drm drm-fixes e93c9c99a629c61837d5a7fc2120cd2b6c70dbdd
+	Linux 5.1
+drm-misc drm-misc-fixes ab042b824c11502bd39abfdfd4c7f285347d483a
+	Revert "drm/qxl: drop prime import/export callbacks"
+drm-intel drm-intel-fixes f5c58ba18ab8ea2169670ed880e4d31ed772ad10
+	drm/i915: Restore correct bxt_ddi_phy_calc_lane_lat_optim_mask() calculation
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 8da0e1525b7f0d69c6cb44094963906282b32673
+	Merge tag 'drm-misc-next-fixes-2019-05-15' of git://anongit.freedesktop.org/drm/drm-misc into drm-next
+drm-misc drm-misc-next-fixes 51a0d1a90bff5d90a1a1c58e165928a0dd92268a
+	drm/sun4i: sun6i_mipi_dsi: Fix hsync_porch overflow
+drm-intel drm-intel-next-fixes c36beba6b296b3c05a0f29753b04775e5ae23886
+	drm/i915: Seal races between async GPU cancellation, retirement and signaling
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 5b24f715042da2a7f3fd059f15cc5a6fbd4f4ec6
+	drm: Reserve/unreserve GEM VRAM BOs from within pin/unpin functions
+drm-intel drm-intel-next-queued 4cc79cbb01ef35dd822f96160f78f0012843cf3c
+	drm/i915/execlists: Drop promotion on unsubmit
+drm-intel drm-intel-next ad2c467aa92e283e9e8009bb9eb29a5c6a2d1217
+	drm/i915: Update DRIVER_DATE to 20190417
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 56df90b631fc027fe28b70d41352d820797239bb
+	ALSA: hda/realtek - Fix for Lenovo B50-70 inverted internal microphone bug
+sound-upstream for-next 56df90b631fc027fe28b70d41352d820797239bb
+	ALSA: hda/realtek - Fix for Lenovo B50-70 inverted internal microphone bug
+drm-intel topic/core-for-CI e42ab48f69c8d67d125767793f758f0442006c3a
+	RFC: soft/hardlookup: taint kernel
