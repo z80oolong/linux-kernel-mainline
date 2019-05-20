@@ -474,6 +474,9 @@ struct iwl_mvm_vif {
 
 	struct iwl_probe_resp_data __rcu *probe_resp_data;
 	struct ieee80211_key_conf *ap_wep_key;
+
+	/* we can only have 2 GTK + 2 IGTK active at a time */
+	struct ieee80211_key_conf *ap_early_keys[4];
 };
 
 static inline struct iwl_mvm_vif *
