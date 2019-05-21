@@ -1,0 +1,30 @@
+drm drm-fixes e93c9c99a629c61837d5a7fc2120cd2b6c70dbdd
+	Linux 5.1
+drm-misc drm-misc-fixes 7c420636860a719049fae9403e2c87804f53bdde
+	drm/gma500/cdv: Check vbt config bits when detecting lvds panels
+drm-intel drm-intel-fixes 57cb853d1d5b07ed4e4647ad61b0c16a9c21996e
+	Merge tag 'gvt-fixes-2019-05-21' of https://github.com/intel/gvt-linux into drm-intel-fixes
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next a188339ca5a396acc588e5851ed7e19f66b0ebd9
+	Linux 5.2-rc1
+drm-misc drm-misc-next-fixes 51a0d1a90bff5d90a1a1c58e165928a0dd92268a
+	drm/sun4i: sun6i_mipi_dsi: Fix hsync_porch overflow
+drm-intel drm-intel-next-fixes c36beba6b296b3c05a0f29753b04775e5ae23886
+	drm/i915: Seal races between async GPU cancellation, retirement and signaling
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 7793a108964924dd2802ee8c5dff2e9f3a9cd54a
+	drm/fourcc: Fix the parameters name in the documentation
+drm-intel drm-intel-next-queued 5c000fb33b767c3fa10d29a1021edbf4f92b76a2
+	drm/i915: Bump gen7+ fb size limits to 16kx16k
+drm-intel drm-intel-next ad2c467aa92e283e9e8009bb9eb29a5c6a2d1217
+	drm/i915: Update DRIVER_DATE to 20190417
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus c7b55fabfa441ef48f274cdfa1565ed8af92951a
+	ALSA: hdac: fix memory release for SST and SOF drivers
+sound-upstream for-next 8d3f1fdf521165cac96a21e35f5a1630147d91b1
+	ALSA: firewire-lib: unify tracing events to 'amdtp_packet' event
+drm-intel topic/core-for-CI e223a7b99df09bb5e19222eea7da38560ff3c0ef
+	Revert "ext4: protect journal inode's blocks using block_validity"
