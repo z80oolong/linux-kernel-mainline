@@ -1,0 +1,30 @@
+drm drm-fixes 6b0538da5a6ca2129b93cea5afc997226875c402
+	Merge branch 'drm-fixes-5.2' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+drm-misc drm-misc-fixes f3617b449d0bcf3b5d80a97f51498dcf7463cf7e
+	drm/panfrost: Select devfreq
+drm-intel drm-intel-fixes 57cb853d1d5b07ed4e4647ad61b0c16a9c21996e
+	Merge tag 'gvt-fixes-2019-05-21' of https://github.com/intel/gvt-linux into drm-intel-fixes
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next a188339ca5a396acc588e5851ed7e19f66b0ebd9
+	Linux 5.2-rc1
+drm-misc drm-misc-next-fixes 51a0d1a90bff5d90a1a1c58e165928a0dd92268a
+	drm/sun4i: sun6i_mipi_dsi: Fix hsync_porch overflow
+drm-intel drm-intel-next-fixes c36beba6b296b3c05a0f29753b04775e5ae23886
+	drm/i915: Seal races between async GPU cancellation, retirement and signaling
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 6ac98829a4144a2cc78e97b84ee752ce6689e87f
+	drm/edid: Fix docbook in drm_hdmi_infoframe_set_hdr_metadata()
+drm-intel drm-intel-next-queued b3ca0d44917c12f581cfdae52f9d6efdbfda5fe6
+	drm/i915: remove unused IO_TLB_SEGPAGES which should be defined by swiotlb
+drm-intel drm-intel-next cfc0e7bbf41baad26ad32bacd43bdab0be6b44d8
+	drm/i915: Update DRIVER_DATE to 20190523
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 17b168646a66b5a78738aee6a4d941126f6ad886
+	ALSA: Enable micmute LED for Huawei laptops
+sound-upstream for-next 947b437e1263c81bb5d30a84f1a4a35dbb9f6b78
+	ALSA: firewire-lib: unify packet handler for IR context
+drm-intel topic/core-for-CI 4bb8cab8e32f95d7204dbb450679cf81302557cb
+	net/sch_generic: Shut up noise
