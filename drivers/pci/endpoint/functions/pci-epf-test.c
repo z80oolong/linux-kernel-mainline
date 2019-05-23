@@ -436,8 +436,14 @@ static int pci_epf_test_alloc_space(struct pci_epf *epf)
 	void *base;
 	int bar;
 	enum pci_barno test_reg_bar = epf_test->test_reg_bar;
+	size_t test_reg_size;
 
-	base = pci_epf_alloc_space(epf, sizeof(struct pci_epf_test_reg),
+	if (epc_features->bar_fixed_size[test_reg_bar])
+		test_reg_size = bar_size[test_reg_bar];
+	else
+		test_reg_size = sizeof(struct pci_epf_test_reg);
+
+	base = pci_epf_alloc_space(epf, test_reg_size,
 				   test_reg_bar);
 	if (!base) {
 		dev_err(dev, "Failed to allocated register space\n");
