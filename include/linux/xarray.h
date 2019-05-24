@@ -220,6 +220,7 @@ enum xa_lock_type {
 #define XA_FLAGS_LOCK_IRQ	((__force gfp_t)XA_LOCK_IRQ)
 #define XA_FLAGS_LOCK_BH	((__force gfp_t)XA_LOCK_BH)
 #define XA_FLAGS_TRACK_FREE	((__force gfp_t)4U)
+#define XA_FLAGS_ACCOUNT	((__force gfp_t)32U)
 #define XA_FLAGS_MARK(mark)	((__force gfp_t)((1U << __GFP_BITS_SHIFT) << \
 						(__force unsigned)(mark)))
 
