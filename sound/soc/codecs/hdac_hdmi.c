@@ -189,7 +189,7 @@ static void hdac_hdmi_jack_report(struct hdac_hdmi_pcm *pcm,
 			snd_soc_jack_report(pcm->jack, SND_JACK_AVOUT,
 						SND_JACK_AVOUT);
 		}
-		pcm->jack_event++;
+		pcm->jack_event = 1;
 	} else {
 		/*
 		 * Report Jack disconnect event when a device is disconnected
@@ -198,8 +198,7 @@ static void hdac_hdmi_jack_report(struct hdac_hdmi_pcm *pcm,
 		 */
 		if (pcm->jack_event == 1)
 			snd_soc_jack_report(pcm->jack, 0, SND_JACK_AVOUT);
-		if (pcm->jack_event > 0)
-			pcm->jack_event--;
+		pcm->jack_event = 0;
 	}
 
 	snd_soc_dapm_sync(port->dapm);
