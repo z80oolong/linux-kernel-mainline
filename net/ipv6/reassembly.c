@@ -92,7 +92,7 @@ EXPORT_SYMBOL(ip6_frag_init);
 void ip6_expire_frag_queue(struct net *net, struct frag_queue *fq)
 {
 	struct net_device *dev = NULL;
-	struct sk_buff *head;
+	struct sk_buff *head = NULL;
 
 	rcu_read_lock();
 	spin_lock(&fq->q.lock);
@@ -110,26 +110,42 @@ void ip6_expire_frag_queue(struct net *net, struct frag_queue *fq)
 	IP6_INC_STATS_BH(net, __in6_dev_get(dev), IPSTATS_MIB_REASMTIMEOUT);
 
 	/* Don't send error if the first segment did not arrive. */
-	head = fq->q.fragments;
-	if (!(fq->q.flags & INET_FRAG_FIRST_IN) || !head)
+	if (!(fq->q.flags & INET_FRAG_FIRST_IN))
 		goto out;
+
+	if (fq->q.fragments) {
+		head = fq->q.fragments;
+		fq->q.fragments = head->next;
+	} else {
+		head = skb_rb_first(&fq->q.rb_fragments);
+		if (!head)
+			goto out;
+		rb_erase(&head->rbnode, &fq->q.rb_fragments);
+		memset(&head->rbnode, 0, sizeof(head->rbnode));
+		barrier();
+	}
+
+	if (head == fq->q.fragments_tail)
+		fq->q.fragments_tail = NULL;
+
+	sub_frag_mem_limit(fq->q.net, head->truesize);
 
 	/* But use as source device on which LAST ARRIVED
 	 * segment was received. And do not use fq->dev
 	 * pointer directly, device might already disappeared.
 	 */
 	head->dev = dev;
-	skb_get(head);
 	spin_unlock(&fq->q.lock);
 
 	icmpv6_send(head, ICMPV6_TIME_EXCEED, ICMPV6_EXC_FRAGTIME, 0);
-	kfree_skb(head);
 	goto out_rcu_unlock;
 
 out:
 	spin_unlock(&fq->q.lock);
 out_rcu_unlock:
 	rcu_read_unlock();
+	if (head)
+		kfree_skb(head);
 	inet_frag_put(&fq->q);
 }
 EXPORT_SYMBOL(ip6_expire_frag_queue);
