@@ -568,37 +568,6 @@ static enum spectre_v2_mitigation_cmd __init spectre_v2_parse_cmdline(void)
 	return cmd;
 }
 
-static void update_stibp_msr(void * __unused)
-{
-	wrmsrl(MSR_IA32_SPEC_CTRL, x86_spec_ctrl_base);
-}
-
-/* Update x86_spec_ctrl_base in case SMT state changed. */
-static void update_stibp_strict(void)
-{
-	u64 mask = x86_spec_ctrl_base & ~SPEC_CTRL_STIBP;
-
-	if (sched_smt_active())
-		mask |= SPEC_CTRL_STIBP;
-
-	if (mask == x86_spec_ctrl_base)
-		return;
-
-	pr_info("Update user space SMT mitigation: STIBP %s\n",
-		mask & SPEC_CTRL_STIBP ? "always-on" : "off");
-	x86_spec_ctrl_base = mask;
-	on_each_cpu(update_stibp_msr, NULL, 1);
-}
-
-/* Update the static key controlling the evaluation of TIF_SPEC_IB */
-static void update_indir_branch_cond(void)
-{
-	if (sched_smt_active())
-		static_branch_enable(&switch_to_cond_stibp);
-	else
-		static_branch_disable(&switch_to_cond_stibp);
-}
-
 static void __init spectre_v2_select_mitigation(void)
 {
 	enum spectre_v2_mitigation_cmd cmd = spectre_v2_parse_cmdline();
@@ -700,6 +669,37 @@ specv2_set_mode:
 
 	/* Set up IBPB and STIBP depending on the general spectre V2 command */
 	spectre_v2_user_select_mitigation(cmd);
+}
+
+static void update_stibp_msr(void * __unused)
+{
+	wrmsrl(MSR_IA32_SPEC_CTRL, x86_spec_ctrl_base);
+}
+
+/* Update x86_spec_ctrl_base in case SMT state changed. */
+static void update_stibp_strict(void)
+{
+	u64 mask = x86_spec_ctrl_base & ~SPEC_CTRL_STIBP;
+
+	if (sched_smt_active())
+		mask |= SPEC_CTRL_STIBP;
+
+	if (mask == x86_spec_ctrl_base)
+		return;
+
+	pr_info("Update user space SMT mitigation: STIBP %s\n",
+		mask & SPEC_CTRL_STIBP ? "always-on" : "off");
+	x86_spec_ctrl_base = mask;
+	on_each_cpu(update_stibp_msr, NULL, 1);
+}
+
+/* Update the static key controlling the evaluation of TIF_SPEC_IB */
+static void update_indir_branch_cond(void)
+{
+	if (sched_smt_active())
+		static_branch_enable(&switch_to_cond_stibp);
+	else
+		static_branch_disable(&switch_to_cond_stibp);
 }
 
 #undef pr_fmt
