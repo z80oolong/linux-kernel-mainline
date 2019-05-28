@@ -36,8 +36,9 @@
 #include <drm/i915_drm.h>
 
 #include "i915_drv.h"
-#include "i915_vgpu.h"
+#include "i915_scatterlist.h"
 #include "i915_trace.h"
+#include "i915_vgpu.h"
 #include "intel_drv.h"
 #include "intel_frontbuffer.h"
 
@@ -2063,8 +2064,10 @@ static struct i915_hw_ppgtt *gen6_ppgtt_create(struct drm_i915_private *i915)
 	ppgtt->base.vm.pte_encode = ggtt->vm.pte_encode;
 
 	ppgtt->work = kmalloc(sizeof(*ppgtt->work), GFP_KERNEL);
-	if (!ppgtt->work)
+	if (!ppgtt->work) {
+		err = -ENOMEM;
 		goto err_free;
+	}
 
 	err = gen6_ppgtt_init_scratch(ppgtt);
 	if (err)
@@ -3575,8 +3578,11 @@ void i915_gem_restore_gtt_mappings(struct drm_i915_private *dev_priv)
 		WARN_ON(i915_vma_bind(vma,
 				      obj ? obj->cache_level : 0,
 				      PIN_UPDATE));
-		if (obj)
+		if (obj) {
+			i915_gem_object_lock(obj);
 			WARN_ON(i915_gem_object_set_to_gtt_domain(obj, false));
+			i915_gem_object_unlock(obj);
+		}
 
 lock:
 		mutex_lock(&ggtt->vm.mutex);

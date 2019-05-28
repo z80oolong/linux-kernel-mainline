@@ -24,10 +24,13 @@
 
 #include <drm/drm_print.h>
 
+#include "gem/i915_gem_context.h"
+
 #include "i915_drv.h"
 
 #include "intel_engine.h"
 #include "intel_engine_pm.h"
+#include "intel_context.h"
 #include "intel_lrc.h"
 #include "intel_reset.h"
 
@@ -156,7 +159,7 @@ static const struct engine_info intel_engines[] = {
 };
 
 /**
- * ___intel_engine_context_size() - return the size of the context for an engine
+ * intel_engine_context_size() - return the size of the context for an engine
  * @dev_priv: i915 device private
  * @class: engine class
  *
@@ -169,8 +172,7 @@ static const struct engine_info intel_engines[] = {
  * in LRC mode, but does not include the "shared data page" used with
  * GuC submission. The caller should account for this if using the GuC.
  */
-static u32
-__intel_engine_context_size(struct drm_i915_private *dev_priv, u8 class)
+u32 intel_engine_context_size(struct drm_i915_private *dev_priv, u8 class)
 {
 	u32 cxt_size;
 
@@ -327,8 +329,8 @@ intel_engine_setup(struct drm_i915_private *dev_priv,
 
 	engine->uabi_class = intel_engine_classes[info->class].uabi_class;
 
-	engine->context_size = __intel_engine_context_size(dev_priv,
-							   engine->class);
+	engine->context_size = intel_engine_context_size(dev_priv,
+							 engine->class);
 	if (WARN_ON(engine->context_size > BIT(20)))
 		engine->context_size = 0;
 	if (engine->context_size)
@@ -525,7 +527,7 @@ static void cleanup_status_page(struct intel_engine_cs *engine)
 		i915_vma_unpin(vma);
 
 	i915_gem_object_unpin_map(vma->obj);
-	__i915_gem_object_release_unless_active(vma->obj);
+	i915_gem_object_put(vma->obj);
 }
 
 static int pin_ggtt_status_page(struct intel_engine_cs *engine,
@@ -951,12 +953,30 @@ const char *i915_cache_level_str(struct drm_i915_private *i915, int type)
 	}
 }
 
+static inline u32
+intel_sseu_fls_subslice(const struct sseu_dev_info *sseu, u32 slice)
+{
+	u32 subslice;
+	int i;
+
+	for (i = sseu->ss_stride - 1; i >= 0; i--) {
+		subslice = fls(sseu->subslice_mask[slice * sseu->ss_stride +
+						   i]);
+		if (subslice) {
+			subslice += i * BITS_PER_BYTE;
+			break;
+		}
+	}
+
+	return subslice;
+}
+
 u32 intel_calculate_mcr_s_ss_select(struct drm_i915_private *dev_priv)
 {
 	const struct sseu_dev_info *sseu = &RUNTIME_INFO(dev_priv)->sseu;
 	u32 mcr_s_ss_select;
 	u32 slice = fls(sseu->slice_mask);
-	u32 subslice = fls(sseu->subslice_mask[slice]);
+	u32 subslice = intel_sseu_fls_subslice(sseu, slice);
 
 	if (IS_GEN(dev_priv, 10))
 		mcr_s_ss_select = GEN8_MCR_SLICE(slice) |
@@ -1032,6 +1052,7 @@ void intel_engine_get_instdone(struct intel_engine_cs *engine,
 			       struct intel_instdone *instdone)
 {
 	struct drm_i915_private *dev_priv = engine->i915;
+	const struct sseu_dev_info *sseu = &RUNTIME_INFO(dev_priv)->sseu;
 	struct intel_uncore *uncore = engine->uncore;
 	u32 mmio_base = engine->mmio_base;
 	int slice;
@@ -1049,7 +1070,8 @@ void intel_engine_get_instdone(struct intel_engine_cs *engine,
 
 		instdone->slice_common =
 			intel_uncore_read(uncore, GEN7_SC_INSTDONE);
-		for_each_instdone_slice_subslice(dev_priv, slice, subslice) {
+		for_each_instdone_slice_subslice(dev_priv, sseu, slice,
+						 subslice) {
 			instdone->sampler[slice][subslice] =
 				read_subslice_reg(dev_priv, slice, subslice,
 						  GEN7_SAMPLER_INSTDONE);

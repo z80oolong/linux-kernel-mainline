@@ -48,12 +48,10 @@ static int query_topology_info(struct drm_i915_private *dev_priv,
 	BUILD_BUG_ON(sizeof(u8) != sizeof(sseu->slice_mask));
 
 	slice_length = sizeof(sseu->slice_mask);
-	subslice_length = sseu->max_slices *
-		DIV_ROUND_UP(sseu->max_subslices, BITS_PER_BYTE);
-	eu_length = sseu->max_slices * sseu->max_subslices *
-		DIV_ROUND_UP(sseu->max_eus_per_subslice, BITS_PER_BYTE);
-
-	total_length = sizeof(topo) + slice_length + subslice_length + eu_length;
+	subslice_length = sseu->max_slices * sseu->ss_stride;
+	eu_length = sseu->max_slices * sseu->max_subslices * sseu->eu_stride;
+	total_length = sizeof(topo) + slice_length + subslice_length +
+		       eu_length;
 
 	ret = copy_query_item(&topo, sizeof(topo), total_length,
 			      query_item);
@@ -69,10 +67,9 @@ static int query_topology_info(struct drm_i915_private *dev_priv,
 	topo.max_eus_per_subslice = sseu->max_eus_per_subslice;
 
 	topo.subslice_offset = slice_length;
-	topo.subslice_stride = DIV_ROUND_UP(sseu->max_subslices, BITS_PER_BYTE);
+	topo.subslice_stride = sseu->ss_stride;
 	topo.eu_offset = slice_length + subslice_length;
-	topo.eu_stride =
-		DIV_ROUND_UP(sseu->max_eus_per_subslice, BITS_PER_BYTE);
+	topo.eu_stride = sseu->eu_stride;
 
 	if (__copy_to_user(u64_to_user_ptr(query_item->data_ptr),
 			   &topo, sizeof(topo)))
