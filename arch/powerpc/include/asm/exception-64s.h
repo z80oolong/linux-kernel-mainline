@@ -50,27 +50,6 @@
 #define EX_PPR		88	/* SMT thread status register (priority) */
 #define EX_CTR		96
 
-#define STF_ENTRY_BARRIER_SLOT						\
-	STF_ENTRY_BARRIER_FIXUP_SECTION;				\
-	mflr	r10;							\
-	bl	stf_barrier_fallback;					\
-	mtlr	r10
-
-#define STF_EXIT_BARRIER_SLOT						\
-	STF_EXIT_BARRIER_FIXUP_SECTION;					\
-	nop;								\
-	nop;								\
-	nop;								\
-	nop;								\
-	nop;								\
-	nop
-
-/*
- * r10 must be free to use, r13 must be paca
- */
-#define INTERRUPT_TO_KERNEL						\
-	STF_ENTRY_BARRIER_SLOT
-
 /*
  * Macros for annotating the expected destination of (h)rfid
  *
@@ -87,19 +66,16 @@
 	rfid
 
 #define RFI_TO_USER							\
-	STF_EXIT_BARRIER_SLOT;						\
 	RFI_FLUSH_SLOT;							\
 	rfid;								\
 	b	rfi_flush_fallback
 
 #define RFI_TO_USER_OR_KERNEL						\
-	STF_EXIT_BARRIER_SLOT;						\
 	RFI_FLUSH_SLOT;							\
 	rfid;								\
 	b	rfi_flush_fallback
 
 #define RFI_TO_GUEST							\
-	STF_EXIT_BARRIER_SLOT;						\
 	RFI_FLUSH_SLOT;							\
 	rfid;								\
 	b	rfi_flush_fallback
@@ -108,25 +84,21 @@
 	hrfid
 
 #define HRFI_TO_USER							\
-	STF_EXIT_BARRIER_SLOT;						\
 	RFI_FLUSH_SLOT;							\
 	hrfid;								\
 	b	hrfi_flush_fallback
 
 #define HRFI_TO_USER_OR_KERNEL						\
-	STF_EXIT_BARRIER_SLOT;						\
 	RFI_FLUSH_SLOT;							\
 	hrfid;								\
 	b	hrfi_flush_fallback
 
 #define HRFI_TO_GUEST							\
-	STF_EXIT_BARRIER_SLOT;						\
 	RFI_FLUSH_SLOT;							\
 	hrfid;								\
 	b	hrfi_flush_fallback
 
 #define HRFI_TO_UNKNOWN							\
-	STF_EXIT_BARRIER_SLOT;						\
 	RFI_FLUSH_SLOT;							\
 	hrfid;								\
 	b	hrfi_flush_fallback
@@ -254,7 +226,6 @@ END_FTR_SECTION_NESTED(ftr,ftr,943)
 #define __EXCEPTION_PROLOG_1(area, extra, vec)				\
 	OPT_SAVE_REG_TO_PACA(area+EX_PPR, r9, CPU_FTR_HAS_PPR);		\
 	OPT_SAVE_REG_TO_PACA(area+EX_CFAR, r10, CPU_FTR_CFAR);		\
-	INTERRUPT_TO_KERNEL;						\
 	SAVE_CTR(r10, area);						\
 	mfcr	r9;							\
 	extra(vec);							\
@@ -531,13 +502,6 @@ label##_relon_hv:						\
 
 #define SOFTEN_NOTEST_PR(vec)		_SOFTEN_TEST(EXC_STD, vec)
 #define SOFTEN_NOTEST_HV(vec)		_SOFTEN_TEST(EXC_HV, vec)
-
-#define __MASKABLE_EXCEPTION_PSERIES_OOL(vec, label, h, extra)		\
-	__EXCEPTION_PROLOG_1(PACA_EXGEN, extra, vec);			\
-	EXCEPTION_PROLOG_PSERIES_1(label##_common, h);
-
-#define _MASKABLE_EXCEPTION_PSERIES_OOL(vec, label, h, extra)		\
-	__MASKABLE_EXCEPTION_PSERIES_OOL(vec, label, h, extra)
 
 #define __MASKABLE_EXCEPTION_PSERIES(vec, label, h, extra)		\
 	SET_SCRATCH0(r13);    /* save r13 */				\
