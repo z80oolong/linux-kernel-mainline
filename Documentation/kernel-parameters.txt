@@ -2271,7 +2271,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
 				expose users to several CPU vulnerabilities.
 				Equivalent to: nopti [X86,PPC]
 					       nobp=0 [S390]
-					       nospectre_v2 [X86,S390]
+					       nospectre_v1 [PPC]
+					       nospectre_v2 [X86,PPC,S390]
 					       spec_store_bypass_disable=off [X86,PPC]
 					       l1tf=off [X86]
 					       mds=off [X86]
