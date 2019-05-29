@@ -223,9 +223,9 @@ int set_ibpb_enabled(unsigned int val)
 	if (boot_cpu_has(X86_FEATURE_USE_IBPB)) {
 		ibpb_enabled = val;
 		if (ibpb_enabled != prev)
-			pr_info("Spectre V2 : Spectre v2 mitigation: %s "
+			pr_info("Spectre V2 : mitigation: %s "
 				"Indirect Branch Prediction Barrier\n",
-				ibpb_enabled ? "Enabling" : "Disabling");
+				ibpb_enabled ? "Enabling kernel" : "Disabling kernel");
 	} else {
 		ibpb_enabled = 0;
 		if (val) {
@@ -272,10 +272,10 @@ int set_ibrs_enabled(unsigned int val)
 	if (boot_cpu_has(X86_FEATURE_USE_IBRS_FW)) {
 		ibrs_enabled = val;
 		if (ibrs_enabled != prev)
-			pr_info("Spectre V2 : Spectre v2 mitigation: %s "
-				"Indirect Branch Restricted Speculation%s\n",
-				ibrs_enabled ? "Enabling" : "Disabling",
-				ibrs_enabled == 2 ? " (user space)" : "");
+			pr_info("Spectre V2 : mitigation: %s "
+				"Indirect Branch Restricted Speculation\n",
+				ibrs_enabled == 2 ? "Enabling kernel+user" :
+				ibrs_enabled ? "Enabling kernel" : "Disabling");
 
 		if (ibrs_enabled == 0) {
 			/* Always disable IBRS */
