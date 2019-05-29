@@ -820,7 +820,7 @@ struct iwl_mvm {
 	struct iwl_mvm_vif *bf_allowed_vif;
 
 	bool hw_registered;
-	bool calibrating;
+	bool rfkill_safe_init_done;
 	u32 error_event_table[2];
 	u32 log_event_table;
 	u32 umac_error_event_table;
