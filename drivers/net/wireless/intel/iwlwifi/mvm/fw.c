@@ -306,6 +306,8 @@ static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
 	int ret, i;
 	enum iwl_ucode_type old_type = mvm->fwrt.cur_fw_img;
 	static const u16 alive_cmd[] = { MVM_ALIVE };
+	bool run_in_rfkill =
+		ucode_type == IWL_UCODE_INIT || iwl_mvm_has_unified_ucode(mvm);
 
 	set_bit(IWL_FWRT_STATUS_WAIT_ALIVE, &mvm->fwrt.status);
 	if (ucode_type == IWL_UCODE_REGULAR &&
@@ -324,7 +326,12 @@ static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
 				   alive_cmd, ARRAY_SIZE(alive_cmd),
 				   iwl_alive_fn, &alive_data);
 
-	ret = iwl_trans_start_fw(mvm->trans, fw, ucode_type == IWL_UCODE_INIT);
+	/*
+	 * We want to load the INIT firmware even in RFKILL
+	 * For the unified firmware case, the ucode_type is not
+	 * INIT, but we still need to run it.
+	 */
+	ret = iwl_trans_start_fw(mvm->trans, fw, run_in_rfkill);
 	if (ret) {
 		iwl_fw_set_current_image(&mvm->fwrt, old_type);
 		iwl_remove_notification(&mvm->notif_wait, &alive_wait);
@@ -426,7 +433,8 @@ static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
 	 * commands
 	 */
 	ret = iwl_mvm_send_cmd_pdu(mvm, WIDE_ID(SYSTEM_GROUP,
-						INIT_EXTENDED_CFG_CMD), 0,
+						INIT_EXTENDED_CFG_CMD),
+				   CMD_SEND_IN_RFKILL,
 				   sizeof(init_cfg), &init_cfg);
 	if (ret) {
 		IWL_ERR(mvm, "Failed to run init config command: %d\n",
@@ -450,7 +458,8 @@ static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
 	}
 
 	ret = iwl_mvm_send_cmd_pdu(mvm, WIDE_ID(REGULATORY_AND_NVM_GROUP,
-						NVM_ACCESS_COMPLETE), 0,
+						NVM_ACCESS_COMPLETE),
+				   CMD_SEND_IN_RFKILL,
 				   sizeof(nvm_complete), &nvm_complete);
 	if (ret) {
 		IWL_ERR(mvm, "Failed to run complete NVM access: %d\n",
@@ -474,6 +483,8 @@ static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
 			return ret;
 		}
 	}
+
+	mvm->rfkill_safe_init_done = true;
 
 	return 0;
 
@@ -519,7 +530,7 @@ int iwl_run_init_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
 
 	lockdep_assert_held(&mvm->mutex);
 
-	if (WARN_ON_ONCE(mvm->calibrating))
+	if (WARN_ON_ONCE(mvm->rfkill_safe_init_done))
 		return 0;
 
 	iwl_init_notification_wait(&mvm->notif_wait,
@@ -569,7 +580,7 @@ int iwl_run_init_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
 		goto remove_notif;
 	}
 
-	mvm->calibrating = true;
+	mvm->rfkill_safe_init_done = true;
 
 	/* Send TX valid antennas before triggering calibrations */
 	ret = iwl_send_tx_ant_cfg(mvm, iwl_mvm_get_valid_tx_ant(mvm));
@@ -605,7 +616,7 @@ int iwl_run_init_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
 remove_notif:
 	iwl_remove_notification(&mvm->notif_wait, &calib_wait);
 out:
-	mvm->calibrating = false;
+	mvm->rfkill_safe_init_done = false;
 	if (iwlmvm_mod_params.init_dbg && !mvm->nvm_data) {
 		/* we want to debug INIT and we have no NVM - fake */
 		mvm->nvm_data = kzalloc(sizeof(struct iwl_nvm_data) +
