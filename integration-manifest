@@ -1,0 +1,30 @@
+drm drm-fixes 2a3e0b716296a504d9e65fea7acb379c86fe4283
+	Merge tag 'imx-drm-fixes-2019-05-29' of git://git.pengutronix.de/git/pza/linux into drm-fixes
+drm-misc drm-misc-fixes 95b74ce88943747fff0a3a8a6f04eecbe7b1c3ce
+	drm/qxl: drop WARN_ONCE()
+drm-intel drm-intel-fixes afb286bcae85ee816e8497596bf8e7f83347f47b
+	Merge tag 'gvt-fixes-2019-05-30' of https://github.com/intel/gvt-linux into drm-intel-fixes
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 91c1ead6aee22d4595f50ba66070b94a4a8f84a9
+	Merge branch 'drm-next-5.3' of git://people.freedesktop.org/~agd5f/linux into drm-next
+drm-misc drm-misc-next-fixes 51a0d1a90bff5d90a1a1c58e165928a0dd92268a
+	drm/sun4i: sun6i_mipi_dsi: Fix hsync_porch overflow
+drm-intel drm-intel-next-fixes c36beba6b296b3c05a0f29753b04775e5ae23886
+	drm/i915: Seal races between async GPU cancellation, retirement and signaling
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next ff5781634c41167bb1d8f9620fba1c9c833780ec
+	drm/bridge: sii902x: Implement HDMI audio support
+drm-intel drm-intel-next-queued d82b4b26218d359eeba3f401c9fc649388641b1a
+	drm/i915: Report all objects with allocated pages to the shrinker
+drm-intel drm-intel-next c0a74c732568ad347f7b3de281922808dab30504
+	drm/i915: Update DRIVER_DATE to 20190524
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 717f43d81afc1250300479075952a0e36d74ded3
+	ALSA: hda/realtek - Update headset mode for ALC256
+sound-upstream for-next e046b64b1547e2dc1ac27e0a5ac57e55213e16f1
+	ALSA: hda/ca0132: Use struct_size()
+drm-intel topic/core-for-CI f27a5d91201639161d6f6e25af1c89c9cbb3cac7
+	x86/fpu: Use fault_in_pages_writeable() for pre-faulting
