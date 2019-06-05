@@ -420,6 +420,8 @@ struct dpll {
 struct intel_atomic_state {
 	struct drm_atomic_state base;
 
+	intel_wakeref_t wakeref;
+
 	struct {
 		/*
 		 * Logical state of cdclk (used for all scaling, watermark,
@@ -885,6 +887,8 @@ struct intel_crtc_state {
 
 	struct intel_crtc_wm_state wm;
 
+	u32 data_rate[I915_MAX_PLANES];
+
 	/* Gamma mode programmed on the pipe */
 	u32 gamma_mode;
 
@@ -910,6 +914,7 @@ struct intel_crtc_state {
 		union hdmi_infoframe avi;
 		union hdmi_infoframe spd;
 		union hdmi_infoframe hdmi;
+		union hdmi_infoframe drm;
 	} infoframes;
 
 	/* HDMI scrambling status */
@@ -1552,6 +1557,7 @@ int vlv_force_pll_on(struct drm_i915_private *dev_priv, enum pipe pipe,
 		     const struct dpll *dpll);
 void vlv_force_pll_off(struct drm_i915_private *dev_priv, enum pipe pipe);
 int lpt_get_iclkip(struct drm_i915_private *dev_priv);
+bool intel_fuzzy_clock_check(int clock1, int clock2);
 
 /* modesetting asserts */
 void assert_panel_unlocked(struct drm_i915_private *dev_priv,
