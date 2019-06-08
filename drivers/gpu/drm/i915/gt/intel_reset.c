@@ -7,6 +7,8 @@
 #include <linux/sched/mm.h>
 #include <linux/stop_machine.h>
 
+#include "gem/i915_gem_context.h"
+
 #include "i915_drv.h"
 #include "i915_gpu_error.h"
 #include "i915_irq.h"
@@ -1158,7 +1160,14 @@ static void clear_register(struct intel_uncore *uncore, i915_reg_t reg)
 	intel_uncore_rmw(uncore, reg, 0, 0);
 }
 
-void i915_clear_error_registers(struct drm_i915_private *i915)
+static void gen8_clear_engine_error_register(struct intel_engine_cs *engine)
+{
+	GEN6_RING_FAULT_REG_RMW(engine, RING_FAULT_VALID, 0);
+	GEN6_RING_FAULT_REG_POSTING_READ(engine);
+}
+
+void i915_clear_error_registers(struct drm_i915_private *i915,
+				intel_engine_mask_t engine_mask)
 {
 	struct intel_uncore *uncore = &i915->uncore;
 	u32 eir;
@@ -1191,12 +1200,8 @@ void i915_clear_error_registers(struct drm_i915_private *i915)
 		struct intel_engine_cs *engine;
 		enum intel_engine_id id;
 
-		for_each_engine(engine, i915, id) {
-			rmw_clear(uncore,
-				  RING_FAULT_REG(engine), RING_FAULT_VALID);
-			intel_uncore_posting_read(uncore,
-						  RING_FAULT_REG(engine));
-		}
+		for_each_engine_masked(engine, i915, engine_mask, id)
+			gen8_clear_engine_error_register(engine);
 	}
 }
 
@@ -1248,7 +1253,7 @@ void i915_handle_error(struct drm_i915_private *i915,
 
 	if (flags & I915_ERROR_CAPTURE) {
 		i915_capture_error_state(i915, engine_mask, msg);
-		i915_clear_error_registers(i915);
+		i915_clear_error_registers(i915, engine_mask);
 	}
 
 	/*
