@@ -1,0 +1,30 @@
+drm drm-fixes 671e2ee5ee2127179ca884b439ab6001a623edd6
+	Merge branch 'linux-5.2' of git://github.com/skeggsb/linux into drm-fixes
+drm-misc drm-misc-fixes 652b8b086538c8a10de5aa5cbdaef79333b46358
+	drm: panel-orientation-quirks: Add quirk for GPD MicroPC
+drm-intel drm-intel-fixes fa2eb819ddf9bf671077f3711441208532118a5c
+	Merge tag 'gvt-fixes-2019-06-05' of https://github.com/intel/gvt-linux into drm-intel-fixes
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 396f9acaffd87e44b8b02bc60f06dc949b832b7e
+	Merge branch 'drm-next-5.3' of git://people.freedesktop.org/~agd5f/linux into drm-next
+drm-misc drm-misc-next-fixes 51a0d1a90bff5d90a1a1c58e165928a0dd92268a
+	drm/sun4i: sun6i_mipi_dsi: Fix hsync_porch overflow
+drm-intel drm-intel-next-fixes c36beba6b296b3c05a0f29753b04775e5ae23886
+	drm/i915: Seal races between async GPU cancellation, retirement and signaling
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next aec3925f093d3ac880c53ec03ea28ef8608b0a52
+	drm/fb-helper: Move out commit code
+drm-intel drm-intel-next-queued 6be306bee7dd80905329769292e21b5e2d166b8f
+	drm/i915/dsi: Read back pclk set by GOP and use that as pclk (v3)
+drm-intel drm-intel-next c0a74c732568ad347f7b3de281922808dab30504
+	drm/i915: Update DRIVER_DATE to 20190524
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 717f43d81afc1250300479075952a0e36d74ded3
+	ALSA: hda/realtek - Update headset mode for ALC256
+sound-upstream for-next e046b64b1547e2dc1ac27e0a5ac57e55213e16f1
+	ALSA: hda/ca0132: Use struct_size()
+drm-intel topic/core-for-CI b3058c553658db1ca8cc64b7327a000364eebc54
+	mm: Band aid for 5fd4ca2d84b249f0858ce28cf637cf25b61a398f
