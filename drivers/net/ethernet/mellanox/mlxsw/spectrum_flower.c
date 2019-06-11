@@ -253,7 +253,7 @@ static int mlxsw_sp_flower_parse_ip(struct mlxsw_sp *mlxsw_sp,
 				       key->tos & 0x3, mask->tos & 0x3);
 
 	mlxsw_sp_acl_rulei_keymask_u32(rulei, MLXSW_AFK_ELEMENT_IP_DSCP,
-				       key->tos >> 6, mask->tos >> 6);
+				       key->tos >> 2, mask->tos >> 2);
 
 	return 0;
 }
