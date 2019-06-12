@@ -22,11 +22,13 @@
  *
  */
 
-#include "../i915_selftest.h"
+#include "gem/i915_gem_pm.h"
+#include "gem/selftests/igt_gem_utils.h"
+#include "gem/selftests/mock_context.h"
 
-#include "igt_gem_utils.h"
+#include "i915_selftest.h"
+
 #include "lib_sw_fence.h"
-#include "mock_context.h"
 #include "mock_drm.h"
 #include "mock_gem_device.h"
 
@@ -65,20 +67,24 @@ static int populate_ggtt(struct drm_i915_private *i915,
 		count++;
 	}
 
+	bound = 0;
 	unbound = 0;
-	list_for_each_entry(obj, &i915->mm.unbound_list, mm.link)
-		if (obj->mm.quirked)
+	list_for_each_entry(obj, objects, st_link) {
+		GEM_BUG_ON(!obj->mm.quirked);
+
+		if (atomic_read(&obj->bind_count))
+			bound++;
+		else
 			unbound++;
+	}
+	GEM_BUG_ON(bound + unbound != count);
+
 	if (unbound) {
 		pr_err("%s: Found %lu objects unbound, expected %u!\n",
 		       __func__, unbound, 0);
 		return -EINVAL;
 	}
 
-	bound = 0;
-	list_for_each_entry(obj, &i915->mm.bound_list, mm.link)
-		if (obj->mm.quirked)
-			bound++;
 	if (bound != count) {
 		pr_err("%s: Found %lu objects bound, expected %lu!\n",
 		       __func__, bound, count);

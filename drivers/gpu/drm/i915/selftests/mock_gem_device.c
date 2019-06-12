@@ -27,12 +27,13 @@
 
 #include "gt/mock_engine.h"
 
-#include "mock_context.h"
 #include "mock_request.h"
 #include "mock_gem_device.h"
-#include "mock_gem_object.h"
 #include "mock_gtt.h"
 #include "mock_uncore.h"
+
+#include "gem/selftests/mock_context.h"
+#include "gem/selftests/mock_gem_object.h"
 
 void mock_device_flush(struct drm_i915_private *i915)
 {
@@ -129,6 +130,7 @@ static struct dev_pm_domain pm_domain = {
 
 struct drm_i915_private *mock_gem_device(void)
 {
+	static struct lock_class_key reset_key;
 	struct drm_i915_private *i915;
 	struct pci_dev *pdev;
 	int err;
@@ -202,6 +204,8 @@ struct drm_i915_private *mock_gem_device(void)
 
 	INIT_LIST_HEAD(&i915->gt.active_rings);
 	INIT_LIST_HEAD(&i915->gt.closed_vma);
+	spin_lock_init(&i915->gt.closed_lock);
+	lockdep_init_map(&i915->gt.reset_lockmap, "i915.reset", &reset_key, 0);
 
 	mutex_lock(&i915->drm.struct_mutex);
 
