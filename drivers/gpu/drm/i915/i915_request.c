@@ -29,6 +29,9 @@
 #include <linux/sched/clock.h>
 #include <linux/sched/signal.h>
 
+#include "gem/i915_gem_context.h"
+#include "gt/intel_context.h"
+
 #include "i915_active.h"
 #include "i915_drv.h"
 #include "i915_globals.h"
@@ -781,8 +784,11 @@ struct i915_request *
 i915_request_create(struct intel_context *ce)
 {
 	struct i915_request *rq;
+	int err;
 
-	intel_context_timeline_lock(ce);
+	err = intel_context_timeline_lock(ce);
+	if (err)
+		return ERR_PTR(err);
 
 	/* Move our oldest request to the slab-cache (if not in use!) */
 	rq = list_first_entry(&ce->ring->request_list, typeof(*rq), ring_link);
@@ -1438,6 +1444,7 @@ long i915_request_wait(struct i915_request *rq,
 		return -ETIME;
 
 	trace_i915_request_wait_begin(rq, flags);
+	lock_map_acquire(&rq->i915->gt.reset_lockmap);
 
 	/*
 	 * Optimistic spin before touching IRQs.
@@ -1511,6 +1518,7 @@ long i915_request_wait(struct i915_request *rq,
 	dma_fence_remove_callback(&rq->fence, &wait.cb);
 
 out:
+	lock_map_release(&rq->i915->gt.reset_lockmap);
 	trace_i915_request_wait_end(rq);
 	return timeout;
 }

@@ -47,6 +47,8 @@
 #include <drm/drm_probe_helper.h>
 #include <drm/i915_drm.h>
 
+#include "gem/i915_gem_context.h"
+#include "gem/i915_gem_ioctls.h"
 #include "gt/intel_gt_pm.h"
 #include "gt/intel_reset.h"
 #include "gt/intel_workarounds.h"
@@ -60,6 +62,7 @@
 #include "i915_vgpu.h"
 #include "intel_acpi.h"
 #include "intel_audio.h"
+#include "intel_bw.h"
 #include "intel_cdclk.h"
 #include "intel_csr.h"
 #include "intel_dp.h"
@@ -329,6 +332,7 @@ static int i915_getparam_ioctl(struct drm_device *dev, void *data,
 {
 	struct drm_i915_private *dev_priv = to_i915(dev);
 	struct pci_dev *pdev = dev_priv->drm.pdev;
+	const struct sseu_dev_info *sseu = &RUNTIME_INFO(dev_priv)->sseu;
 	drm_i915_getparam_t *param = data;
 	int value;
 
@@ -346,7 +350,7 @@ static int i915_getparam_ioctl(struct drm_device *dev, void *data,
 		value = pdev->revision;
 		break;
 	case I915_PARAM_NUM_FENCES_AVAIL:
-		value = dev_priv->num_fence_regs;
+		value = dev_priv->ggtt.num_fences;
 		break;
 	case I915_PARAM_HAS_OVERLAY:
 		value = dev_priv->overlay ? 1 : 0;
@@ -382,12 +386,12 @@ static int i915_getparam_ioctl(struct drm_device *dev, void *data,
 		value = i915_cmd_parser_get_version(dev_priv);
 		break;
 	case I915_PARAM_SUBSLICE_TOTAL:
-		value = sseu_subslice_total(&RUNTIME_INFO(dev_priv)->sseu);
+		value = intel_sseu_subslice_total(sseu);
 		if (!value)
 			return -ENODEV;
 		break;
 	case I915_PARAM_EU_TOTAL:
-		value = RUNTIME_INFO(dev_priv)->sseu.eu_total;
+		value = sseu->eu_total;
 		if (!value)
 			return -ENODEV;
 		break;
@@ -404,7 +408,7 @@ static int i915_getparam_ioctl(struct drm_device *dev, void *data,
 		value = HAS_POOLED_EU(dev_priv);
 		break;
 	case I915_PARAM_MIN_EU_IN_POOL:
-		value = RUNTIME_INFO(dev_priv)->sseu.min_eu_in_pool;
+		value = sseu->min_eu_in_pool;
 		break;
 	case I915_PARAM_HUC_STATUS:
 		value = intel_huc_check_status(&dev_priv->huc);
@@ -455,12 +459,12 @@ static int i915_getparam_ioctl(struct drm_device *dev, void *data,
 		value = intel_engines_has_context_isolation(dev_priv);
 		break;
 	case I915_PARAM_SLICE_MASK:
-		value = RUNTIME_INFO(dev_priv)->sseu.slice_mask;
+		value = sseu->slice_mask;
 		if (!value)
 			return -ENODEV;
 		break;
 	case I915_PARAM_SUBSLICE_MASK:
-		value = RUNTIME_INFO(dev_priv)->sseu.subslice_mask[0];
+		value = sseu->subslice_mask[0];
 		if (!value)
 			return -ENODEV;
 		break;
@@ -738,6 +742,7 @@ static int i915_load_modeset_init(struct drm_device *dev)
 
 cleanup_gem:
 	i915_gem_suspend(dev_priv);
+	i915_gem_fini_hw(dev_priv);
 	i915_gem_fini(dev_priv);
 cleanup_modeset:
 	intel_modeset_cleanup(dev);
@@ -1620,7 +1625,6 @@ static int i915_driver_init_hw(struct drm_i915_private *dev_priv)
 	intel_uncore_sanitize(dev_priv);
 
 	intel_gt_init_workarounds(dev_priv);
-	i915_gem_load_init_fences(dev_priv);
 
 	/* On the 945G/GM, the chipset reports the MSI capability on the
 	 * integrated graphics even though the support isn't actually there
@@ -1657,6 +1661,7 @@ static int i915_driver_init_hw(struct drm_i915_private *dev_priv)
 	 */
 	intel_get_dram_info(dev_priv);
 
+	intel_bw_init_hw(dev_priv);
 
 	return 0;
 
@@ -1685,7 +1690,6 @@ static void i915_driver_cleanup_hw(struct drm_i915_private *dev_priv)
 		pci_disable_msi(pdev);
 
 	pm_qos_remove_request(&dev_priv->pm_qos);
-	i915_ggtt_cleanup_hw(dev_priv);
 }
 
 /**
@@ -1909,6 +1913,7 @@ int i915_driver_load(struct pci_dev *pdev, const struct pci_device_id *ent)
 
 out_cleanup_hw:
 	i915_driver_cleanup_hw(dev_priv);
+	i915_ggtt_cleanup_hw(dev_priv);
 out_cleanup_mmio:
 	i915_driver_cleanup_mmio(dev_priv);
 out_runtime_pm_put:
@@ -1960,20 +1965,28 @@ void i915_driver_unload(struct drm_device *dev)
 	cancel_delayed_work_sync(&dev_priv->gpu_error.hangcheck_work);
 	i915_reset_error_state(dev_priv);
 
-	i915_gem_fini(dev_priv);
+	i915_gem_fini_hw(dev_priv);
 
 	intel_power_domains_fini_hw(dev_priv);
 
 	i915_driver_cleanup_hw(dev_priv);
-	i915_driver_cleanup_mmio(dev_priv);
 
 	enable_rpm_wakeref_asserts(dev_priv);
-	intel_runtime_pm_cleanup(dev_priv);
 }
 
 static void i915_driver_release(struct drm_device *dev)
 {
 	struct drm_i915_private *dev_priv = to_i915(dev);
+
+	disable_rpm_wakeref_asserts(dev_priv);
+
+	i915_gem_fini(dev_priv);
+
+	i915_ggtt_cleanup_hw(dev_priv);
+	i915_driver_cleanup_mmio(dev_priv);
+
+	enable_rpm_wakeref_asserts(dev_priv);
+	intel_runtime_pm_cleanup(dev_priv);
 
 	i915_driver_cleanup_early(dev_priv);
 	i915_driver_destroy(dev_priv);
@@ -2694,7 +2707,7 @@ static void vlv_restore_gunit_s0ix_state(struct drm_i915_private *dev_priv)
 	I915_WRITE(VLV_GUNIT_CLOCK_GATE2,	s->clock_gate_dis2);
 }
 
-static int vlv_wait_for_pw_status(struct drm_i915_private *dev_priv,
+static int vlv_wait_for_pw_status(struct drm_i915_private *i915,
 				  u32 mask, u32 val)
 {
 	i915_reg_t reg = VLV_GTLC_PW_STATUS;
@@ -2708,7 +2721,9 @@ static int vlv_wait_for_pw_status(struct drm_i915_private *dev_priv,
 	 * Transitioning between RC6 states should be at most 2ms (see
 	 * valleyview_enable_rps) so use a 3ms timeout.
 	 */
-	ret = wait_for(((reg_value = I915_READ_NOTRACE(reg)) & mask) == val, 3);
+	ret = wait_for(((reg_value =
+			 intel_uncore_read_notrace(&i915->uncore, reg)) & mask)
+		       == val, 3);
 
 	/* just trace the final value */
 	trace_i915_reg_rw(false, reg, reg_value, sizeof(reg_value), true);

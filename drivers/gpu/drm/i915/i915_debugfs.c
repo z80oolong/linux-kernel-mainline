@@ -32,10 +32,10 @@
 #include <drm/drm_debugfs.h>
 #include <drm/drm_fourcc.h>
 
+#include "gem/i915_gem_context.h"
 #include "gt/intel_reset.h"
 
 #include "i915_debugfs.h"
-#include "i915_gem_context.h"
 #include "i915_irq.h"
 #include "intel_csr.h"
 #include "intel_dp.h"
@@ -104,19 +104,6 @@ static char get_pin_mapped_flag(struct drm_i915_gem_object *obj)
 	return obj->mm.mapping ? 'M' : ' ';
 }
 
-static u64 i915_gem_obj_total_ggtt_size(struct drm_i915_gem_object *obj)
-{
-	u64 size = 0;
-	struct i915_vma *vma;
-
-	for_each_ggtt_vma(vma, obj) {
-		if (drm_mm_node_allocated(&vma->node))
-			size += vma->node.size;
-	}
-
-	return size;
-}
-
 static const char *
 stringify_page_sizes(unsigned int page_sizes, char *buf, size_t len)
 {
@@ -156,8 +143,6 @@ describe_obj(struct seq_file *m, struct drm_i915_gem_object *obj)
 	unsigned int frontbuffer_bits;
 	int pin_count = 0;
 
-	lockdep_assert_held(&obj->base.dev->struct_mutex);
-
 	seq_printf(m, "%pK: %c%c%c%c%c %8zdKiB %02x %02x %s%s%s",
 		   &obj->base,
 		   get_active_flag(obj),
@@ -173,16 +158,16 @@ describe_obj(struct seq_file *m, struct drm_i915_gem_object *obj)
 		   obj->mm.madv == I915_MADV_DONTNEED ? " purgeable" : "");
 	if (obj->base.name)
 		seq_printf(m, " (name: %d)", obj->base.name);
-	list_for_each_entry(vma, &obj->vma.list, obj_link) {
-		if (i915_vma_is_pinned(vma))
-			pin_count++;
-	}
-	seq_printf(m, " (pinned x %d)", pin_count);
-	if (obj->pin_global)
-		seq_printf(m, " (global)");
+
+	spin_lock(&obj->vma.lock);
 	list_for_each_entry(vma, &obj->vma.list, obj_link) {
 		if (!drm_mm_node_allocated(&vma->node))
 			continue;
+
+		spin_unlock(&obj->vma.lock);
+
+		if (i915_vma_is_pinned(vma))
+			pin_count++;
 
 		seq_printf(m, " (%sgtt offset: %08llx, size: %08llx, pages: %s",
 			   i915_vma_is_ggtt(vma) ? "g" : "pp",
@@ -234,9 +219,16 @@ describe_obj(struct seq_file *m, struct drm_i915_gem_object *obj)
 				   vma->fence->id,
 				   i915_active_request_isset(&vma->last_fence) ? "*" : "");
 		seq_puts(m, ")");
+
+		spin_lock(&obj->vma.lock);
 	}
+	spin_unlock(&obj->vma.lock);
+
+	seq_printf(m, " (pinned x %d)", pin_count);
 	if (obj->stolen)
 		seq_printf(m, " (stolen: %08llx)", obj->stolen->start);
+	if (obj->pin_global)
+		seq_printf(m, " (global)");
 
 	engine = i915_gem_object_last_write_engine(obj);
 	if (engine)
@@ -245,83 +237,6 @@ describe_obj(struct seq_file *m, struct drm_i915_gem_object *obj)
 	frontbuffer_bits = atomic_read(&obj->frontbuffer_bits);
 	if (frontbuffer_bits)
 		seq_printf(m, " (frontbuffer: 0x%03x)", frontbuffer_bits);
-}
-
-static int obj_rank_by_stolen(const void *A, const void *B)
-{
-	const struct drm_i915_gem_object *a =
-		*(const struct drm_i915_gem_object **)A;
-	const struct drm_i915_gem_object *b =
-		*(const struct drm_i915_gem_object **)B;
-
-	if (a->stolen->start < b->stolen->start)
-		return -1;
-	if (a->stolen->start > b->stolen->start)
-		return 1;
-	return 0;
-}
-
-static int i915_gem_stolen_list_info(struct seq_file *m, void *data)
-{
-	struct drm_i915_private *dev_priv = node_to_i915(m->private);
-	struct drm_device *dev = &dev_priv->drm;
-	struct drm_i915_gem_object **objects;
-	struct drm_i915_gem_object *obj;
-	u64 total_obj_size, total_gtt_size;
-	unsigned long total, count, n;
-	int ret;
-
-	total = READ_ONCE(dev_priv->mm.object_count);
-	objects = kvmalloc_array(total, sizeof(*objects), GFP_KERNEL);
-	if (!objects)
-		return -ENOMEM;
-
-	ret = mutex_lock_interruptible(&dev->struct_mutex);
-	if (ret)
-		goto out;
-
-	total_obj_size = total_gtt_size = count = 0;
-
-	spin_lock(&dev_priv->mm.obj_lock);
-	list_for_each_entry(obj, &dev_priv->mm.bound_list, mm.link) {
-		if (count == total)
-			break;
-
-		if (obj->stolen == NULL)
-			continue;
-
-		objects[count++] = obj;
-		total_obj_size += obj->base.size;
-		total_gtt_size += i915_gem_obj_total_ggtt_size(obj);
-
-	}
-	list_for_each_entry(obj, &dev_priv->mm.unbound_list, mm.link) {
-		if (count == total)
-			break;
-
-		if (obj->stolen == NULL)
-			continue;
-
-		objects[count++] = obj;
-		total_obj_size += obj->base.size;
-	}
-	spin_unlock(&dev_priv->mm.obj_lock);
-
-	sort(objects, count, sizeof(*objects), obj_rank_by_stolen, NULL);
-
-	seq_puts(m, "Stolen:\n");
-	for (n = 0; n < count; n++) {
-		seq_puts(m, "   ");
-		describe_obj(m, objects[n]);
-		seq_putc(m, '\n');
-	}
-	seq_printf(m, "Total %lu objects, %llu bytes, %llu GTT size\n",
-		   count, total_obj_size, total_gtt_size);
-
-	mutex_unlock(&dev->struct_mutex);
-out:
-	kvfree(objects);
-	return ret;
 }
 
 struct file_stats {
@@ -343,7 +258,7 @@ static int per_file_stats(int id, void *ptr, void *data)
 
 	stats->count++;
 	stats->total += obj->base.size;
-	if (!obj->bind_count)
+	if (!atomic_read(&obj->bind_count))
 		stats->unbound += obj->base.size;
 	if (obj->base.name || obj->base.dma_buf)
 		stats->shared += obj->base.size;
@@ -426,7 +341,7 @@ static void print_context_stats(struct seq_file *m,
 		i915_gem_context_unlock_engines(ctx);
 
 		if (!IS_ERR_OR_NULL(ctx->file_priv)) {
-			struct file_stats stats = { .vm = &ctx->ppgtt->vm, };
+			struct file_stats stats = { .vm = ctx->vm, };
 			struct drm_file *file = ctx->file_priv->file;
 			struct task_struct *task;
 			char name[80];
@@ -450,153 +365,22 @@ static void print_context_stats(struct seq_file *m,
 
 static int i915_gem_object_info(struct seq_file *m, void *data)
 {
-	struct drm_i915_private *dev_priv = node_to_i915(m->private);
-	struct drm_device *dev = &dev_priv->drm;
-	struct i915_ggtt *ggtt = &dev_priv->ggtt;
-	u32 count, mapped_count, purgeable_count, dpy_count, huge_count;
-	u64 size, mapped_size, purgeable_size, dpy_size, huge_size;
-	struct drm_i915_gem_object *obj;
-	unsigned int page_sizes = 0;
-	char buf[80];
+	struct drm_i915_private *i915 = node_to_i915(m->private);
 	int ret;
 
-	seq_printf(m, "%u objects, %llu bytes\n",
-		   dev_priv->mm.object_count,
-		   dev_priv->mm.object_memory);
-
-	size = count = 0;
-	mapped_size = mapped_count = 0;
-	purgeable_size = purgeable_count = 0;
-	huge_size = huge_count = 0;
-
-	spin_lock(&dev_priv->mm.obj_lock);
-	list_for_each_entry(obj, &dev_priv->mm.unbound_list, mm.link) {
-		size += obj->base.size;
-		++count;
-
-		if (obj->mm.madv == I915_MADV_DONTNEED) {
-			purgeable_size += obj->base.size;
-			++purgeable_count;
-		}
-
-		if (obj->mm.mapping) {
-			mapped_count++;
-			mapped_size += obj->base.size;
-		}
-
-		if (obj->mm.page_sizes.sg > I915_GTT_PAGE_SIZE) {
-			huge_count++;
-			huge_size += obj->base.size;
-			page_sizes |= obj->mm.page_sizes.sg;
-		}
-	}
-	seq_printf(m, "%u unbound objects, %llu bytes\n", count, size);
-
-	size = count = dpy_size = dpy_count = 0;
-	list_for_each_entry(obj, &dev_priv->mm.bound_list, mm.link) {
-		size += obj->base.size;
-		++count;
-
-		if (obj->pin_global) {
-			dpy_size += obj->base.size;
-			++dpy_count;
-		}
-
-		if (obj->mm.madv == I915_MADV_DONTNEED) {
-			purgeable_size += obj->base.size;
-			++purgeable_count;
-		}
-
-		if (obj->mm.mapping) {
-			mapped_count++;
-			mapped_size += obj->base.size;
-		}
-
-		if (obj->mm.page_sizes.sg > I915_GTT_PAGE_SIZE) {
-			huge_count++;
-			huge_size += obj->base.size;
-			page_sizes |= obj->mm.page_sizes.sg;
-		}
-	}
-	spin_unlock(&dev_priv->mm.obj_lock);
-
-	seq_printf(m, "%u bound objects, %llu bytes\n",
-		   count, size);
-	seq_printf(m, "%u purgeable objects, %llu bytes\n",
-		   purgeable_count, purgeable_size);
-	seq_printf(m, "%u mapped objects, %llu bytes\n",
-		   mapped_count, mapped_size);
-	seq_printf(m, "%u huge-paged objects (%s) %llu bytes\n",
-		   huge_count,
-		   stringify_page_sizes(page_sizes, buf, sizeof(buf)),
-		   huge_size);
-	seq_printf(m, "%u display objects (globally pinned), %llu bytes\n",
-		   dpy_count, dpy_size);
-
-	seq_printf(m, "%llu [%pa] gtt total\n",
-		   ggtt->vm.total, &ggtt->mappable_end);
-	seq_printf(m, "Supported page sizes: %s\n",
-		   stringify_page_sizes(INTEL_INFO(dev_priv)->page_sizes,
-					buf, sizeof(buf)));
+	seq_printf(m, "%u shrinkable objects, %llu bytes\n",
+		   i915->mm.shrink_count,
+		   i915->mm.shrink_memory);
 
 	seq_putc(m, '\n');
 
-	ret = mutex_lock_interruptible(&dev->struct_mutex);
+	ret = mutex_lock_interruptible(&i915->drm.struct_mutex);
 	if (ret)
 		return ret;
 
-	print_batch_pool_stats(m, dev_priv);
-	print_context_stats(m, dev_priv);
-	mutex_unlock(&dev->struct_mutex);
-
-	return 0;
-}
-
-static int i915_gem_gtt_info(struct seq_file *m, void *data)
-{
-	struct drm_info_node *node = m->private;
-	struct drm_i915_private *dev_priv = node_to_i915(node);
-	struct drm_device *dev = &dev_priv->drm;
-	struct drm_i915_gem_object **objects;
-	struct drm_i915_gem_object *obj;
-	u64 total_obj_size, total_gtt_size;
-	unsigned long nobject, n;
-	int count, ret;
-
-	nobject = READ_ONCE(dev_priv->mm.object_count);
-	objects = kvmalloc_array(nobject, sizeof(*objects), GFP_KERNEL);
-	if (!objects)
-		return -ENOMEM;
-
-	ret = mutex_lock_interruptible(&dev->struct_mutex);
-	if (ret)
-		return ret;
-
-	count = 0;
-	spin_lock(&dev_priv->mm.obj_lock);
-	list_for_each_entry(obj, &dev_priv->mm.bound_list, mm.link) {
-		objects[count++] = obj;
-		if (count == nobject)
-			break;
-	}
-	spin_unlock(&dev_priv->mm.obj_lock);
-
-	total_obj_size = total_gtt_size = 0;
-	for (n = 0;  n < count; n++) {
-		obj = objects[n];
-
-		seq_puts(m, "   ");
-		describe_obj(m, obj);
-		seq_putc(m, '\n');
-		total_obj_size += obj->base.size;
-		total_gtt_size += i915_gem_obj_total_ggtt_size(obj);
-	}
-
-	mutex_unlock(&dev->struct_mutex);
-
-	seq_printf(m, "Total %d objects, %llu bytes, %llu GTT size\n",
-		   count, total_obj_size, total_gtt_size);
-	kvfree(objects);
+	print_batch_pool_stats(m, i915);
+	print_context_stats(m, i915);
+	mutex_unlock(&i915->drm.struct_mutex);
 
 	return 0;
 }
@@ -919,28 +703,25 @@ static int i915_interrupt_info(struct seq_file *m, void *data)
 
 static int i915_gem_fence_regs_info(struct seq_file *m, void *data)
 {
-	struct drm_i915_private *dev_priv = node_to_i915(m->private);
-	struct drm_device *dev = &dev_priv->drm;
-	int i, ret;
+	struct drm_i915_private *i915 = node_to_i915(m->private);
+	unsigned int i;
 
-	ret = mutex_lock_interruptible(&dev->struct_mutex);
-	if (ret)
-		return ret;
+	seq_printf(m, "Total fences = %d\n", i915->ggtt.num_fences);
 
-	seq_printf(m, "Total fences = %d\n", dev_priv->num_fence_regs);
-	for (i = 0; i < dev_priv->num_fence_regs; i++) {
-		struct i915_vma *vma = dev_priv->fence_regs[i].vma;
+	rcu_read_lock();
+	for (i = 0; i < i915->ggtt.num_fences; i++) {
+		struct i915_vma *vma = i915->ggtt.fence_regs[i].vma;
 
 		seq_printf(m, "Fence %d, pin count = %d, object = ",
-			   i, dev_priv->fence_regs[i].pin_count);
+			   i, i915->ggtt.fence_regs[i].pin_count);
 		if (!vma)
 			seq_puts(m, "unused");
 		else
 			describe_obj(m, vma->obj);
 		seq_putc(m, '\n');
 	}
+	rcu_read_unlock();
 
-	mutex_unlock(&dev->struct_mutex);
 	return 0;
 }
 
@@ -1047,6 +828,7 @@ static const struct file_operations i915_error_state_fops = {
 static int i915_frequency_info(struct seq_file *m, void *unused)
 {
 	struct drm_i915_private *dev_priv = node_to_i915(m->private);
+	struct intel_uncore *uncore = &dev_priv->uncore;
 	struct intel_rps *rps = &dev_priv->gt_pm.rps;
 	intel_wakeref_t wakeref;
 	int ret = 0;
@@ -1054,8 +836,8 @@ static int i915_frequency_info(struct seq_file *m, void *unused)
 	wakeref = intel_runtime_pm_get(dev_priv);
 
 	if (IS_GEN(dev_priv, 5)) {
-		u16 rgvswctl = I915_READ16(MEMSWCTL);
-		u16 rgvstat = I915_READ16(MEMSTAT_ILK);
+		u16 rgvswctl = intel_uncore_read16(uncore, MEMSWCTL);
+		u16 rgvstat = intel_uncore_read16(uncore, MEMSTAT_ILK);
 
 		seq_printf(m, "Requested P-state: %d\n", (rgvswctl >> 8) & 0xf);
 		seq_printf(m, "Requested VID: %d\n", rgvswctl & 0x3f);
@@ -1377,13 +1159,14 @@ static int i915_reset_info(struct seq_file *m, void *unused)
 
 static int ironlake_drpc_info(struct seq_file *m)
 {
-	struct drm_i915_private *dev_priv = node_to_i915(m->private);
+	struct drm_i915_private *i915 = node_to_i915(m->private);
+	struct intel_uncore *uncore = &i915->uncore;
 	u32 rgvmodectl, rstdbyctl;
 	u16 crstandvid;
 
-	rgvmodectl = I915_READ(MEMMODECTL);
-	rstdbyctl = I915_READ(RSTDBYCTL);
-	crstandvid = I915_READ16(CRSTANDVID);
+	rgvmodectl = intel_uncore_read(uncore, MEMMODECTL);
+	rstdbyctl = intel_uncore_read(uncore, RSTDBYCTL);
+	crstandvid = intel_uncore_read16(uncore, CRSTANDVID);
 
 	seq_printf(m, "HD boost: %s\n", yesno(rgvmodectl & MEMMODE_BOOST_EN));
 	seq_printf(m, "Boost freq: %d\n",
@@ -1500,7 +1283,7 @@ static int gen6_drpc_info(struct seq_file *m)
 
 	if (INTEL_GEN(dev_priv) <= 7)
 		sandybridge_pcode_read(dev_priv, GEN6_PCODE_READ_RC6VIDS,
-				       &rc6vids);
+				       &rc6vids, NULL);
 
 	seq_printf(m, "RC1e Enabled: %s\n",
 		   yesno(rcctl1 & GEN6_RC_CTL_RC1e_ENABLE));
@@ -1783,7 +1566,7 @@ static int i915_ring_freq_table(struct seq_file *m, void *unused)
 		ia_freq = gpu_freq;
 		sandybridge_pcode_read(dev_priv,
 				       GEN6_PCODE_READ_MIN_FREQ_TABLE,
-				       &ia_freq);
+				       &ia_freq, NULL);
 		seq_printf(m, "%d\t\t%d\t\t\t\t%d\n",
 			   intel_gpu_freq(dev_priv, (gpu_freq *
 						     (IS_GEN9_BC(dev_priv) ||
@@ -1966,6 +1749,7 @@ static const char *swizzle_string(unsigned swizzle)
 static int i915_swizzle_info(struct seq_file *m, void *data)
 {
 	struct drm_i915_private *dev_priv = node_to_i915(m->private);
+	struct intel_uncore *uncore = &dev_priv->uncore;
 	intel_wakeref_t wakeref;
 
 	wakeref = intel_runtime_pm_get(dev_priv);
@@ -1977,30 +1761,30 @@ static int i915_swizzle_info(struct seq_file *m, void *data)
 
 	if (IS_GEN_RANGE(dev_priv, 3, 4)) {
 		seq_printf(m, "DDC = 0x%08x\n",
-			   I915_READ(DCC));
+			   intel_uncore_read(uncore, DCC));
 		seq_printf(m, "DDC2 = 0x%08x\n",
-			   I915_READ(DCC2));
+			   intel_uncore_read(uncore, DCC2));
 		seq_printf(m, "C0DRB3 = 0x%04x\n",
-			   I915_READ16(C0DRB3));
+			   intel_uncore_read16(uncore, C0DRB3));
 		seq_printf(m, "C1DRB3 = 0x%04x\n",
-			   I915_READ16(C1DRB3));
+			   intel_uncore_read16(uncore, C1DRB3));
 	} else if (INTEL_GEN(dev_priv) >= 6) {
 		seq_printf(m, "MAD_DIMM_C0 = 0x%08x\n",
-			   I915_READ(MAD_DIMM_C0));
+			   intel_uncore_read(uncore, MAD_DIMM_C0));
 		seq_printf(m, "MAD_DIMM_C1 = 0x%08x\n",
-			   I915_READ(MAD_DIMM_C1));
+			   intel_uncore_read(uncore, MAD_DIMM_C1));
 		seq_printf(m, "MAD_DIMM_C2 = 0x%08x\n",
-			   I915_READ(MAD_DIMM_C2));
+			   intel_uncore_read(uncore, MAD_DIMM_C2));
 		seq_printf(m, "TILECTL = 0x%08x\n",
-			   I915_READ(TILECTL));
+			   intel_uncore_read(uncore, TILECTL));
 		if (INTEL_GEN(dev_priv) >= 8)
 			seq_printf(m, "GAMTARBMODE = 0x%08x\n",
-				   I915_READ(GAMTARBMODE));
+				   intel_uncore_read(uncore, GAMTARBMODE));
 		else
 			seq_printf(m, "ARB_MODE = 0x%08x\n",
-				   I915_READ(ARB_MODE));
+				   intel_uncore_read(uncore, ARB_MODE));
 		seq_printf(m, "DISP_ARB_CTL = 0x%08x\n",
-			   I915_READ(DISP_ARB_CTL));
+			   intel_uncore_read(uncore, DISP_ARB_CTL));
 	}
 
 	if (dev_priv->quirks & QUIRK_PIN_SWIZZLED_PAGES)
@@ -4176,7 +3960,7 @@ static void broadwell_sseu_device_status(struct drm_i915_private *dev_priv,
 				RUNTIME_INFO(dev_priv)->sseu.subslice_mask[s];
 		}
 		sseu->eu_total = sseu->eu_per_subslice *
-				 sseu_subslice_total(sseu);
+				 intel_sseu_subslice_total(sseu);
 
 		/* subtract fused off EU(s) from enabled slice(s) */
 		for (s = 0; s < fls(sseu->slice_mask); s++) {
@@ -4200,10 +3984,10 @@ static void i915_print_sseu_info(struct seq_file *m, bool is_available_info,
 	seq_printf(m, "  %s Slice Total: %u\n", type,
 		   hweight8(sseu->slice_mask));
 	seq_printf(m, "  %s Subslice Total: %u\n", type,
-		   sseu_subslice_total(sseu));
+		   intel_sseu_subslice_total(sseu));
 	for (s = 0; s < fls(sseu->slice_mask); s++) {
 		seq_printf(m, "  %s Slice%i subslices: %u\n", type,
-			   s, hweight8(sseu->subslice_mask[s]));
+			   s, intel_sseu_subslices_per_slice(sseu, s));
 	}
 	seq_printf(m, "  %s EU Total: %u\n", type,
 		   sseu->eu_total);
@@ -4582,8 +4366,6 @@ static const struct file_operations i915_fifo_underrun_reset_ops = {
 static const struct drm_info_list i915_debugfs_list[] = {
 	{"i915_capabilities", i915_capabilities, 0},
 	{"i915_gem_objects", i915_gem_object_info, 0},
-	{"i915_gem_gtt", i915_gem_gtt_info, 0},
-	{"i915_gem_stolen", i915_gem_stolen_list_info },
 	{"i915_gem_fence_regs", i915_gem_fence_regs_info, 0},
 	{"i915_gem_interrupt", i915_interrupt_info, 0},
 	{"i915_gem_batch_pool", i915_gem_batch_pool_info, 0},
