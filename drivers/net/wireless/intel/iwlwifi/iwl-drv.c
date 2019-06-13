@@ -1604,8 +1604,8 @@ err_fw:
 err_free_dbgfs:
 	debugfs_remove_recursive(drv->dbgfs_drv);
 err_free_tlv:
-	iwl_fw_dbg_free(drv->trans);
 #endif
+	iwl_fw_dbg_free(drv->trans);
 	kfree(drv);
 err:
 	return ERR_PTR(ret);
