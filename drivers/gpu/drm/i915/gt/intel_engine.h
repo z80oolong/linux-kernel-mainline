@@ -52,6 +52,7 @@ struct drm_printer;
 #define ENGINE_READ(...)	__ENGINE_READ_OP(read, __VA_ARGS__)
 #define ENGINE_READ_FW(...)	__ENGINE_READ_OP(read_fw, __VA_ARGS__)
 #define ENGINE_POSTING_READ(...) __ENGINE_READ_OP(posting_read, __VA_ARGS__)
+#define ENGINE_POSTING_READ16(...) __ENGINE_READ_OP(posting_read16, __VA_ARGS__)
 
 #define ENGINE_READ64(engine__, lower_reg__, upper_reg__) \
 	__ENGINE_REG_OP(read64_2x32, (engine__), \
@@ -67,6 +68,24 @@ struct drm_printer;
 #define ENGINE_WRITE16(...)	__ENGINE_WRITE_OP(write16, __VA_ARGS__)
 #define ENGINE_WRITE(...)	__ENGINE_WRITE_OP(write, __VA_ARGS__)
 #define ENGINE_WRITE_FW(...)	__ENGINE_WRITE_OP(write_fw, __VA_ARGS__)
+
+#define GEN6_RING_FAULT_REG_READ(engine__) \
+	intel_uncore_read((engine__)->uncore, RING_FAULT_REG(engine__))
+
+#define GEN6_RING_FAULT_REG_POSTING_READ(engine__) \
+	intel_uncore_posting_read((engine__)->uncore, RING_FAULT_REG(engine__))
+
+#define GEN6_RING_FAULT_REG_RMW(engine__, clear__, set__) \
+({ \
+	u32 __val; \
+\
+	__val = intel_uncore_read((engine__)->uncore, \
+				  RING_FAULT_REG(engine__)); \
+	__val &= ~(clear__); \
+	__val |= (set__); \
+	intel_uncore_write((engine__)->uncore, RING_FAULT_REG(engine__), \
+			   __val); \
+})
 
 /* seqno size is actually only a uint32, but since we plan to use MI_FLUSH_DW to
  * do the writes, and that must have qw aligned offsets, simply pretend it's 8b.
@@ -106,70 +125,25 @@ hangcheck_action_to_str(const enum intel_engine_hangcheck_action a)
 
 void intel_engines_set_scheduler_caps(struct drm_i915_private *i915);
 
-static inline void
-execlists_set_active(struct intel_engine_execlists *execlists,
-		     unsigned int bit)
-{
-	__set_bit(bit, (unsigned long *)&execlists->active);
-}
-
-static inline bool
-execlists_set_active_once(struct intel_engine_execlists *execlists,
-			  unsigned int bit)
-{
-	return !__test_and_set_bit(bit, (unsigned long *)&execlists->active);
-}
-
-static inline void
-execlists_clear_active(struct intel_engine_execlists *execlists,
-		       unsigned int bit)
-{
-	__clear_bit(bit, (unsigned long *)&execlists->active);
-}
-
-static inline void
-execlists_clear_all_active(struct intel_engine_execlists *execlists)
-{
-	execlists->active = 0;
-}
-
-static inline bool
-execlists_is_active(const struct intel_engine_execlists *execlists,
-		    unsigned int bit)
-{
-	return test_bit(bit, (unsigned long *)&execlists->active);
-}
-
-void execlists_user_begin(struct intel_engine_execlists *execlists,
-			  const struct execlist_port *port);
-void execlists_user_end(struct intel_engine_execlists *execlists);
-
-void
-execlists_cancel_port_requests(struct intel_engine_execlists * const execlists);
-
-struct i915_request *
-execlists_unwind_incomplete_requests(struct intel_engine_execlists *execlists);
-
 static inline unsigned int
 execlists_num_ports(const struct intel_engine_execlists * const execlists)
 {
 	return execlists->port_mask + 1;
 }
 
-static inline struct execlist_port *
-execlists_port_complete(struct intel_engine_execlists * const execlists,
-			struct execlist_port * const port)
+static inline struct i915_request *
+execlists_active(const struct intel_engine_execlists *execlists)
 {
-	const unsigned int m = execlists->port_mask;
-
-	GEM_BUG_ON(port_index(port, execlists) != 0);
-	GEM_BUG_ON(!execlists_is_active(execlists, EXECLISTS_ACTIVE_USER));
-
-	memmove(port, port + 1, m * sizeof(struct execlist_port));
-	memset(port + m, 0, sizeof(struct execlist_port));
-
-	return port;
+	GEM_BUG_ON(execlists->active - execlists->inflight >
+		   execlists_num_ports(execlists));
+	return READ_ONCE(*execlists->active);
 }
+
+void
+execlists_cancel_port_requests(struct intel_engine_execlists * const execlists);
+
+struct i915_request *
+execlists_unwind_incomplete_requests(struct intel_engine_execlists *execlists);
 
 static inline u32
 intel_read_status_page(const struct intel_engine_cs *engine, int reg)
@@ -448,8 +422,6 @@ static inline void intel_engine_reset(struct intel_engine_cs *engine,
 bool intel_engine_is_idle(struct intel_engine_cs *engine);
 bool intel_engines_are_idle(struct drm_i915_private *dev_priv);
 
-void intel_engine_lost_context(struct intel_engine_cs *engine);
-
 void intel_engines_reset_default_submission(struct drm_i915_private *i915);
 unsigned int intel_engines_has_context_isolation(struct drm_i915_private *i915);
 
@@ -526,6 +498,8 @@ ktime_t intel_engine_get_busy_time(struct intel_engine_cs *engine);
 struct i915_request *
 intel_engine_find_active_request(struct intel_engine_cs *engine);
 
+u32 intel_engine_context_size(struct drm_i915_private *i915, u8 class);
+
 #if IS_ENABLED(CONFIG_DRM_I915_SELFTEST)
 
 static inline bool inject_preempt_hang(struct intel_engine_execlists *execlists)
@@ -545,5 +519,11 @@ static inline bool inject_preempt_hang(struct intel_engine_execlists *execlists)
 }
 
 #endif
+
+void intel_engine_init_active(struct intel_engine_cs *engine,
+			      unsigned int subclass);
+#define ENGINE_PHYSICAL	0
+#define ENGINE_MOCK	1
+#define ENGINE_VIRTUAL	2
 
 #endif /* _INTEL_RINGBUFFER_H_ */

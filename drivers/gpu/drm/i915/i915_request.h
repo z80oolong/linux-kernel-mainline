@@ -28,6 +28,7 @@
 #include <linux/dma-fence.h>
 #include <linux/lockdep.h>
 
+#include "gt/intel_context_types.h"
 #include "gt/intel_engine_types.h"
 
 #include "i915_gem.h"
@@ -217,7 +218,7 @@ struct i915_request {
 
 	bool waitboost;
 
-	/** engine->request_list entry for this request */
+	/** timeline->request entry for this request */
 	struct list_head link;
 
 	/** ring->request_list entry for this request */

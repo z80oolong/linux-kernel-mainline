@@ -11,6 +11,8 @@
 #include <linux/irq_work.h>
 #include <linux/kref.h>
 #include <linux/list.h>
+#include <linux/llist.h>
+#include <linux/timer.h>
 #include <linux/types.h>
 
 #include "i915_gem.h"
@@ -29,6 +31,7 @@
 #define I915_CMD_HASH_ORDER 9
 
 struct dma_fence;
+struct drm_i915_gem_object;
 struct drm_i915_reg_table;
 struct i915_gem_context;
 struct i915_request;
@@ -67,6 +70,18 @@ struct intel_ring {
 	struct i915_timeline *timeline;
 	struct list_head request_list;
 	struct list_head active_link;
+
+	/*
+	 * As we have two types of rings, one global to the engine used
+	 * by ringbuffer submission and those that are exclusive to a
+	 * context used by execlists, we have to play safe and allow
+	 * atomic updates to the pin_count. However, the actual pinning
+	 * of the context is either done during initialisation for
+	 * ringbuffer submission or serialised as part of the context
+	 * pinning for execlists, and so we do not need a mutex ourselves
+	 * to serialise intel_ring_pin/intel_ring_unpin.
+	 */
+	atomic_t pin_count;
 
 	u32 head;
 	u32 tail;
@@ -136,6 +151,11 @@ struct intel_engine_execlists {
 	struct tasklet_struct tasklet;
 
 	/**
+	 * @timer: kick the current context if its timeslice expires
+	 */
+	struct timer_list timer;
+
+	/**
 	 * @default_priolist: priority list for I915_PRIORITY_NORMAL
 	 */
 	struct i915_priolist default_priolist;
@@ -158,51 +178,28 @@ struct intel_engine_execlists {
 	 */
 	u32 __iomem *ctrl_reg;
 
-	/**
-	 * @port: execlist port states
-	 *
-	 * For each hardware ELSP (ExecList Submission Port) we keep
-	 * track of the last request and the number of times we submitted
-	 * that port to hw. We then count the number of times the hw reports
-	 * a context completion or preemption. As only one context can
-	 * be active on hw, we limit resubmission of context to port[0]. This
-	 * is called Lite Restore, of the context.
-	 */
-	struct execlist_port {
-		/**
-		 * @request_count: combined request and submission count
-		 */
-		struct i915_request *request_count;
-#define EXECLIST_COUNT_BITS 2
-#define port_request(p) ptr_mask_bits((p)->request_count, EXECLIST_COUNT_BITS)
-#define port_count(p) ptr_unmask_bits((p)->request_count, EXECLIST_COUNT_BITS)
-#define port_pack(rq, count) ptr_pack_bits(rq, count, EXECLIST_COUNT_BITS)
-#define port_unpack(p, count) ptr_unpack_bits((p)->request_count, count, EXECLIST_COUNT_BITS)
-#define port_set(p, packed) ((p)->request_count = (packed))
-#define port_isset(p) ((p)->request_count)
-#define port_index(p, execlists) ((p) - (execlists)->port)
-
-		/**
-		 * @context_id: context ID for port
-		 */
-		GEM_DEBUG_DECL(u32 context_id);
-
 #define EXECLIST_MAX_PORTS 2
-	} port[EXECLIST_MAX_PORTS];
-
 	/**
-	 * @active: is the HW active? We consider the HW as active after
-	 * submitting any context for execution and until we have seen the
-	 * last context completion event. After that, we do not expect any
-	 * more events until we submit, and so can park the HW.
-	 *
-	 * As we have a small number of different sources from which we feed
-	 * the HW, we track the state of each inside a single bitfield.
+	 * @active: the currently known context executing on HW
 	 */
-	unsigned int active;
-#define EXECLISTS_ACTIVE_USER 0
-#define EXECLISTS_ACTIVE_PREEMPT 1
-#define EXECLISTS_ACTIVE_HWACK 2
+	struct i915_request * const *active;
+	/**
+	 * @inflight: the set of contexts submitted and acknowleged by HW
+	 *
+	 * The set of inflight contexts is managed by reading CS events
+	 * from the HW. On a context-switch event (not preemption), we
+	 * know the HW has transitioned from port0 to port1, and we
+	 * advance our inflight/active tracking accordingly.
+	 */
+	struct i915_request *inflight[EXECLIST_MAX_PORTS + 1 /* sentinel */];
+	/**
+	 * @pending: the next set of contexts submitted to ELSP
+	 *
+	 * We store the array of contexts that we submit to HW (via ELSP) and
+	 * promote them to the inflight array once HW has signaled the
+	 * preemption or idle-to-active event.
+	 */
+	struct i915_request *pending[EXECLIST_MAX_PORTS + 1];
 
 	/**
 	 * @port_mask: number of execlist ports - 1
@@ -244,11 +241,6 @@ struct intel_engine_execlists {
 	u32 *csb_status;
 
 	/**
-	 * @preempt_complete_status: expected CSB upon completing preemption
-	 */
-	u32 preempt_complete_status;
-
-	/**
 	 * @csb_size: context status buffer FIFO size
 	 */
 	u8 csb_size;
@@ -286,10 +278,17 @@ struct intel_engine_cs {
 
 	struct intel_ring *buffer;
 
-	struct i915_timeline timeline;
+	struct {
+		spinlock_t lock;
+		struct list_head requests;
+	} active;
+
+	struct llist_head barrier_tasks;
 
 	struct intel_context *kernel_context; /* pinned */
 	struct intel_context *preempt_context; /* pinned; optional */
+
+	intel_engine_mask_t saturated; /* submitting semaphores too late? */
 
 	unsigned long serial;
 
@@ -433,17 +432,6 @@ struct intel_engine_cs {
 	void		(*destroy)(struct intel_engine_cs *engine);
 
 	struct intel_engine_execlists execlists;
-
-	/* Contexts are pinned whilst they are active on the GPU. The last
-	 * context executed remains active whilst the GPU is idle - the
-	 * switch away and write to the context object only occurs on the
-	 * next execution.  Contexts are only unpinned on retirement of the
-	 * following request ensuring that we can always write to the object
-	 * on the context switch even after idling. Across suspend, we switch
-	 * to the kernel context and trash it as the save may not happen
-	 * before the hardware is powered down.
-	 */
-	struct intel_context *last_retired_context;
 
 	/* status_notifier: list of callbacks for context-switch changes */
 	struct atomic_notifier_head context_status_notifier;

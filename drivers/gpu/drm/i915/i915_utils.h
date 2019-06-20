@@ -131,6 +131,18 @@ __check_struct_size(size_t base, size_t arr, size_t count, size_t *size)
 	((typeof(ptr))((unsigned long)(ptr) | __bits));			\
 })
 
+#define ptr_count_dec(p_ptr) do {					\
+	typeof(p_ptr) __p = (p_ptr);					\
+	unsigned long __v = (unsigned long)(*__p);			\
+	*__p = (typeof(*p_ptr))(--__v);					\
+} while (0)
+
+#define ptr_count_inc(p_ptr) do {					\
+	typeof(p_ptr) __p = (p_ptr);					\
+	unsigned long __v = (unsigned long)(*__p);			\
+	*__p = (typeof(*p_ptr))(++__v);					\
+} while (0)
+
 #define page_mask_bits(ptr) ptr_mask_bits(ptr, PAGE_SHIFT)
 #define page_unmask_bits(ptr) ptr_unmask_bits(ptr, PAGE_SHIFT)
 #define page_pack_bits(ptr, bits) ptr_pack_bits(ptr, bits, PAGE_SHIFT)
@@ -218,16 +230,6 @@ static inline unsigned long msecs_to_jiffies_timeout(const unsigned int m)
 	unsigned long j = msecs_to_jiffies(m);
 
 	return min_t(unsigned long, MAX_JIFFY_OFFSET, j + 1);
-}
-
-static inline unsigned long nsecs_to_jiffies_timeout(const u64 n)
-{
-	/* nsecs_to_jiffies64() does not guard against overflow */
-	if (NSEC_PER_SEC % HZ &&
-	    div_u64(n, NSEC_PER_SEC) >= MAX_JIFFY_OFFSET / HZ)
-		return MAX_JIFFY_OFFSET;
-
-        return min_t(u64, MAX_JIFFY_OFFSET, nsecs_to_jiffies64(n) + 1);
 }
 
 /*
