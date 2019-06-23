@@ -6,6 +6,7 @@
 
 #include <linux/prime_numbers.h>
 
+#include "gt/intel_gt.h"
 #include "gt/intel_gt_pm.h"
 #include "huge_gem_object.h"
 #include "i915_selftest.h"
@@ -143,7 +144,7 @@ static int check_partial_mapping(struct drm_i915_gem_object *obj,
 		if (offset >= obj->base.size)
 			continue;
 
-		i915_gem_flush_ggtt_writes(to_i915(obj->base.dev));
+		intel_gt_flush_ggtt_writes(&to_i915(obj->base.dev)->gt);
 
 		p = i915_gem_object_get_page(obj, offset >> PAGE_SHIFT);
 		cpu = kmap(p) + offset_in_page(offset);
@@ -473,15 +474,6 @@ static int igt_mmap_offset_exhaustion(void *arg)
 		if (err) {
 			pr_err("[loop %d] Failed to busy the object\n", loop);
 			goto err_obj;
-		}
-
-		/* NB we rely on the _active_ reference to access obj now */
-		GEM_BUG_ON(!i915_gem_object_is_active(obj));
-		err = create_mmap_offset(obj);
-		if (err) {
-			pr_err("[loop %d] create_mmap_offset failed with err=%d\n",
-			       loop, err);
-			goto out;
 		}
 	}
 
