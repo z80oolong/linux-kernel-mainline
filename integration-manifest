@@ -1,0 +1,32 @@
+drm drm-fixes 5eab9cf87b6c261f4e2f6c7623171cc2f5ea1a9c
+	Merge tag 'imx-drm-fixes-2019-06-20' of git://git.pengutronix.de/git/pza/linux into drm-fixes
+drm-misc drm-misc-fixes 5eab9cf87b6c261f4e2f6c7623171cc2f5ea1a9c
+	Merge tag 'imx-drm-fixes-2019-06-20' of git://git.pengutronix.de/git/pza/linux into drm-fixes
+drm-intel drm-intel-fixes 4b972a01a7da614b4796475f933094751a295a2f
+	Linux 5.2-rc6
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 80d42db02b3a5beb8cffba08207adf5f4c525ee3
+	drm/edid: use for_each_displayid_db where applicable
+drm-misc drm-misc-next-fixes b1622cb3be4557fd086831ca7426eafe5f1acc2e
+	drm/bridge: tfp410: fix use of cancel_delayed_work_sync
+drm-intel drm-intel-next-fixes c36beba6b296b3c05a0f29753b04775e5ae23886
+	drm/i915: Seal races between async GPU cancellation, retirement and signaling
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 2c6574a9ed666d6e00b0deac66be4b793097b0b7
+	drm/panel: simple: Add GiantPlus GPM940B0 panel support
+drm-intel drm-intel-next-queued c8d84778e52733cbbc05c1f3ea77635feb099642
+	drm/i915/selftests: Hold ref on request across waits
+drm-intel drm-intel-next 1ee008f240ad5401f683ec3b79a2e3b044a82a89
+	drm/i915: Update DRIVER_DATE to 20190619
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 503d90b30602a3295978e46d844ccc8167400fe6
+	ALSA: hda/realtek: Add quirks for several Clevo notebook barebones
+sound-upstream for-next 801ebf1043ae7b182588554cc9b9ad3c14bc2ab5
+	ALSA: usb-audio: Sanity checks for each pipe and EP types
+drm-intel topic/core-for-CI b1981e3655f63c0c352a1c28416884f97c604c4e
+	mm: Band aid for 5fd4ca2d84b249f0858ce28cf637cf25b61a398f
+drm-misc topic/remove-fbcon-notifiers 2443091408c267f84b40025183490486b79ee2cd
+	fbcon: Export fbcon_update_vcs
