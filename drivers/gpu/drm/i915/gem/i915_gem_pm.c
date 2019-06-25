@@ -38,7 +38,7 @@ static void i915_gem_park(struct drm_i915_private *i915)
 		i915_gem_batch_pool_fini(&engine->batch_pool);
 	}
 
-	i915_timelines_park(i915);
+	intel_timelines_park(i915);
 	i915_vma_parked(i915);
 
 	i915_globals_park();
@@ -54,7 +54,8 @@ static void idle_work_handler(struct work_struct *work)
 	mutex_lock(&i915->drm.struct_mutex);
 
 	intel_wakeref_lock(&i915->gt.wakeref);
-	park = !intel_wakeref_active(&i915->gt.wakeref) && !work_pending(work);
+	park = (!intel_wakeref_is_active(&i915->gt.wakeref) &&
+		!work_pending(work));
 	intel_wakeref_unlock(&i915->gt.wakeref);
 	if (park)
 		i915_gem_park(i915);
@@ -258,7 +259,7 @@ void i915_gem_resume(struct drm_i915_private *i915)
 	 * guarantee that the context image is complete. So let's just reset
 	 * it and start again.
 	 */
-	intel_gt_resume(i915);
+	intel_gt_resume(&i915->gt);
 
 	if (i915_gem_init_hw(i915))
 		goto err_wedged;

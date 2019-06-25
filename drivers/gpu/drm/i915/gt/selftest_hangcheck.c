@@ -25,6 +25,7 @@
 #include <linux/kthread.h>
 
 #include "gem/i915_gem_context.h"
+#include "gt/intel_gt.h"
 #include "intel_engine_pm.h"
 
 #include "i915_selftest.h"
@@ -43,6 +44,7 @@
 
 struct hang {
 	struct drm_i915_private *i915;
+	struct intel_gt *gt;
 	struct drm_i915_gem_object *hws;
 	struct drm_i915_gem_object *obj;
 	struct i915_gem_context *ctx;
@@ -128,34 +130,30 @@ static struct i915_request *
 hang_create_request(struct hang *h, struct intel_engine_cs *engine)
 {
 	struct drm_i915_private *i915 = h->i915;
-	struct i915_address_space *vm = h->ctx->vm ?: &i915->ggtt.vm;
+	struct i915_address_space *vm = h->ctx->vm ?: &engine->gt->ggtt->vm;
+	struct drm_i915_gem_object *obj;
 	struct i915_request *rq = NULL;
 	struct i915_vma *hws, *vma;
 	unsigned int flags;
+	void *vaddr;
 	u32 *batch;
 	int err;
 
-	if (i915_gem_object_is_active(h->obj)) {
-		struct drm_i915_gem_object *obj;
-		void *vaddr;
+	obj = i915_gem_object_create_internal(i915, PAGE_SIZE);
+	if (IS_ERR(obj))
+		return ERR_CAST(obj);
 
-		obj = i915_gem_object_create_internal(h->i915, PAGE_SIZE);
-		if (IS_ERR(obj))
-			return ERR_CAST(obj);
-
-		vaddr = i915_gem_object_pin_map(obj,
-						i915_coherent_map_type(h->i915));
-		if (IS_ERR(vaddr)) {
-			i915_gem_object_put(obj);
-			return ERR_CAST(vaddr);
-		}
-
-		i915_gem_object_unpin_map(h->obj);
-		i915_gem_object_put(h->obj);
-
-		h->obj = obj;
-		h->batch = vaddr;
+	vaddr = i915_gem_object_pin_map(obj, i915_coherent_map_type(i915));
+	if (IS_ERR(vaddr)) {
+		i915_gem_object_put(obj);
+		return ERR_CAST(vaddr);
 	}
+
+	i915_gem_object_unpin_map(h->obj);
+	i915_gem_object_put(h->obj);
+
+	h->obj = obj;
+	h->batch = vaddr;
 
 	vma = i915_vma_instance(h->obj, vm, NULL);
 	if (IS_ERR(vma))
@@ -242,7 +240,7 @@ hang_create_request(struct hang *h, struct intel_engine_cs *engine)
 		*batch++ = lower_32_bits(vma->node.start);
 	}
 	*batch++ = MI_BATCH_BUFFER_END; /* not reached */
-	i915_gem_chipset_flush(h->i915);
+	intel_gt_chipset_flush(engine->gt);
 
 	if (rq->engine->emit_init_breadcrumb) {
 		err = rq->engine->emit_init_breadcrumb(rq);
@@ -251,7 +249,7 @@ hang_create_request(struct hang *h, struct intel_engine_cs *engine)
 	}
 
 	flags = 0;
-	if (INTEL_GEN(vm->i915) <= 5)
+	if (INTEL_GEN(i915) <= 5)
 		flags |= I915_DISPATCH_SECURE;
 
 	err = rq->engine->emit_bb_start(rq, vma->node.start, PAGE_SIZE, flags);
@@ -276,7 +274,9 @@ static u32 hws_seqno(const struct hang *h, const struct i915_request *rq)
 static void hang_fini(struct hang *h)
 {
 	*h->batch = MI_BATCH_BUFFER_END;
-	i915_gem_chipset_flush(h->i915);
+
+	if (h->gt)
+		intel_gt_chipset_flush(h->gt);
 
 	i915_gem_object_unpin_map(h->obj);
 	i915_gem_object_put(h->obj);
@@ -333,7 +333,7 @@ static int igt_hang_sanitycheck(void *arg)
 		i915_request_get(rq);
 
 		*h.batch = MI_BATCH_BUFFER_END;
-		i915_gem_chipset_flush(i915);
+		intel_gt_chipset_flush(engine->gt);
 
 		i915_request_add(rq);
 
@@ -1509,7 +1509,7 @@ static int igt_reset_queue(void *arg)
 		pr_info("%s: Completed %d resets\n", engine->name, count);
 
 		*h.batch = MI_BATCH_BUFFER_END;
-		i915_gem_chipset_flush(i915);
+		intel_gt_chipset_flush(engine->gt);
 
 		i915_request_put(prev);
 

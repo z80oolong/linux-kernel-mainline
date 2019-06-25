@@ -15,6 +15,7 @@
 #include "i915_gpu_error.h"
 #include "i915_irq.h"
 #include "intel_engine_pm.h"
+#include "intel_gt.h"
 #include "intel_gt_pm.h"
 #include "intel_reset.h"
 
@@ -24,16 +25,6 @@
 
 /* XXX How to handle concurrent GGTT updates using tiling registers? */
 #define RESET_UNDER_STOP_MACHINE 0
-
-static void rmw_set(struct intel_uncore *uncore, i915_reg_t reg, u32 set)
-{
-	intel_uncore_rmw(uncore, reg, 0, set);
-}
-
-static void rmw_clear(struct intel_uncore *uncore, i915_reg_t reg, u32 clr)
-{
-	intel_uncore_rmw(uncore, reg, clr, 0);
-}
 
 static void rmw_set_fw(struct intel_uncore *uncore, i915_reg_t reg, u32 set)
 {
@@ -723,7 +714,7 @@ static void reset_prepare(struct drm_i915_private *i915)
 	struct intel_engine_cs *engine;
 	enum intel_engine_id id;
 
-	intel_gt_pm_get(i915);
+	intel_gt_pm_get(&i915->gt);
 	for_each_engine(engine, i915, id)
 		reset_prepare_engine(engine);
 
@@ -774,7 +765,7 @@ static void reset_finish(struct drm_i915_private *i915)
 		reset_finish_engine(engine);
 		intel_engine_signal_breadcrumbs(engine);
 	}
-	intel_gt_pm_put(i915);
+	intel_gt_pm_put(&i915->gt);
 }
 
 static void nop_submit_request(struct i915_request *request)
@@ -860,7 +851,7 @@ void i915_gem_set_wedged(struct drm_i915_private *i915)
 static bool __i915_gem_unset_wedged(struct drm_i915_private *i915)
 {
 	struct i915_gpu_error *error = &i915->gpu_error;
-	struct i915_timeline *tl;
+	struct intel_timeline *tl;
 
 	if (!test_bit(I915_WEDGED, &error->flags))
 		return true;
@@ -900,7 +891,7 @@ static bool __i915_gem_unset_wedged(struct drm_i915_private *i915)
 	}
 	mutex_unlock(&i915->gt.timelines.mutex);
 
-	intel_gt_sanitize(i915, false);
+	intel_gt_sanitize(&i915->gt, false);
 
 	/*
 	 * Undo nop_submit_request. We prevent all new i915 requests from
@@ -1081,7 +1072,7 @@ int i915_reset_engine(struct intel_engine_cs *engine, const char *msg)
 	GEM_TRACE("%s flags=%lx\n", engine->name, error->flags);
 	GEM_BUG_ON(!test_bit(I915_RESET_ENGINE + engine->id, &error->flags));
 
-	if (!intel_wakeref_active(&engine->wakeref))
+	if (!intel_engine_pm_is_awake(engine))
 		return 0;
 
 	reset_prepare_engine(engine);
@@ -1157,119 +1148,6 @@ static void i915_reset_device(struct drm_i915_private *i915,
 		kobject_uevent_env(kobj, KOBJ_CHANGE, reset_done_event);
 }
 
-static void clear_register(struct intel_uncore *uncore, i915_reg_t reg)
-{
-	intel_uncore_rmw(uncore, reg, 0, 0);
-}
-
-static void gen8_clear_engine_error_register(struct intel_engine_cs *engine)
-{
-	GEN6_RING_FAULT_REG_RMW(engine, RING_FAULT_VALID, 0);
-	GEN6_RING_FAULT_REG_POSTING_READ(engine);
-}
-
-static void clear_error_registers(struct drm_i915_private *i915,
-				  intel_engine_mask_t engine_mask)
-{
-	struct intel_uncore *uncore = &i915->uncore;
-	u32 eir;
-
-	if (!IS_GEN(i915, 2))
-		clear_register(uncore, PGTBL_ER);
-
-	if (INTEL_GEN(i915) < 4)
-		clear_register(uncore, IPEIR(RENDER_RING_BASE));
-	else
-		clear_register(uncore, IPEIR_I965);
-
-	clear_register(uncore, EIR);
-	eir = intel_uncore_read(uncore, EIR);
-	if (eir) {
-		/*
-		 * some errors might have become stuck,
-		 * mask them.
-		 */
-		DRM_DEBUG_DRIVER("EIR stuck: 0x%08x, masking\n", eir);
-		rmw_set(uncore, EMR, eir);
-		intel_uncore_write(uncore, GEN2_IIR,
-				   I915_MASTER_ERROR_INTERRUPT);
-	}
-
-	if (INTEL_GEN(i915) >= 8) {
-		rmw_clear(uncore, GEN8_RING_FAULT_REG, RING_FAULT_VALID);
-		intel_uncore_posting_read(uncore, GEN8_RING_FAULT_REG);
-	} else if (INTEL_GEN(i915) >= 6) {
-		struct intel_engine_cs *engine;
-		enum intel_engine_id id;
-
-		for_each_engine_masked(engine, i915, engine_mask, id)
-			gen8_clear_engine_error_register(engine);
-	}
-}
-
-static void gen6_check_faults(struct drm_i915_private *dev_priv)
-{
-	struct intel_engine_cs *engine;
-	enum intel_engine_id id;
-	u32 fault;
-
-	for_each_engine(engine, dev_priv, id) {
-		fault = GEN6_RING_FAULT_REG_READ(engine);
-		if (fault & RING_FAULT_VALID) {
-			DRM_DEBUG_DRIVER("Unexpected fault\n"
-					 "\tAddr: 0x%08lx\n"
-					 "\tAddress space: %s\n"
-					 "\tSource ID: %d\n"
-					 "\tType: %d\n",
-					 fault & PAGE_MASK,
-					 fault & RING_FAULT_GTTSEL_MASK ? "GGTT" : "PPGTT",
-					 RING_FAULT_SRCID(fault),
-					 RING_FAULT_FAULT_TYPE(fault));
-		}
-	}
-}
-
-static void gen8_check_faults(struct drm_i915_private *dev_priv)
-{
-	u32 fault = I915_READ(GEN8_RING_FAULT_REG);
-
-	if (fault & RING_FAULT_VALID) {
-		u32 fault_data0, fault_data1;
-		u64 fault_addr;
-
-		fault_data0 = I915_READ(GEN8_FAULT_TLB_DATA0);
-		fault_data1 = I915_READ(GEN8_FAULT_TLB_DATA1);
-		fault_addr = ((u64)(fault_data1 & FAULT_VA_HIGH_BITS) << 44) |
-			     ((u64)fault_data0 << 12);
-
-		DRM_DEBUG_DRIVER("Unexpected fault\n"
-				 "\tAddr: 0x%08x_%08x\n"
-				 "\tAddress space: %s\n"
-				 "\tEngine ID: %d\n"
-				 "\tSource ID: %d\n"
-				 "\tType: %d\n",
-				 upper_32_bits(fault_addr),
-				 lower_32_bits(fault_addr),
-				 fault_data1 & FAULT_GTT_SEL ? "GGTT" : "PPGTT",
-				 GEN8_RING_FAULT_ENGINE_ID(fault),
-				 RING_FAULT_SRCID(fault),
-				 RING_FAULT_FAULT_TYPE(fault));
-	}
-}
-
-void i915_check_and_clear_faults(struct drm_i915_private *i915)
-{
-	/* From GEN8 onwards we only have one 'All Engine Fault Register' */
-	if (INTEL_GEN(i915) >= 8)
-		gen8_check_faults(i915);
-	else if (INTEL_GEN(i915) >= 6)
-		gen6_check_faults(i915);
-	else
-		return;
-
-	clear_error_registers(i915, ALL_ENGINES);
-}
-
 /**
  * i915_handle_error - handle a gpu error
  * @i915: i915 device private
@@ -1318,7 +1196,7 @@ void i915_handle_error(struct drm_i915_private *i915,
 
 	if (flags & I915_ERROR_CAPTURE) {
 		i915_capture_error_state(i915, engine_mask, msg);
-		clear_error_registers(i915, engine_mask);
+		intel_gt_clear_error_registers(&i915->gt, engine_mask);
 	}
 
 	/*
