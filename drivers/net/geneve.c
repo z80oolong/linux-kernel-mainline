@@ -627,15 +627,19 @@ static int geneve_open(struct net_device *dev)
 	struct geneve_dev *geneve = netdev_priv(dev);
 	bool ipv6 = geneve->remote.sa.sa_family == AF_INET6;
 	bool metadata = geneve->collect_md;
+	bool ipv4 = !ipv6 || metadata;
 	int ret = 0;
 
 	geneve->sock4 = NULL;
 #if IS_ENABLED(CONFIG_IPV6)
 	geneve->sock6 = NULL;
-	if (ipv6 || metadata)
+	if (ipv6) {
 		ret = geneve_sock_add(geneve, true);
+		if (ret < 0 && ret != -EAFNOSUPPORT)
+			ipv4 = false;
+	}
 #endif
-	if (!ret && (!ipv6 || metadata))
+	if (ipv4)
 		ret = geneve_sock_add(geneve, false);
 	if (ret < 0)
 		geneve_sock_release(geneve);
