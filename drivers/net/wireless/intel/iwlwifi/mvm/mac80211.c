@@ -184,11 +184,11 @@ static const struct iwl_fw_bcast_filter iwl_mvm_default_bcast_filters[] = {
 };
 #endif
 
-static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
-			       enum set_key_cmd cmd,
-			       struct ieee80211_vif *vif,
-			       struct ieee80211_sta *sta,
-			       struct ieee80211_key_conf *key);
+static int __iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
+				 enum set_key_cmd cmd,
+				 struct ieee80211_vif *vif,
+				 struct ieee80211_sta *sta,
+				 struct ieee80211_key_conf *key);
 
 void iwl_mvm_ref(struct iwl_mvm *mvm, enum iwl_mvm_ref_type ref_type)
 {
@@ -2422,7 +2422,7 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
 
 		mvmvif->ap_early_keys[i] = NULL;
 
-		ret = iwl_mvm_mac_set_key(hw, SET_KEY, vif, NULL, key);
+		ret = __iwl_mvm_mac_set_key(hw, SET_KEY, vif, NULL, key);
 		if (ret)
 			goto out_quota_failed;
 	}
@@ -3195,11 +3195,11 @@ static int iwl_mvm_mac_sched_scan_stop(struct ieee80211_hw *hw,
 	return ret;
 }
 
-static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
-			       enum set_key_cmd cmd,
-			       struct ieee80211_vif *vif,
-			       struct ieee80211_sta *sta,
-			       struct ieee80211_key_conf *key)
+static int __iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
+				 enum set_key_cmd cmd,
+				 struct ieee80211_vif *vif,
+				 struct ieee80211_sta *sta,
+				 struct ieee80211_key_conf *key)
 {
 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
@@ -3261,8 +3261,6 @@ static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
 		else
 			return -EOPNOTSUPP;
 	}
-
-	mutex_lock(&mvm->mutex);
 
 	switch (cmd) {
 	case SET_KEY:
@@ -3404,7 +3402,22 @@ static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
 		ret = -EINVAL;
 	}
 
+	return ret;
+}
+
+static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
+			       enum set_key_cmd cmd,
+			       struct ieee80211_vif *vif,
+			       struct ieee80211_sta *sta,
+			       struct ieee80211_key_conf *key)
+{
+	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
+	int ret;
+
+	mutex_lock(&mvm->mutex);
+	ret = __iwl_mvm_mac_set_key(hw, cmd, vif, sta, key);
 	mutex_unlock(&mvm->mutex);
+
 	return ret;
 }
 
