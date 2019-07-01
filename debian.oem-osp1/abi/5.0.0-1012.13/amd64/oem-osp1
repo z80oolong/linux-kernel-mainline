@@ -5513,6 +5513,7 @@ EXPORT_SYMBOL sound/soc/sof/intel/snd-sof-intel-hda 0x00000000	hda_codec_i915_ex
 EXPORT_SYMBOL sound/soc/sof/intel/snd-sof-intel-hda 0x00000000	hda_codec_i915_get
 EXPORT_SYMBOL sound/soc/sof/intel/snd-sof-intel-hda 0x00000000	hda_codec_i915_init
 EXPORT_SYMBOL sound/soc/sof/intel/snd-sof-intel-hda 0x00000000	hda_codec_i915_put
+EXPORT_SYMBOL sound/soc/sof/intel/snd-sof-intel-hda 0x00000000	hda_codec_jack_check
 EXPORT_SYMBOL sound/soc/sof/intel/snd-sof-intel-hda 0x00000000	hda_codec_probe_bus
 EXPORT_SYMBOL sound/soc/sof/intel/snd-sof-intel-hda-common 0x00000000	apl_chip_info
 EXPORT_SYMBOL sound/soc/sof/intel/snd-sof-intel-hda-common 0x00000000	cnl_chip_info
@@ -5558,6 +5559,7 @@ EXPORT_SYMBOL sound/soc/sof/snd-sof 0x00000000	snd_sof_pcm_period_elapsed
 EXPORT_SYMBOL sound/soc/sof/snd-sof 0x00000000	snd_sof_release_trace
 EXPORT_SYMBOL sound/soc/sof/snd-sof 0x00000000	snd_sof_resume
 EXPORT_SYMBOL sound/soc/sof/snd-sof 0x00000000	snd_sof_run_firmware
+EXPORT_SYMBOL sound/soc/sof/snd-sof 0x00000000	snd_sof_runtime_idle
 EXPORT_SYMBOL sound/soc/sof/snd-sof 0x00000000	snd_sof_runtime_resume
 EXPORT_SYMBOL sound/soc/sof/snd-sof 0x00000000	snd_sof_runtime_suspend
 EXPORT_SYMBOL sound/soc/sof/snd-sof 0x00000000	snd_sof_suspend
@@ -14585,6 +14587,7 @@ EXPORT_SYMBOL_GPL drivers/nvme/host/nvme-core 0x00000000	nvme_delete_ctrl_sync
 EXPORT_SYMBOL_GPL drivers/nvme/host/nvme-core 0x00000000	nvme_delete_wq
 EXPORT_SYMBOL_GPL drivers/nvme/host/nvme-core 0x00000000	nvme_disable_ctrl
 EXPORT_SYMBOL_GPL drivers/nvme/host/nvme-core 0x00000000	nvme_enable_ctrl
+EXPORT_SYMBOL_GPL drivers/nvme/host/nvme-core 0x00000000	nvme_get_features
 EXPORT_SYMBOL_GPL drivers/nvme/host/nvme-core 0x00000000	nvme_init_ctrl
 EXPORT_SYMBOL_GPL drivers/nvme/host/nvme-core 0x00000000	nvme_init_identify
 EXPORT_SYMBOL_GPL drivers/nvme/host/nvme-core 0x00000000	nvme_io_timeout
@@ -14594,6 +14597,7 @@ EXPORT_SYMBOL_GPL drivers/nvme/host/nvme-core 0x00000000	nvme_reset_ctrl
 EXPORT_SYMBOL_GPL drivers/nvme/host/nvme-core 0x00000000	nvme_reset_ctrl_sync
 EXPORT_SYMBOL_GPL drivers/nvme/host/nvme-core 0x00000000	nvme_reset_wq
 EXPORT_SYMBOL_GPL drivers/nvme/host/nvme-core 0x00000000	nvme_sec_submit
+EXPORT_SYMBOL_GPL drivers/nvme/host/nvme-core 0x00000000	nvme_set_features
 EXPORT_SYMBOL_GPL drivers/nvme/host/nvme-core 0x00000000	nvme_set_queue_count
 EXPORT_SYMBOL_GPL drivers/nvme/host/nvme-core 0x00000000	nvme_setup_cmd
 EXPORT_SYMBOL_GPL drivers/nvme/host/nvme-core 0x00000000	nvme_shutdown_ctrl
@@ -14604,6 +14608,7 @@ EXPORT_SYMBOL_GPL drivers/nvme/host/nvme-core 0x00000000	nvme_stop_ctrl
 EXPORT_SYMBOL_GPL drivers/nvme/host/nvme-core 0x00000000	nvme_stop_keep_alive
 EXPORT_SYMBOL_GPL drivers/nvme/host/nvme-core 0x00000000	nvme_stop_queues
 EXPORT_SYMBOL_GPL drivers/nvme/host/nvme-core 0x00000000	nvme_submit_sync_cmd
+EXPORT_SYMBOL_GPL drivers/nvme/host/nvme-core 0x00000000	nvme_sync_queues
 EXPORT_SYMBOL_GPL drivers/nvme/host/nvme-core 0x00000000	nvme_trace_disk_name
 EXPORT_SYMBOL_GPL drivers/nvme/host/nvme-core 0x00000000	nvme_unfreeze
 EXPORT_SYMBOL_GPL drivers/nvme/host/nvme-core 0x00000000	nvme_uninit_ctrl
