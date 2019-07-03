@@ -184,7 +184,9 @@ static const struct {
 	{ STATS_OFFSET32(driver_filtered_tx_pkt),
 			4, STATS_FLAGS_FUNC, "driver_filtered_tx_pkt" },
 	{ STATS_OFFSET32(eee_tx_lpi),
-			4, STATS_FLAGS_PORT, "Tx LPI entry count"}
+			4, STATS_FLAGS_PORT, "Tx LPI entry count"},
+	{ STATS_OFFSET32(ptp_skip_tx_ts),
+			4, STATS_FLAGS_FUNC, "ptp_skipped_tx_tstamp" },
 };
 
 #define BNX2X_NUM_STATS		ARRAY_SIZE(bnx2x_stats_arr)
