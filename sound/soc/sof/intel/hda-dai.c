@@ -210,9 +210,13 @@ static int hda_link_hw_params(struct snd_pcm_substream *substream,
 	int stream_tag;
 	int ret;
 
-	link_dev = hda_link_stream_assign(bus, substream);
-	if (!link_dev)
-		return -EBUSY;
+	/* get stored dma data if resuming from system suspend */
+	link_dev = snd_soc_dai_get_dma_data(dai, substream);
+	if (!link_dev) {
+		link_dev = hda_link_stream_assign(bus, substream);
+		if (!link_dev)
+			return -EBUSY;
+	}
 
 	stream_tag = hdac_stream(link_dev)->stream_tag;
 
@@ -318,7 +322,7 @@ static int hda_link_pcm_trigger(struct snd_pcm_substream *substream,
 		break;
 	case SNDRV_PCM_TRIGGER_SUSPEND:
 		/*
-		 * clear and release link DMA channel. It will be assigned when
+		 * clear link DMA channel. It will be restored when
 		 * hw_params is set up again after resume.
 		 */
 		ret = hda_link_config_ipc(hda_stream, dai->name,
@@ -327,8 +331,6 @@ static int hda_link_pcm_trigger(struct snd_pcm_substream *substream,
 			return ret;
 		stream_tag = hdac_stream(link_dev)->stream_tag;
 		snd_hdac_ext_link_clear_stream_id(link, stream_tag);
-		snd_hdac_ext_stream_release(link_dev,
-					    HDAC_EXT_STREAM_TYPE_LINK);
 
 		/* fallthrough */
 	case SNDRV_PCM_TRIGGER_PAUSE_PUSH:
@@ -372,6 +374,7 @@ static int hda_link_hw_free(struct snd_pcm_substream *substream,
 	stream_tag = hdac_stream(link_dev)->stream_tag;
 	snd_hdac_ext_link_clear_stream_id(link, stream_tag);
 	snd_hdac_ext_stream_release(link_dev, HDAC_EXT_STREAM_TYPE_LINK);
+	snd_soc_dai_set_dma_data(dai, substream, NULL);
 	link_dev->link_prepared = 0;
 
 	/* free the host DMA channel reserved by hostless streams */
