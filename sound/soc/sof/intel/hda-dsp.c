@@ -504,10 +504,10 @@ int hda_dsp_set_hw_params_upon_resume(struct snd_sof_dev *sdev)
 		hda_stream->hw_params_upon_resume = 1;
 #if IS_ENABLED(CONFIG_SND_SOC_SOF_HDA)
 		/*
-		 * clear and release stream. This should already be taken care
-		 * for running streams when the SUSPEND trigger is called.
-		 * But paused streams do not get suspended, so this needs to be
-		 * done explicitly during suspend.
+		 * clear stream. This should already be taken care for running
+		 * streams when the SUSPEND trigger is called. But paused
+		 * streams do not get suspended, so this needs to be done
+		 * explicitly during suspend.
 		 */
 		if (stream->link_substream) {
 			rtd = snd_pcm_substream_chip(stream->link_substream);
@@ -517,8 +517,6 @@ int hda_dsp_set_hw_params_upon_resume(struct snd_sof_dev *sdev)
 				return -EINVAL;
 			stream_tag = hdac_stream(stream)->stream_tag;
 			snd_hdac_ext_link_clear_stream_id(link, stream_tag);
-			snd_hdac_ext_stream_release(stream,
-						    HDAC_EXT_STREAM_TYPE_LINK);
 		}
 #endif
 	}
