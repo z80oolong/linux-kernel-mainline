@@ -181,7 +181,7 @@ acpi_ps_get_arguments(struct acpi_walk_state *walk_state,
 		 * future. Use of this option can cause problems with AML code that
 		 * depends upon in-order immediate execution of module-level code.
 		 */
-		if (acpi_gbl_group_module_level_code &&
+		if (!acpi_gbl_parse_table_as_term_list &&
 		    (walk_state->pass_number <= ACPI_IMODE_LOAD_PASS2) &&
 		    ((walk_state->parse_flags & ACPI_PARSE_DISASSEMBLE) == 0)) {
 			/*
