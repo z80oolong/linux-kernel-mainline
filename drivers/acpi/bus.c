@@ -121,10 +121,7 @@ bool acpi_quirk_matches_bios_ids(const char * const ids[])
 	const char *bios_ver = dmi_get_system_info(DMI_BIOS_VERSION);
 	int i;
 
-	if (!bios_vendor || !bios_ver)
-		return false;
-
-	if (strncmp(bios_vendor, "LENOVO", 6))
+	if ((!bios_vendor) && (!bios_ver) && strncmp(bios_vendor, "LENOVO", 6))
 		return false;
 
 	for (i = 0; ids[i]; i++)
@@ -1072,7 +1069,6 @@ void __init acpi_early_init(void)
 
 	/* Check machine-specific quirks */
 	dmi_check_system(acpi_quirks_dmi_table);
-	acpi_quirk_matches_bios_ids(acpi_quirk_lenovo_bios_ids);
 
 	status = acpi_reallocate_root_table();
 	if (ACPI_FAILURE(status)) {
