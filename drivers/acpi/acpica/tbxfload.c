@@ -103,8 +103,7 @@ acpi_status ACPI_INIT_FUNCTION acpi_load_tables(void)
 				"While loading namespace from ACPI tables"));
 	}
 
-	if (acpi_gbl_parse_table_as_term_list
-	    || !acpi_gbl_group_module_level_code) {
+	if (acpi_gbl_parse_table_as_term_list) {
 		/*
 		 * If the module-level code support is enabled, initialize the objects
 		 * in the namespace that remain uninitialized. This runs the executable
