@@ -330,7 +330,8 @@ static int hda_link_pcm_trigger(struct snd_pcm_substream *substream,
 		if (ret < 0)
 			return ret;
 		stream_tag = hdac_stream(link_dev)->stream_tag;
-		snd_hdac_ext_link_clear_stream_id(link, stream_tag);
+		if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK)
+			snd_hdac_ext_link_clear_stream_id(link, stream_tag);
 
 		/* fallthrough */
 	case SNDRV_PCM_TRIGGER_PAUSE_PUSH:
@@ -372,7 +373,8 @@ static int hda_link_hw_free(struct snd_pcm_substream *substream,
 		return -EINVAL;
 
 	stream_tag = hdac_stream(link_dev)->stream_tag;
-	snd_hdac_ext_link_clear_stream_id(link, stream_tag);
+	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK)
+		snd_hdac_ext_link_clear_stream_id(link, stream_tag);
 	snd_hdac_ext_stream_release(link_dev, HDAC_EXT_STREAM_TYPE_LINK);
 	snd_soc_dai_set_dma_data(dai, substream, NULL);
 	link_dev->link_prepared = 0;
