@@ -3235,6 +3235,8 @@ static void alc256_init(struct hda_codec *codec)
 	alc_update_coefex_idx(codec, 0x57, 0x04, 0x0007, 0x4); /* Hight power */
 	alc_update_coefex_idx(codec, 0x53, 0x02, 0x8000, 1 << 15); /* Clear bit */
 	alc_update_coefex_idx(codec, 0x53, 0x02, 0x8000, 0 << 15);
+	/* Switch pcbeep path to Line in path*/
+	alc_update_coef_idx(codec, 0x36, 1 << 13, 1 << 5);
 }
 
 static void alc256_shutup(struct hda_codec *codec)
