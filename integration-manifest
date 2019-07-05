@@ -1,0 +1,32 @@
+drm drm-fixes a0b2cf792ac9db7bb73e599e516adfb9dca8e60b
+	Merge tag 'imx-drm-fixes-2019-07-04' of git://git.pengutronix.de/git/pza/linux into drm-fixes
+drm-misc drm-misc-fixes 2f040d27080ddfffecff2be1a77107c494d0e4f4
+	drm/panfrost: Fix a double-free error
+drm-intel drm-intel-fixes 4b972a01a7da614b4796475f933094751a295a2f
+	Linux 5.2-rc6
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 4cf643a39221af24a151ad2cff4e3f95f12f368e
+	Merge tag 'drm-next-5.3-2019-06-27' of git://people.freedesktop.org/~agd5f/linux into drm-next
+drm-misc drm-misc-next-fixes e5704b3fe9d5ffa810abd8ce00215f52f3fd675b
+	drm: connector: remove bogus NULL check
+drm-intel drm-intel-next-fixes c36beba6b296b3c05a0f29753b04775e5ae23886
+	drm/i915: Seal races between async GPU cancellation, retirement and signaling
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 67b587934c23c6e286486a0a724d486c8e037fd6
+	drm/bridge: ti-sn65dsi86: correct dsi mode_flags
+drm-intel drm-intel-next-queued 3e27d70bcc46c68aceb5dafc813db4c4ff675221
+	drm/i915: Remove set but not used variable 'intel_dig_port'
+drm-intel drm-intel-next 1ee008f240ad5401f683ec3b79a2e3b044a82a89
+	drm/i915: Update DRIVER_DATE to 20190619
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 3450121997ce872eb7f1248417225827ea249710
+	ALSA: line6: Fix write on zero-sized buffer
+sound-upstream for-next 388b00f045180179fedff4b108d40a0192684cda
+	ALSA: cs4281: remove redundant assignment to variable val and remove a goto
+drm-intel topic/core-for-CI 3e03b51fcdedb947fdaaff36252f4daf3caf20be
+	mm: Show slab debug as offsets from section base not hashed pointers
+drm-misc topic/remove-fbcon-notifiers 6116b892bd4fd0ddc5f30566a556218bb2e1a9b6
+	vga_switcheroo: Depend upon fbcon being built-in, if enabled
