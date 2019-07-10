@@ -10444,6 +10444,7 @@ EXPORT_SYMBOL vmlinux 0x00000000	strchrnul
 EXPORT_SYMBOL vmlinux 0x00000000	strcmp
 EXPORT_SYMBOL vmlinux 0x00000000	strcpy
 EXPORT_SYMBOL vmlinux 0x00000000	strcspn
+EXPORT_SYMBOL vmlinux 0x00000000	stream_open
 EXPORT_SYMBOL vmlinux 0x00000000	strim
 EXPORT_SYMBOL vmlinux 0x00000000	string_escape_mem
 EXPORT_SYMBOL vmlinux 0x00000000	string_get_size
@@ -11388,6 +11389,7 @@ EXPORT_SYMBOL_GPL arch/x86/kvm/kvm 0x00000000	kvm_lapic_set_eoi
 EXPORT_SYMBOL_GPL arch/x86/kvm/kvm 0x00000000	kvm_lapic_switch_to_hv_timer
 EXPORT_SYMBOL_GPL arch/x86/kvm/kvm 0x00000000	kvm_lapic_switch_to_sw_timer
 EXPORT_SYMBOL_GPL arch/x86/kvm/kvm 0x00000000	kvm_lmsw
+EXPORT_SYMBOL_GPL arch/x86/kvm/kvm 0x00000000	kvm_load_guest_xcr0
 EXPORT_SYMBOL_GPL arch/x86/kvm/kvm 0x00000000	kvm_max_guest_tsc_khz
 EXPORT_SYMBOL_GPL arch/x86/kvm/kvm 0x00000000	kvm_max_tsc_scaling_ratio
 EXPORT_SYMBOL_GPL arch/x86/kvm/kvm 0x00000000	kvm_mce_cap_supported
@@ -11414,6 +11416,7 @@ EXPORT_SYMBOL_GPL arch/x86/kvm/kvm 0x00000000	kvm_mtrr_valid
 EXPORT_SYMBOL_GPL arch/x86/kvm/kvm 0x00000000	kvm_no_apic_vcpu
 EXPORT_SYMBOL_GPL arch/x86/kvm/kvm 0x00000000	kvm_page_track_register_notifier
 EXPORT_SYMBOL_GPL arch/x86/kvm/kvm 0x00000000	kvm_page_track_unregister_notifier
+EXPORT_SYMBOL_GPL arch/x86/kvm/kvm 0x00000000	kvm_put_guest_xcr0
 EXPORT_SYMBOL_GPL arch/x86/kvm/kvm 0x00000000	kvm_put_kvm
 EXPORT_SYMBOL_GPL arch/x86/kvm/kvm 0x00000000	kvm_queue_exception
 EXPORT_SYMBOL_GPL arch/x86/kvm/kvm 0x00000000	kvm_queue_exception_e
@@ -11486,7 +11489,6 @@ EXPORT_SYMBOL_GPL arch/x86/kvm/kvm 0x00000000	kvm_write_guest_page
 EXPORT_SYMBOL_GPL arch/x86/kvm/kvm 0x00000000	kvm_write_guest_virt_system
 EXPORT_SYMBOL_GPL arch/x86/kvm/kvm 0x00000000	kvm_write_tsc
 EXPORT_SYMBOL_GPL arch/x86/kvm/kvm 0x00000000	kvm_x86_ops
-EXPORT_SYMBOL_GPL arch/x86/kvm/kvm 0x00000000	lapic_timer_advance_ns
 EXPORT_SYMBOL_GPL arch/x86/kvm/kvm 0x00000000	load_pdptrs
 EXPORT_SYMBOL_GPL arch/x86/kvm/kvm 0x00000000	mark_page_dirty
 EXPORT_SYMBOL_GPL arch/x86/kvm/kvm 0x00000000	pdptrs_changed
@@ -16747,6 +16749,7 @@ EXPORT_SYMBOL_GPL net/netfilter/nf_synproxy_core 0x00000000	synproxy_parse_optio
 EXPORT_SYMBOL_GPL net/netfilter/nf_synproxy_core 0x00000000	synproxy_tstamp_adjust
 EXPORT_SYMBOL_GPL net/netfilter/nf_tables 0x00000000	__nft_release_basechain
 EXPORT_SYMBOL_GPL net/netfilter/nf_tables 0x00000000	nf_tables_bind_set
+EXPORT_SYMBOL_GPL net/netfilter/nf_tables 0x00000000	nf_tables_deactivate_set
 EXPORT_SYMBOL_GPL net/netfilter/nf_tables 0x00000000	nf_tables_destroy_set
 EXPORT_SYMBOL_GPL net/netfilter/nf_tables 0x00000000	nf_tables_unbind_set
 EXPORT_SYMBOL_GPL net/netfilter/nf_tables 0x00000000	nft_chain_validate
@@ -18785,6 +18788,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	blk_insert_cloned_request
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	blk_lld_busy
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	blk_mq_alloc_request_hctx
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	blk_mq_bio_list_merge
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	blk_mq_complete_request_sync
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	blk_mq_debugfs_rq_show
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	blk_mq_flush_busy_ctxs
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	blk_mq_free_request
