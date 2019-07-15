@@ -724,6 +724,8 @@ static int parse_nodes_opt(const struct option *opt __maybe_unused,
 	return 0;
 }
 
+#define BIT(x) (1ul << x)
+
 static inline uint32_t lfsr_32(uint32_t lfsr)
 {
 	const uint32_t taps = BIT(1) | BIT(5) | BIT(6) | BIT(31);
