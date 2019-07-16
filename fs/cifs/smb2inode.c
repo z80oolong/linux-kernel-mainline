@@ -110,6 +110,8 @@ smb2_compound_op(const unsigned int xid, struct cifs_tcon *tcon,
 				SMB2_O_INFO_FILE, 0,
 				sizeof(struct smb2_file_all_info) +
 					  PATH_MAX * 2, 0, NULL);
+		if (rc)
+			goto finished;
 		smb2_set_next_command(tcon, &rqst[num_rqst]);
 		smb2_set_related(&rqst[num_rqst++]);
 		break;
@@ -133,6 +135,8 @@ smb2_compound_op(const unsigned int xid, struct cifs_tcon *tcon,
 					COMPOUND_FID, current->tgid,
 					FILE_DISPOSITION_INFORMATION,
 					SMB2_O_INFO_FILE, 0, data, size);
+		if (rc)
+			goto finished;
 		smb2_set_next_command(tcon, &rqst[num_rqst]);
 		smb2_set_related(&rqst[num_rqst++]);
 		break;
@@ -148,6 +152,8 @@ smb2_compound_op(const unsigned int xid, struct cifs_tcon *tcon,
 					COMPOUND_FID, current->tgid,
 					FILE_END_OF_FILE_INFORMATION,
 					SMB2_O_INFO_FILE, 0, data, size);
+		if (rc)
+			goto finished;
 		smb2_set_next_command(tcon, &rqst[num_rqst]);
 		smb2_set_related(&rqst[num_rqst++]);
 		break;
@@ -164,6 +170,8 @@ smb2_compound_op(const unsigned int xid, struct cifs_tcon *tcon,
 					COMPOUND_FID, current->tgid,
 					FILE_BASIC_INFORMATION,
 					SMB2_O_INFO_FILE, 0, data, size);
+		if (rc)
+			goto finished;
 		smb2_set_next_command(tcon, &rqst[num_rqst]);
 		smb2_set_related(&rqst[num_rqst++]);
 		break;
@@ -188,6 +196,8 @@ smb2_compound_op(const unsigned int xid, struct cifs_tcon *tcon,
 					COMPOUND_FID, current->tgid,
 					FILE_RENAME_INFORMATION,
 					SMB2_O_INFO_FILE, 0, data, size);
+		if (rc)
+			goto finished;
 		smb2_set_next_command(tcon, &rqst[num_rqst]);
 		smb2_set_related(&rqst[num_rqst++]);
 		break;
@@ -212,6 +222,8 @@ smb2_compound_op(const unsigned int xid, struct cifs_tcon *tcon,
 					COMPOUND_FID, current->tgid,
 					FILE_LINK_INFORMATION,
 					SMB2_O_INFO_FILE, 0, data, size);
+		if (rc)
+			goto finished;
 		smb2_set_next_command(tcon, &rqst[num_rqst]);
 		smb2_set_related(&rqst[num_rqst++]);
 		break;
