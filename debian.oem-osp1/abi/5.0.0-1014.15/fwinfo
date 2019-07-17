@@ -694,6 +694,7 @@ firmware:       iwlwifi-Qu-a0-hr-a0-50.ucode
 firmware:       iwlwifi-Qu-a0-jf-b0-50.ucode
 firmware:       iwlwifi-Qu-b0-hr-b0-50.ucode
 firmware:       iwlwifi-Qu-b0-jf-b0-50.ucode
+firmware:       iwlwifi-Qu-c0-hr-b0-50.ucode
 firmware:       iwlwifi-QuQnj-a0-hr-a0-50.ucode
 firmware:       iwlwifi-QuQnj-b0-hr-b0-50.ucode
 firmware:       iwlwifi-QuQnj-b0-jf-b0-50.ucode
