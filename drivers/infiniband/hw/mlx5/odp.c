@@ -1602,7 +1602,7 @@ static void mlx5_ib_prefetch_mr_work(struct work_struct *work)
 		ib_device_put(&w->dev->ib_dev);
 	}
 	put_device(&w->dev->ib_dev.dev);
-	kfree(w);
+	kvfree(w);
 }
 
 int mlx5_ib_advise_mr_prefetch(struct ib_pd *pd,
