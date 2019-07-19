@@ -3037,6 +3037,11 @@ static int
 sanitize_disable_power_well_option(const struct drm_i915_private *dev_priv,
 				   int disable_power_well)
 {
+	struct pci_dev *pdev = dev_priv->drm.pdev;
+	/* icl hdmi audio needs to set disable_power_well=0 temporarily, will remove it later */
+	if ((pdev->device == 0x8a56) || (pdev->device == 0x8a52))
+		return 0;
+
 	if (disable_power_well >= 0)
 		return !!disable_power_well;
 
