@@ -1,0 +1,30 @@
+drm drm-fixes 5f9e832c137075045d15cd6899ab0505cfb2ca4b
+	Linus 5.3-rc1
+drm-misc drm-misc-fixes bbb6fc43f131f77fcb7ae8081f6d7c51396a2120
+	drm: silence variable 'conn' set but not used
+drm-intel drm-intel-fixes d7e8a19b38c8ac1a32b6b03af049e2c88d4155db
+	drm/i915: Don't dereference request if it may have been retired when printing
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 8ee795625665208589a97972b01790bb04ea83e3
+	Merge branch 'linux-5.3' of git://github.com/skeggsb/linux into drm-next
+drm-misc drm-misc-next-fixes 7aaddd96d5febcf5b24357a326b3038d49a20532
+	drm/modes: Don't apply cmdline's rotation if it wasn't specified
+drm-intel drm-intel-next-fixes c36beba6b296b3c05a0f29753b04775e5ae23886
+	drm/i915: Seal races between async GPU cancellation, retirement and signaling
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next d808097627e51d53cf9b1aa13239b5c4a6adaefb
+	drm/i915: Fix up broken merge
+drm-intel drm-intel-next-queued 3bdd4f8485310687affe117f1b1a6e9012e897f6
+	drm/i915: Rely on spinlock protection for GPU error capture
+drm-intel drm-intel-next a17ce803dffa8e34fda39f8af721a4005c451fef
+	drm/i915: Update DRIVER_DATE to 20190708
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus e4091bdd2fd957793a10449a8682c767578b0430
+	ALSA: line6: Fix a typo
+sound-upstream for-next d2d5a6b0253d30ef04d513447cdd00df4fa627c3
+	ALSA: firewire-motu: more code refactoring for MOTU data block processing layer
+drm-intel topic/core-for-CI 08141c520b31cb7c97f387e7d8c89f420067143c
+	snd/hda: Flush interrupts on disabling
