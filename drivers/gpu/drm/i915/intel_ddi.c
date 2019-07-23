@@ -2455,6 +2455,8 @@ static void intel_disable_ddi_dp(struct intel_encoder *encoder,
 {
 	struct intel_dp *intel_dp = enc_to_intel_dp(&encoder->base);
 
+	intel_dp->link_trained = false;
+
 	if (old_crtc_state->has_audio)
 		intel_audio_codec_disable(encoder);
 
