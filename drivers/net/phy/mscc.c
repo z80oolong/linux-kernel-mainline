@@ -1807,8 +1807,8 @@ static int vsc8574_probe(struct phy_device *phydev)
 	vsc8531->supp_led_modes = VSC8584_SUPP_LED_MODES;
 	vsc8531->hw_stats = vsc8584_hw_stats;
 	vsc8531->nstats = ARRAY_SIZE(vsc8584_hw_stats);
-	vsc8531->stats = devm_kmalloc_array(&phydev->mdio.dev, vsc8531->nstats,
-					    sizeof(u64), GFP_KERNEL);
+	vsc8531->stats = devm_kcalloc(&phydev->mdio.dev, vsc8531->nstats,
+				      sizeof(u64), GFP_KERNEL);
 	if (!vsc8531->stats)
 		return -ENOMEM;
 
@@ -1837,8 +1837,8 @@ static int vsc8584_probe(struct phy_device *phydev)
 	vsc8531->supp_led_modes = VSC8584_SUPP_LED_MODES;
 	vsc8531->hw_stats = vsc8584_hw_stats;
 	vsc8531->nstats = ARRAY_SIZE(vsc8584_hw_stats);
-	vsc8531->stats = devm_kmalloc_array(&phydev->mdio.dev, vsc8531->nstats,
-					    sizeof(u64), GFP_KERNEL);
+	vsc8531->stats = devm_kcalloc(&phydev->mdio.dev, vsc8531->nstats,
+				      sizeof(u64), GFP_KERNEL);
 	if (!vsc8531->stats)
 		return -ENOMEM;
 
@@ -1867,8 +1867,8 @@ static int vsc85xx_probe(struct phy_device *phydev)
 	vsc8531->supp_led_modes = VSC85XX_SUPP_LED_MODES;
 	vsc8531->hw_stats = vsc85xx_hw_stats;
 	vsc8531->nstats = ARRAY_SIZE(vsc85xx_hw_stats);
-	vsc8531->stats = devm_kmalloc_array(&phydev->mdio.dev, vsc8531->nstats,
-					    sizeof(u64), GFP_KERNEL);
+	vsc8531->stats = devm_kcalloc(&phydev->mdio.dev, vsc8531->nstats,
+				      sizeof(u64), GFP_KERNEL);
 	if (!vsc8531->stats)
 		return -ENOMEM;
 
