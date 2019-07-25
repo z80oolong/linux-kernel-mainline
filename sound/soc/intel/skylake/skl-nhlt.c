@@ -18,6 +18,7 @@
  *
  */
 #include <linux/pci.h>
+#include <sound/intel-nhlt.h>
 #include "skl.h"
 #include "skl-i2s.h"
 
