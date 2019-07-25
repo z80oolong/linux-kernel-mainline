@@ -1,26 +1,15 @@
 /*
- *  skl-nhlt.h - Intel HDA Platform NHLT header
+ *  intel-nhlt.h - Intel HDA Platform NHLT header
  *
- *  Copyright (C) 2015 Intel Corp
- *  Author: Sanjiv Kumar <sanjiv.kumar@intel.com>
- *  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; version 2 of the License.
- *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- *
+ *  Copyright (c) 2015-2019 Intel Corporation
  */
-#ifndef __SKL_NHLT_H__
-#define __SKL_NHLT_H__
+
+#ifndef __INTEL_NHLT_H__
+#define __INTEL_NHLT_H__
 
 #include <linux/acpi.h>
+
+#if IS_ENABLED(CONFIG_ACPI) && IS_ENABLED(CONFIG_SND_INTEL_NHLT)
 
 struct wav_fmt {
 	u16 fmt_tag;
@@ -124,5 +113,31 @@ enum {
 	NHLT_MIC_ARRAY_4CH_2ND_GEOM = 0xe,
 	NHLT_MIC_ARRAY_VENDOR_DEFINED = 0xf,
 };
+
+struct nhlt_acpi_table *intel_nhlt_init(struct device *dev);
+
+void intel_nhlt_free(struct nhlt_acpi_table *addr);
+
+int intel_nhlt_get_dmic_geo(struct device *dev, struct nhlt_acpi_table *nhlt);
+
+#else
+
+struct nhlt_acpi_table;
+
+static inline struct nhlt_acpi_table *intel_nhlt_init(struct device *dev)
+{
+	return NULL;
+}
+
+static inline void intel_nhlt_free(struct nhlt_acpi_table *addr)
+{
+}
+
+static inline int intel_nhlt_get_dmic_geo(struct device *dev,
+					  struct nhlt_acpi_table *nhlt)
+{
+	return 0;
+}
+#endif
 
 #endif
