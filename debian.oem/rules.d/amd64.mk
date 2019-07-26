@@ -19,6 +19,7 @@ do_tools_x86	= true
 do_tools_common = true
 do_tools_acpidbg = true
 do_zfs		= true
+do_dkms_nvidia	= true
 
 do_libc_dev_package=false
 do_doc_package = false
