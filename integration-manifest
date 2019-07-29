@@ -1,0 +1,30 @@
+drm drm-fixes 4d5308e7852741318e4d40fb8d43d9311b3984ae
+	Merge tag 'drm-fixes-5.3-2019-07-24' of git://people.freedesktop.org/~agd5f/linux into drm-fixes
+drm-misc drm-misc-fixes bbb6fc43f131f77fcb7ae8081f6d7c51396a2120
+	drm: silence variable 'conn' set but not used
+drm-intel drm-intel-fixes 89f5752307cf53010d97503ac501b2ca1b089922
+	drm/i915: Fix the TBT AUX power well enabling
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 5f9e832c137075045d15cd6899ab0505cfb2ca4b
+	Linus 5.3-rc1
+drm-misc drm-misc-next-fixes 7aaddd96d5febcf5b24357a326b3038d49a20532
+	drm/modes: Don't apply cmdline's rotation if it wasn't specified
+drm-intel drm-intel-next-fixes c36beba6b296b3c05a0f29753b04775e5ae23886
+	drm/i915: Seal races between async GPU cancellation, retirement and signaling
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 63b87c310a8326c2d0721ab6c981493d590aa542
+	drm/mst: Fix sphinx warnings in drm_dp_msg_connector register functions
+drm-intel drm-intel-next-queued 301efe96f777c0197502b9399694ae83779579b3
+	drm/i915/uc: Don't fail on HuC firmware failure
+drm-intel drm-intel-next a17ce803dffa8e34fda39f8af721a4005c451fef
+	drm/i915: Update DRIVER_DATE to 20190708
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 37151a41df800493cfcbbef4f7208ffe04feb959
+	ALSA: pcm: fix lost wakeup event scenarios in snd_pcm_drain
+sound-upstream for-next f474808acb3c4b30552d9c59b181244e0300d218
+	ALSA: aoa: onyx: always initialize register read value
+drm-intel topic/core-for-CI 221ee28eb0411efc0f8ff734dfd7c36d4c1113cf
+	uapi/perf: Squelch compiler warning
