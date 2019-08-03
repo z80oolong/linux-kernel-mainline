@@ -1,0 +1,30 @@
+drm drm-fixes 9c8c9c7cdb4c8fb48a2bc70f41a07920f761d2cd
+	Merge tag 'exynos-drm-fixes-for-v5.3-rc3' of git://git.kernel.org/pub/scm/linux/kernel/git/daeinki/drm-exynos into drm-fixes
+drm-misc drm-misc-fixes 9b562437d388582f5463a4c3f60ee97a2d4d8d58
+	drm/modes: Fix unterminated strncpy
+drm-intel drm-intel-fixes 4b9bb9728c915c6079619e71e3340fe4840d9d40
+	drm/i915: Only recover active engines
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 609488bc979f99f805f34e9a32c1e3b71179d10b
+	Linux 5.3-rc2
+drm-misc drm-misc-next-fixes 7aaddd96d5febcf5b24357a326b3038d49a20532
+	drm/modes: Don't apply cmdline's rotation if it wasn't specified
+drm-intel drm-intel-next-fixes c36beba6b296b3c05a0f29753b04775e5ae23886
+	drm/i915: Seal races between async GPU cancellation, retirement and signaling
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 05103ea9a3159b9bb7004e9c0693948d4d6124f9
+	drm/vblank: drop use of DRM_WAIT_ON()
+drm-intel drm-intel-next-queued 515b8b7e935ef3f59c4efda04a3b05353ed6fbb7
+	drm/i915: Flush the freed object list on file close
+drm-intel drm-intel-next e0e712fe42ef67bdf45fc348767d1d0a4eeba77f
+	drm/i915: Update DRIVER_DATE to 20190730
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 5d78e1c2b7f4be00bbe62141603a631dc7812f35
+	ALSA: usb-audio: Fix gpf in snd_usb_pipe_sanity_check
+sound-upstream for-next b6fcab14ff027c4d54505d9cdff41535c3daf077
+	ALSA: hda: Add support of Zhaoxin controller
+drm-intel topic/core-for-CI 221ee28eb0411efc0f8ff734dfd7c36d4c1113cf
+	uapi/perf: Squelch compiler warning
