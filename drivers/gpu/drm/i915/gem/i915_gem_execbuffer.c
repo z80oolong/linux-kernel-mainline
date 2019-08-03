@@ -16,6 +16,7 @@
 
 #include "gem/i915_gem_ioctls.h"
 #include "gt/intel_context.h"
+#include "gt/intel_gt.h"
 #include "gt/intel_gt_pm.h"
 
 #include "i915_gem_ioctls.h"
@@ -222,7 +223,6 @@ struct i915_execbuffer {
 	struct intel_engine_cs *engine; /** engine to queue the request to */
 	struct intel_context *context; /* logical state for the request */
 	struct i915_gem_context *gem_context; /** caller's context */
-	struct i915_address_space *vm; /** GTT and vma for the request */
 
 	struct i915_request *request; /** our request to build */
 	struct i915_vma *batch; /** identity of the batch obj/vma */
@@ -696,7 +696,7 @@ static int eb_reserve(struct i915_execbuffer *eb)
 
 		case 1:
 			/* Too fragmented, unbind everything and retry */
-			err = i915_gem_evict_vm(eb->vm);
+			err = i915_gem_evict_vm(eb->context->vm);
 			if (err)
 				return err;
 			break;
@@ -724,12 +724,8 @@ static int eb_select_context(struct i915_execbuffer *eb)
 		return -ENOENT;
 
 	eb->gem_context = ctx;
-	if (ctx->vm) {
-		eb->vm = ctx->vm;
+	if (ctx->vm)
 		eb->invalid_flags |= EXEC_OBJECT_NEEDS_GTT;
-	} else {
-		eb->vm = &eb->i915->ggtt.vm;
-	}
 
 	eb->context_flags = 0;
 	if (test_bit(UCONTEXT_NO_ZEROMAP, &ctx->user_flags))
@@ -831,7 +827,7 @@ static int eb_lookup_vmas(struct i915_execbuffer *eb)
 			goto err_vma;
 		}
 
-		vma = i915_vma_instance(obj, eb->vm, NULL);
+		vma = i915_vma_instance(obj, eb->context->vm, NULL);
 		if (IS_ERR(vma)) {
 			err = PTR_ERR(vma);
 			goto err_obj;
@@ -994,7 +990,7 @@ static void reloc_gpu_flush(struct reloc_cache *cache)
 	__i915_gem_object_flush_map(cache->rq->batch->obj, 0, cache->rq_size);
 	i915_gem_object_unpin_map(cache->rq->batch->obj);
 
-	i915_gem_chipset_flush(cache->rq->i915);
+	intel_gt_chipset_flush(cache->rq->engine->gt);
 
 	i915_request_add(cache->rq);
 	cache->rq = NULL;
@@ -1018,11 +1014,12 @@ static void reloc_cache_reset(struct reloc_cache *cache)
 		kunmap_atomic(vaddr);
 		i915_gem_object_finish_access((struct drm_i915_gem_object *)cache->node.mm);
 	} else {
-		wmb();
-		io_mapping_unmap_atomic((void __iomem *)vaddr);
-		if (cache->node.allocated) {
-			struct i915_ggtt *ggtt = cache_to_ggtt(cache);
+		struct i915_ggtt *ggtt = cache_to_ggtt(cache);
 
+		intel_gt_flush_ggtt_writes(ggtt->vm.gt);
+		io_mapping_unmap_atomic((void __iomem *)vaddr);
+
+		if (cache->node.allocated) {
 			ggtt->vm.clear_range(&ggtt->vm,
 					     cache->node.start,
 					     cache->node.size);
@@ -1077,6 +1074,7 @@ static void *reloc_iomap(struct drm_i915_gem_object *obj,
 	void *vaddr;
 
 	if (cache->vaddr) {
+		intel_gt_flush_ggtt_writes(ggtt->vm.gt);
 		io_mapping_unmap_atomic((void __force __iomem *) unmask_page(cache->vaddr));
 	} else {
 		struct i915_vma *vma;
@@ -1118,7 +1116,6 @@ static void *reloc_iomap(struct drm_i915_gem_object *obj,
 
 	offset = cache->node.start;
 	if (cache->node.allocated) {
-		wmb();
 		ggtt->vm.insert_page(&ggtt->vm,
 				     i915_gem_object_get_dma_address(obj, page),
 				     offset, I915_CACHE_NONE, 0);
@@ -1954,7 +1951,7 @@ static int eb_move_to_gpu(struct i915_execbuffer *eb)
 	eb->exec = NULL;
 
 	/* Unconditionally flush any chipset caches (for streaming writes). */
-	i915_gem_chipset_flush(eb->i915);
+	intel_gt_chipset_flush(eb->engine->gt);
 	return 0;
 
 err_skip:
@@ -2129,7 +2126,7 @@ static int eb_pin_context(struct i915_execbuffer *eb, struct intel_context *ce)
 	 * ABI: Before userspace accesses the GPU (e.g. execbuffer), report
 	 * EIO if the GPU is already wedged.
 	 */
-	err = i915_terminally_wedged(eb->i915);
+	err = intel_gt_terminally_wedged(ce->engine->gt);
 	if (err)
 		return err;
 
@@ -2436,7 +2433,7 @@ i915_gem_do_execbuffer(struct drm_device *dev,
 	 * wakeref that we hold until the GPU has been idle for at least
 	 * 100ms.
 	 */
-	intel_gt_pm_get(eb.i915);
+	intel_gt_pm_get(&eb.i915->gt);
 
 	err = i915_mutex_lock_interruptible(dev);
 	if (err)
@@ -2606,7 +2603,7 @@ err_engine:
 err_unlock:
 	mutex_unlock(&dev->struct_mutex);
 err_rpm:
-	intel_gt_pm_put(eb.i915);
+	intel_gt_pm_put(&eb.i915->gt);
 	i915_gem_context_put(eb.gem_context);
 err_destroy:
 	eb_destroy(&eb);
