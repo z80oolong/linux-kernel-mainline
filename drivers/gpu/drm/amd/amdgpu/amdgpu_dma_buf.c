@@ -268,20 +268,6 @@ error:
 }
 
 /**
- * amdgpu_gem_prime_res_obj - &drm_driver.gem_prime_res_obj implementation
- * @obj: GEM BO
- *
- * Returns:
- * The BO's reservation object.
- */
-struct reservation_object *amdgpu_gem_prime_res_obj(struct drm_gem_object *obj)
-{
-	struct amdgpu_bo *bo = gem_to_amdgpu_bo(obj);
-
-	return bo->tbo.resv;
-}
-
-/**
  * amdgpu_dma_buf_begin_cpu_access - &dma_buf_ops.begin_cpu_access implementation
  * @dma_buf: Shared DMA buffer
  * @direction: Direction of DMA transfer
@@ -339,14 +325,12 @@ const struct dma_buf_ops amdgpu_dmabuf_ops = {
  * @gobj: GEM BO
  * @flags: Flags such as DRM_CLOEXEC and DRM_RDWR.
  *
- * The main work is done by the &drm_gem_prime_export helper, which in turn
- * uses &amdgpu_gem_prime_res_obj.
+ * The main work is done by the &drm_gem_prime_export helper.
  *
  * Returns:
  * Shared DMA buffer representing the GEM BO from the given device.
  */
-struct dma_buf *amdgpu_gem_prime_export(struct drm_device *dev,
-					struct drm_gem_object *gobj,
+struct dma_buf *amdgpu_gem_prime_export(struct drm_gem_object *gobj,
 					int flags)
 {
 	struct amdgpu_bo *bo = gem_to_amdgpu_bo(gobj);
@@ -356,9 +340,9 @@ struct dma_buf *amdgpu_gem_prime_export(struct drm_device *dev,
 	    bo->flags & AMDGPU_GEM_CREATE_VM_ALWAYS_VALID)
 		return ERR_PTR(-EPERM);
 
-	buf = drm_gem_prime_export(dev, gobj, flags);
+	buf = drm_gem_prime_export(gobj, flags);
 	if (!IS_ERR(buf)) {
-		buf->file->f_mapping = dev->anon_inode->i_mapping;
+		buf->file->f_mapping = gobj->dev->anon_inode->i_mapping;
 		buf->ops = &amdgpu_dmabuf_ops;
 	}
 
@@ -396,7 +380,7 @@ amdgpu_gem_prime_import_sg_table(struct drm_device *dev,
 	bp.flags = 0;
 	bp.type = ttm_bo_type_sg;
 	bp.resv = resv;
-	ww_mutex_lock(&resv->lock, NULL);
+	reservation_object_lock(resv, NULL);
 	ret = amdgpu_bo_create(adev, &bp, &bo);
 	if (ret)
 		goto error;
@@ -408,11 +392,11 @@ amdgpu_gem_prime_import_sg_table(struct drm_device *dev,
 	if (attach->dmabuf->ops != &amdgpu_dmabuf_ops)
 		bo->prime_shared_count = 1;
 
-	ww_mutex_unlock(&resv->lock);
+	reservation_object_unlock(resv);
 	return &bo->gem_base;
 
 error:
-	ww_mutex_unlock(&resv->lock);
+	reservation_object_unlock(resv);
 	return ERR_PTR(ret);
 }
 
