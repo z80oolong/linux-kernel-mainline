@@ -122,18 +122,20 @@
 
 #if IS_ENABLED(CONFIG_DRM_I915_DEBUG)
 
-bool __i915_inject_probe_failure(const char *func, int line);
-#define i915_inject_probe_failure() \
-	__i915_inject_probe_failure(__func__, __LINE__)
-
+int __i915_inject_load_error(struct drm_i915_private *i915, int err,
+			     const char *func, int line);
+#define i915_inject_load_error(_i915, _err) \
+	__i915_inject_load_error((_i915), (_err), __func__, __LINE__)
 bool i915_error_injected(void);
 
 #else
 
-#define i915_inject_probe_failure() false
+#define i915_inject_load_error(_i915, _err) 0
 #define i915_error_injected() false
 
 #endif
+
+#define i915_inject_probe_failure(i915) i915_inject_load_error((i915), -ENODEV)
 
 #define i915_probe_error(i915, fmt, ...)				   \
 	__i915_printk(i915, i915_error_injected() ? KERN_DEBUG : KERN_ERR, \
@@ -153,6 +155,10 @@ enum hpd_pin {
 	HPD_PORT_D,
 	HPD_PORT_E,
 	HPD_PORT_F,
+	HPD_PORT_G,
+	HPD_PORT_H,
+	HPD_PORT_I,
+
 	HPD_NUM_PINS
 };
 
@@ -767,7 +773,6 @@ struct i915_gem_mm {
 	 */
 	struct llist_head free_list;
 	struct work_struct free_work;
-	spinlock_t free_lock;
 	/**
 	 * Count of objects pending destructions. Used to skip needlessly
 	 * waiting on an RCU barrier if no objects are waiting to be freed.
@@ -1371,11 +1376,12 @@ struct drm_i915_private {
 	wait_queue_head_t gmbus_wait_queue;
 
 	struct pci_dev *bridge_dev;
-	struct intel_engine_cs *engine[I915_NUM_ENGINES];
+
 	/* Context used internally to idle the GPU and setup initial state */
 	struct i915_gem_context *kernel_context;
-	struct intel_engine_cs *engine_class[MAX_ENGINE_CLASS + 1]
-					    [MAX_ENGINE_INSTANCE + 1];
+
+	struct intel_engine_cs *engine[I915_NUM_ENGINES];
+	struct rb_root uabi_engines;
 
 	struct resource mch_res;
 
@@ -1892,7 +1898,12 @@ static inline struct drm_i915_private *to_i915(const struct drm_device *dev)
 
 static inline struct drm_i915_private *kdev_to_i915(struct device *kdev)
 {
-	return to_i915(dev_get_drvdata(kdev));
+	return dev_get_drvdata(kdev);
+}
+
+static inline struct drm_i915_private *pdev_to_i915(struct pci_dev *pdev)
+{
+	return pci_get_drvdata(pdev);
 }
 
 static inline struct drm_i915_private *wopcm_to_i915(struct intel_wopcm *wopcm)
@@ -1913,6 +1924,14 @@ static inline struct drm_i915_private *wopcm_to_i915(struct intel_wopcm *wopcm)
 	     (tmp__) ? \
 	     ((engine__) = (dev_priv__)->engine[__mask_next_bit(tmp__)]), 1 : \
 	     0;)
+
+#define rb_to_uabi_engine(rb) \
+	rb_entry_safe(rb, struct intel_engine_cs, uabi_node)
+
+#define for_each_uabi_engine(engine__, i915__) \
+	for ((engine__) = rb_to_uabi_engine(rb_first(&(i915__)->uabi_engines));\
+	     (engine__); \
+	     (engine__) = rb_to_uabi_engine(rb_next(&(engine__)->uabi_node)))
 
 enum hdmi_force_audio {
 	HDMI_AUDIO_OFF_DVI = -2,	/* no aux data for HDMI-DVI converter */
@@ -2270,12 +2289,13 @@ IS_SUBPLATFORM(const struct drm_i915_private *i915,
 
 #define HAS_GT_UC(dev_priv)	(INTEL_INFO(dev_priv)->has_gt_uc)
 
-/* Having GuC/HuC is not the same as using GuC/HuC */
-#define USES_GUC(dev_priv)		intel_uc_is_using_guc(&(dev_priv)->gt.uc)
-#define USES_GUC_SUBMISSION(dev_priv)	intel_uc_is_using_guc_submission(&(dev_priv)->gt.uc)
-#define USES_HUC(dev_priv)		intel_uc_is_using_huc(&(dev_priv)->gt.uc)
+/* Having GuC is not the same as using GuC */
+#define USES_GUC(dev_priv)		intel_uc_supports_guc(&(dev_priv)->gt.uc)
+#define USES_GUC_SUBMISSION(dev_priv)	intel_uc_supports_guc_submission(&(dev_priv)->gt.uc)
 
 #define HAS_POOLED_EU(dev_priv)	(INTEL_INFO(dev_priv)->has_pooled_eu)
+
+#define HAS_GLOBAL_MOCS_REGISTERS(dev_priv)	(INTEL_INFO(dev_priv)->has_global_mocs)
 
 #define INTEL_PCH_DEVICE_ID_MASK		0xff80
 #define INTEL_PCH_IBX_DEVICE_ID_TYPE		0x3b00
@@ -2370,7 +2390,7 @@ long i915_compat_ioctl(struct file *filp, unsigned int cmd, unsigned long arg);
 extern const struct dev_pm_ops i915_pm_ops;
 
 int i915_driver_probe(struct pci_dev *pdev, const struct pci_device_id *ent);
-void i915_driver_remove(struct drm_device *dev);
+void i915_driver_remove(struct drm_i915_private *i915);
 
 void intel_engine_init_hangcheck(struct intel_engine_cs *engine);
 int vlv_force_gfx_clock(struct drm_i915_private *dev_priv, bool on);
@@ -2477,6 +2497,8 @@ static inline u32 i915_reset_engine_count(struct i915_gpu_error *error,
 void i915_gem_init_mmio(struct drm_i915_private *i915);
 int __must_check i915_gem_init(struct drm_i915_private *dev_priv);
 int __must_check i915_gem_init_hw(struct drm_i915_private *dev_priv);
+void i915_gem_driver_register(struct drm_i915_private *i915);
+void i915_gem_driver_unregister(struct drm_i915_private *i915);
 void i915_gem_driver_remove(struct drm_i915_private *dev_priv);
 void i915_gem_driver_release(struct drm_i915_private *dev_priv);
 int i915_gem_wait_for_idle(struct drm_i915_private *dev_priv,
@@ -2576,8 +2598,8 @@ unsigned long i915_gem_shrink(struct drm_i915_private *i915,
 #define I915_SHRINK_WRITEBACK	BIT(4)
 
 unsigned long i915_gem_shrink_all(struct drm_i915_private *i915);
-void i915_gem_shrinker_register(struct drm_i915_private *i915);
-void i915_gem_shrinker_unregister(struct drm_i915_private *i915);
+void i915_gem_driver_register__shrinker(struct drm_i915_private *i915);
+void i915_gem_driver_unregister__shrinker(struct drm_i915_private *i915);
 void i915_gem_shrinker_taints_mutex(struct drm_i915_private *i915,
 				    struct mutex *mutex);
 

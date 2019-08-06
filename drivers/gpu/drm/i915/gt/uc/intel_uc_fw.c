@@ -132,6 +132,25 @@ __uc_fw_auto_select(struct intel_uc_fw *uc_fw, enum intel_platform p, u8 rev)
 			uc_fw->path = NULL;
 		}
 	}
+
+	/* We don't want to enable GuC/HuC on pre-Gen11 by default */
+	if (i915_modparams.enable_guc == -1 && p < INTEL_ICELAKE)
+		uc_fw->path = NULL;
+}
+
+static const char *__override_guc_firmware_path(void)
+{
+	if (i915_modparams.enable_guc & (ENABLE_GUC_SUBMISSION |
+					 ENABLE_GUC_LOAD_HUC))
+		return i915_modparams.guc_firmware_path;
+	return "";
+}
+
+static const char *__override_huc_firmware_path(void)
+{
+	if (i915_modparams.enable_guc & ENABLE_GUC_LOAD_HUC)
+		return i915_modparams.huc_firmware_path;
+	return "";
 }
 
 static bool
@@ -139,10 +158,10 @@ __uc_fw_override(struct intel_uc_fw *uc_fw)
 {
 	switch (uc_fw->type) {
 	case INTEL_UC_FW_TYPE_GUC:
-		uc_fw->path = i915_modparams.guc_firmware_path;
+		uc_fw->path = __override_guc_firmware_path();
 		break;
 	case INTEL_UC_FW_TYPE_HUC:
-		uc_fw->path = i915_modparams.huc_firmware_path;
+		uc_fw->path = __override_huc_firmware_path();
 		break;
 	}
 
@@ -364,6 +383,10 @@ static int uc_fw_xfer(struct intel_uc_fw *uc_fw, struct intel_gt *gt,
 	u64 offset;
 	int ret;
 
+	ret = i915_inject_load_error(gt->i915, -ETIMEDOUT);
+	if (ret)
+		return ret;
+
 	intel_uncore_forcewake_get(uncore, FORCEWAKE_ALL);
 
 	/* Set the source address for the uCode */
@@ -424,8 +447,13 @@ int intel_uc_fw_upload(struct intel_uc_fw *uc_fw, struct intel_gt *gt,
 	/* make sure the status was cleared the last time we reset the uc */
 	GEM_BUG_ON(intel_uc_fw_is_loaded(uc_fw));
 
+	err = i915_inject_load_error(gt->i915, -ENOEXEC);
+	if (err)
+		return err;
+
 	if (!intel_uc_fw_is_available(uc_fw))
 		return -ENOEXEC;
+
 	/* Call custom loader */
 	intel_uc_fw_ggtt_bind(uc_fw, gt);
 	err = uc_fw_xfer(uc_fw, gt, wopcm_offset, dma_flags);
@@ -445,13 +473,10 @@ int intel_uc_fw_upload(struct intel_uc_fw *uc_fw, struct intel_gt *gt,
 	return 0;
 
 fail:
+	i915_probe_error(gt->i915, "Failed to load %s firmware %s (%d)\n",
+			 intel_uc_fw_type_repr(uc_fw->type), uc_fw->path,
+			 err);
 	uc_fw->status = INTEL_UC_FIRMWARE_FAIL;
-	DRM_DEBUG_DRIVER("%s fw load failed\n",
-			 intel_uc_fw_type_repr(uc_fw->type));
-
-	DRM_WARN("%s: Failed to load firmware %s (error %d)\n",
-		 intel_uc_fw_type_repr(uc_fw->type), uc_fw->path, err);
-
 	return err;
 }
 

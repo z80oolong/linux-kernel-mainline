@@ -1667,7 +1667,7 @@ gen8_update_reg_state_unlocked(struct intel_context *ce,
 			       u32 *reg_state,
 			       const struct i915_oa_config *oa_config)
 {
-	struct drm_i915_private *i915 = ce->gem_context->i915;
+	struct drm_i915_private *i915 = ce->engine->i915;
 	u32 ctx_oactxctrl = i915->perf.oa.ctx_oactxctrl_offset;
 	u32 ctx_flexeu0 = i915->perf.oa.ctx_flexeu0_offset;
 	/* The MMIO offsets for Flex EU registers aren't contiguous */
@@ -1875,7 +1875,6 @@ static int gen8_configure_all_contexts(struct drm_i915_private *i915,
 #undef ctx_flexeuN
 	struct intel_engine_cs *engine;
 	struct i915_gem_context *ctx;
-	enum intel_engine_id id;
 	int i;
 
 	for (i = 2; i < ARRAY_SIZE(regs); i++)
@@ -1915,7 +1914,7 @@ static int gen8_configure_all_contexts(struct drm_i915_private *i915,
 	 * If we don't modify the kernel_context, we do not get events while
 	 * idle.
 	 */
-	for_each_engine(engine, i915, id) {
+	for_each_uabi_engine(engine, i915) {
 		struct intel_context *ce = engine->kernel_context;
 		int err;
 
