@@ -1,0 +1,30 @@
+drm drm-fixes e21a712a9685488f5ce80495b37b9fdbe96c230d
+	Linux 5.3-rc3
+drm-misc drm-misc-fixes f7ccbed656f78212593ca965d9a8f34bf24e0aab
+	drm/rockchip: Suspend DP late
+drm-intel drm-intel-fixes 73a0ff0b30af79bf0303d557eb82f1d1945bb6ee
+	drm/i915: Fix wrong escape clock divisor init for GLK
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next dce14e36aea23183ccd315fbc6b0fca027bf73f5
+	Merge tag 'drm-intel-next-2019-07-30' of git://anongit.freedesktop.org/drm/drm-intel into drm-next
+drm-misc drm-misc-next-fixes 7aaddd96d5febcf5b24357a326b3038d49a20532
+	drm/modes: Don't apply cmdline's rotation if it wasn't specified
+drm-intel drm-intel-next-fixes c36beba6b296b3c05a0f29753b04775e5ae23886
+	drm/i915: Seal races between async GPU cancellation, retirement and signaling
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next bc0380b9e5587d0c3fd207f16c53a101a9ea81dd
+	drm/hdcp: reference for srm file format
+drm-intel drm-intel-next-queued 033a856c73683924e28e329502572c413beb86c0
+	drm/i915/dmc: Load DMC on TGL
+drm-intel drm-intel-next e0e712fe42ef67bdf45fc348767d1d0a4eeba77f
+	drm/i915: Update DRIVER_DATE to 20190730
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus c1c6c877b0c79fd7e05c931435aa42211eaeebaf
+	ALSA: hda - Don't override global PCM hw info flag
+sound-upstream for-next 118b2806a07605d6e3c880e35a5c472bfda7582f
+	ALSA: usb-audio: Add Pioneer DDJ-SX3 PCM quirck
+drm-intel topic/core-for-CI 221ee28eb0411efc0f8ff734dfd7c36d4c1113cf
+	uapi/perf: Squelch compiler warning
