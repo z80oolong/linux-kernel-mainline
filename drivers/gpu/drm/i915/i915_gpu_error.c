@@ -686,6 +686,7 @@ static void __err_print_to_sgl(struct drm_i915_error_state_buf *m,
 	err_printf(m, "Kernel: %s %s\n",
 		   init_utsname()->release,
 		   init_utsname()->machine);
+	err_printf(m, "Driver: %s\n", DRIVER_DATE);
 	ts = ktime_to_timespec64(error->time);
 	err_printf(m, "Time: %lld s %ld us\n",
 		   (s64)ts.tv_sec, ts.tv_nsec / NSEC_PER_USEC);
@@ -745,15 +746,14 @@ static void __err_print_to_sgl(struct drm_i915_error_state_buf *m,
 	for (i = 0; i < error->nfence; i++)
 		err_printf(m, "  fence[%d] = %08llx\n", i, error->fence[i]);
 
-	if (INTEL_GEN(m->i915) >= 6) {
+	if (IS_GEN_RANGE(m->i915, 6, 11)) {
 		err_printf(m, "ERROR: 0x%08x\n", error->error);
-
-		if (INTEL_GEN(m->i915) >= 8)
-			err_printf(m, "FAULT_TLB_DATA: 0x%08x 0x%08x\n",
-				   error->fault_data1, error->fault_data0);
-
 		err_printf(m, "DONE_REG: 0x%08x\n", error->done_reg);
 	}
+
+	if (INTEL_GEN(m->i915) >= 8)
+		err_printf(m, "FAULT_TLB_DATA: 0x%08x 0x%08x\n",
+			   error->fault_data1, error->fault_data0);
 
 	if (IS_GEN(m->i915, 7))
 		err_printf(m, "ERR_INT: 0x%08x\n", error->err_int);
@@ -1106,7 +1106,10 @@ static void error_record_engine_registers(struct i915_gpu_state *error,
 
 	if (INTEL_GEN(dev_priv) >= 6) {
 		ee->rc_psmi = ENGINE_READ(engine, RING_PSMI_CTL);
-		if (INTEL_GEN(dev_priv) >= 8)
+
+		if (INTEL_GEN(dev_priv) >= 12)
+			ee->fault_reg = I915_READ(GEN12_RING_FAULT_REG);
+		else if (INTEL_GEN(dev_priv) >= 8)
 			ee->fault_reg = I915_READ(GEN8_RING_FAULT_REG);
 		else
 			ee->fault_reg = GEN6_RING_FAULT_REG_READ(engine);
@@ -1542,7 +1545,12 @@ static void capture_reg_state(struct i915_gpu_state *error)
 	if (IS_GEN(i915, 7))
 		error->err_int = intel_uncore_read(uncore, GEN7_ERR_INT);
 
-	if (INTEL_GEN(i915) >= 8) {
+	if (INTEL_GEN(i915) >= 12) {
+		error->fault_data0 = intel_uncore_read(uncore,
+						       GEN12_FAULT_TLB_DATA0);
+		error->fault_data1 = intel_uncore_read(uncore,
+						       GEN12_FAULT_TLB_DATA1);
+	} else if (INTEL_GEN(i915) >= 8) {
 		error->fault_data0 = intel_uncore_read(uncore,
 						       GEN8_FAULT_TLB_DATA0);
 		error->fault_data1 = intel_uncore_read(uncore,
@@ -1561,8 +1569,10 @@ static void capture_reg_state(struct i915_gpu_state *error)
 
 	if (INTEL_GEN(i915) >= 6) {
 		error->derrmr = intel_uncore_read(uncore, DERRMR);
-		error->error = intel_uncore_read(uncore, ERROR_GEN6);
-		error->done_reg = intel_uncore_read(uncore, DONE_REG);
+		if (INTEL_GEN(i915) < 12) {
+			error->error = intel_uncore_read(uncore, ERROR_GEN6);
+			error->done_reg = intel_uncore_read(uncore, DONE_REG);
+		}
 	}
 
 	if (INTEL_GEN(i915) >= 5)

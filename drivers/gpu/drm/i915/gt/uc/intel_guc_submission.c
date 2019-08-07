@@ -33,6 +33,7 @@
 #include "intel_guc_submission.h"
 
 #include "i915_drv.h"
+#include "i915_trace.h"
 
 enum {
 	GUC_PREEMPT_NONE = 0,
@@ -488,7 +489,7 @@ static void guc_add_request(struct intel_guc *guc, struct i915_request *rq)
 			   ring_tail, rq->fence.seqno);
 	guc_ring_doorbell(client);
 
-	client->submissions[engine->id] += 1;
+	client->submissions[engine->guc_id] += 1;
 }
 
 /*
@@ -1123,6 +1124,10 @@ int intel_guc_submission_enable(struct intel_guc *guc)
 	enum intel_engine_id id;
 	int err;
 
+	err = i915_inject_load_error(gt->i915, -ENXIO);
+	if (err)
+		return err;
+
 	/*
 	 * We're using GuC work items for submitting work through GuC. Since
 	 * we're coalescing multiple requests from a single context into a
@@ -1161,6 +1166,22 @@ void intel_guc_submission_disable(struct intel_guc *guc)
 
 	guc_interrupts_release(gt);
 	guc_clients_disable(guc);
+}
+
+static bool __guc_submission_support(struct intel_guc *guc)
+{
+	/* XXX: GuC submission is unavailable for now */
+	return false;
+
+	if (!intel_guc_is_supported(guc))
+		return false;
+
+	return i915_modparams.enable_guc & ENABLE_GUC_SUBMISSION;
+}
+
+void intel_guc_submission_init_early(struct intel_guc *guc)
+{
+	guc->submission_supported = __guc_submission_support(guc);
 }
 
 #if IS_ENABLED(CONFIG_DRM_I915_SELFTEST)

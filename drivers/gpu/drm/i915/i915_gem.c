@@ -46,6 +46,7 @@
 #include "gem/i915_gem_ioctls.h"
 #include "gem/i915_gem_pm.h"
 #include "gem/i915_gemfs.h"
+#include "gt/intel_engine_user.h"
 #include "gt/intel_gt.h"
 #include "gt/intel_gt_pm.h"
 #include "gt/intel_mocs.h"
@@ -58,7 +59,6 @@
 #include "i915_trace.h"
 #include "i915_vgpu.h"
 
-#include "intel_drv.h"
 #include "intel_pm.h"
 
 static int
@@ -1240,22 +1240,14 @@ int i915_gem_init_hw(struct drm_i915_private *i915)
 		goto out;
 	}
 
-	ret = intel_wopcm_init_hw(&i915->wopcm, gt);
-	if (ret) {
-		DRM_ERROR("Enabling WOPCM failed (%d)\n", ret);
-		goto out;
-	}
-
 	/* We can't enable contexts until all firmware is loaded */
-	ret = intel_uc_init_hw(&i915->gt.uc);
+	ret = intel_uc_init_hw(&gt->uc);
 	if (ret) {
-		DRM_ERROR("Enabling uc failed (%d)\n", ret);
+		i915_probe_error(i915, "Enabling uc failed (%d)\n", ret);
 		goto out;
 	}
 
-	intel_mocs_init_l3cc_table(gt);
-
-	intel_engines_set_scheduler_caps(i915);
+	intel_mocs_init(gt);
 
 out:
 	intel_uncore_forcewake_put(uncore, FORCEWAKE_ALL);
@@ -1367,24 +1359,6 @@ err_rq:
 		i915_gem_object_unpin_map(engine->default_state);
 	}
 
-	if (IS_ENABLED(CONFIG_DRM_I915_DEBUG_GEM)) {
-		unsigned int found = intel_engines_has_context_isolation(i915);
-
-		/*
-		 * Make sure that classes with multiple engine instances all
-		 * share the same basic configuration.
-		 */
-		for_each_engine(engine, i915, id) {
-			unsigned int bit = BIT(engine->uabi_class);
-			unsigned int expected = engine->default_state ? bit : 0;
-
-			if ((found & bit) != expected) {
-				DRM_ERROR("mismatching default context state for class %d on engine %s\n",
-					  engine->uabi_class, engine->name);
-			}
-		}
-	}
-
 out_ctx:
 	i915_gem_context_unlock_engines(ctx);
 	i915_gem_context_set_closed(ctx);
@@ -1447,10 +1421,7 @@ int i915_gem_init(struct drm_i915_private *dev_priv)
 		return ret;
 
 	intel_uc_fetch_firmwares(&dev_priv->gt.uc);
-
-	ret = intel_wopcm_init(&dev_priv->wopcm);
-	if (ret)
-		goto err_uc_fw;
+	intel_wopcm_init(&dev_priv->wopcm);
 
 	/* This is just a security blanket to placate dragons.
 	 * On some systems, we very sporadically observe that the first TLBs
@@ -1526,15 +1497,13 @@ int i915_gem_init(struct drm_i915_private *dev_priv)
 	if (ret)
 		goto err_gt;
 
-	if (i915_inject_probe_failure()) {
-		ret = -ENODEV;
+	ret = i915_inject_load_error(dev_priv, -ENODEV);
+	if (ret)
 		goto err_gt;
-	}
 
-	if (i915_inject_probe_failure()) {
-		ret = -EIO;
+	ret = i915_inject_load_error(dev_priv, -EIO);
+	if (ret)
 		goto err_gt;
-	}
 
 	intel_uncore_forcewake_put(&dev_priv->uncore, FORCEWAKE_ALL);
 	mutex_unlock(&dev_priv->drm.struct_mutex);
@@ -1576,7 +1545,6 @@ err_unlock:
 	intel_uncore_forcewake_put(&dev_priv->uncore, FORCEWAKE_ALL);
 	mutex_unlock(&dev_priv->drm.struct_mutex);
 
-err_uc_fw:
 	intel_uc_cleanup_firmwares(&dev_priv->gt.uc);
 
 	if (ret != -EIO) {
@@ -1609,6 +1577,18 @@ err_uc_fw:
 
 	i915_gem_drain_freed_objects(dev_priv);
 	return ret;
+}
+
+void i915_gem_driver_register(struct drm_i915_private *i915)
+{
+	i915_gem_driver_register__shrinker(i915);
+
+	intel_engines_driver_register(i915);
+}
+
+void i915_gem_driver_unregister(struct drm_i915_private *i915)
+{
+	i915_gem_driver_unregister__shrinker(i915);
 }
 
 void i915_gem_driver_remove(struct drm_i915_private *dev_priv)
@@ -1660,7 +1640,6 @@ void i915_gem_init_mmio(struct drm_i915_private *i915)
 static void i915_gem_init__mm(struct drm_i915_private *i915)
 {
 	spin_lock_init(&i915->mm.obj_lock);
-	spin_lock_init(&i915->mm.free_lock);
 
 	init_llist_head(&i915->mm.free_list);
 
@@ -1694,8 +1673,6 @@ void i915_gem_cleanup_early(struct drm_i915_private *dev_priv)
 	GEM_BUG_ON(!llist_empty(&dev_priv->mm.free_list));
 	GEM_BUG_ON(atomic_read(&dev_priv->mm.free_count));
 	WARN_ON(dev_priv->mm.shrink_count);
-
-	intel_gt_cleanup_early(&dev_priv->gt);
 
 	i915_gemfs_fini(dev_priv);
 }

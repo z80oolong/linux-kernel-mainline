@@ -84,8 +84,8 @@ static void sr_oa_regs(struct intel_vgpu_workload *workload,
 		u32 *reg_state, bool save)
 {
 	struct drm_i915_private *dev_priv = workload->vgpu->gvt->dev_priv;
-	u32 ctx_oactxctrl = dev_priv->perf.oa.ctx_oactxctrl_offset;
-	u32 ctx_flexeu0 = dev_priv->perf.oa.ctx_flexeu0_offset;
+	u32 ctx_oactxctrl = dev_priv->perf.ctx_oactxctrl_offset;
+	u32 ctx_flexeu0 = dev_priv->perf.ctx_flexeu0_offset;
 	int i = 0;
 	u32 flex_mmio[] = {
 		i915_mmio_reg_offset(EU_PERF_CNTL0),
@@ -291,9 +291,6 @@ shadow_context_descriptor_update(struct intel_context *ce,
 	 * Update bits 0-11 of the context descriptor which includes flags
 	 * like GEN8_CTX_* cached in desc_template
 	 */
-	desc &= U64_MAX << 12;
-	desc |= ce->gem_context->desc_template & ((1ULL << 12) - 1);
-
 	desc &= ~(0x3 << GEN8_CTX_ADDRESSING_MODE_SHIFT);
 	desc |= workload->ctx_desc.addressing_mode <<
 		GEN8_CTX_ADDRESSING_MODE_SHIFT;

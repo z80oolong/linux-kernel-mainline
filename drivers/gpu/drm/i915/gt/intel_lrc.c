@@ -136,6 +136,7 @@
 #include "gem/i915_gem_context.h"
 
 #include "i915_drv.h"
+#include "i915_trace.h"
 #include "i915_vgpu.h"
 #include "intel_engine_pm.h"
 #include "intel_gt.h"
@@ -417,13 +418,17 @@ lrc_descriptor(struct intel_context *ce, struct intel_engine_cs *engine)
 	BUILD_BUG_ON(MAX_CONTEXT_HW_ID > (BIT(GEN8_CTX_ID_WIDTH)));
 	BUILD_BUG_ON(GEN11_MAX_CONTEXT_HW_ID > (BIT(GEN11_SW_CTX_ID_WIDTH)));
 
-	desc = ctx->desc_template;				/* bits  0-11 */
-	GEM_BUG_ON(desc & GENMASK_ULL(63, 12));
+	desc = INTEL_LEGACY_32B_CONTEXT;
+	if (i915_vm_is_4lvl(ce->vm))
+		desc = INTEL_LEGACY_64B_CONTEXT;
+	desc <<= GEN8_CTX_ADDRESSING_MODE_SHIFT;
+
+	desc |= GEN8_CTX_VALID | GEN8_CTX_PRIVILEGE;
+	if (IS_GEN(engine->i915, 8))
+		desc |= GEN8_CTX_L3LLC_COHERENT;
 
 	desc |= i915_ggtt_offset(ce->state) + LRC_HEADER_PAGES * PAGE_SIZE;
 								/* bits 12-31 */
-	GEM_BUG_ON(desc & GENMASK_ULL(63, 32));
-
 	/*
 	 * The following 32bits are copied into the OA reports (dword 2).
 	 * Consider updating oa_get_render_ctx_id in i915_perf.c when changing
@@ -2280,18 +2285,6 @@ static void __execlists_reset(struct intel_engine_cs *engine, bool stalled)
 	GEM_BUG_ON(i915_active_is_idle(&ce->active));
 	GEM_BUG_ON(!i915_vma_is_pinned(ce->state));
 	rq = active_request(rq);
-
-	/*
-	 * Catch up with any missed context-switch interrupts.
-	 *
-	 * Ideally we would just read the remaining CSB entries now that we
-	 * know the gpu is idle. However, the CSB registers are sometimes^W
-	 * often trashed across a GPU reset! Instead we have to rely on
-	 * guessing the missed context-switch events by looking at what
-	 * requests were completed.
-	 */
-	execlists_cancel_port_requests(execlists);
-
 	if (!rq) {
 		ce->ring->head = ce->ring->tail;
 		goto out_replay;
@@ -2353,6 +2346,7 @@ out_replay:
 
 unwind:
 	/* Push back any incomplete requests for replay after the reset. */
+	execlists_cancel_port_requests(execlists);
 	__unwind_incomplete_requests(engine);
 }
 
