@@ -3756,6 +3756,7 @@ EXPORT_SYMBOL vmlinux 0x00000000	filemap_check_errors
 EXPORT_SYMBOL vmlinux 0x00000000	filemap_fault
 EXPORT_SYMBOL vmlinux 0x00000000	filemap_fdatawait_keep_errors
 EXPORT_SYMBOL vmlinux 0x00000000	filemap_fdatawait_range
+EXPORT_SYMBOL vmlinux 0x00000000	filemap_fdatawait_range_keep_errors
 EXPORT_SYMBOL vmlinux 0x00000000	filemap_fdatawrite
 EXPORT_SYMBOL vmlinux 0x00000000	filemap_fdatawrite_range
 EXPORT_SYMBOL vmlinux 0x00000000	filemap_flush
@@ -4412,6 +4413,8 @@ EXPORT_SYMBOL vmlinux 0x00000000	jbd2_journal_init_inode
 EXPORT_SYMBOL vmlinux 0x00000000	jbd2_journal_init_jbd_inode
 EXPORT_SYMBOL vmlinux 0x00000000	jbd2_journal_inode_add_wait
 EXPORT_SYMBOL vmlinux 0x00000000	jbd2_journal_inode_add_write
+EXPORT_SYMBOL vmlinux 0x00000000	jbd2_journal_inode_ranged_wait
+EXPORT_SYMBOL vmlinux 0x00000000	jbd2_journal_inode_ranged_write
 EXPORT_SYMBOL vmlinux 0x00000000	jbd2_journal_invalidatepage
 EXPORT_SYMBOL vmlinux 0x00000000	jbd2_journal_load
 EXPORT_SYMBOL vmlinux 0x00000000	jbd2_journal_lock_updates
@@ -7995,6 +7998,7 @@ EXPORT_SYMBOL_GPL fs/nfs/nfs 0x00000000	nfs_may_open
 EXPORT_SYMBOL_GPL fs/nfs/nfs 0x00000000	nfs_mkdir
 EXPORT_SYMBOL_GPL fs/nfs/nfs 0x00000000	nfs_mknod
 EXPORT_SYMBOL_GPL fs/nfs/nfs 0x00000000	nfs_net_id
+EXPORT_SYMBOL_GPL fs/nfs/nfs 0x00000000	nfs_open
 EXPORT_SYMBOL_GPL fs/nfs/nfs 0x00000000	nfs_pageio_init_read
 EXPORT_SYMBOL_GPL fs/nfs/nfs 0x00000000	nfs_pageio_init_write
 EXPORT_SYMBOL_GPL fs/nfs/nfs 0x00000000	nfs_pageio_resend
@@ -10862,7 +10866,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	kick_all_cpus_sync
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	kick_process
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	kill_dax
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	kill_dev_dax
-EXPORT_SYMBOL_GPL vmlinux 0x00000000	kill_pid_info_as_cred
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	kill_pid_usb_asyncio
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	klist_add_before
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	klist_add_behind
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	klist_add_head
