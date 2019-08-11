@@ -82,47 +82,22 @@ struct reservation_object {
 	lockdep_assert_held(&(obj)->lock.base)
 
 /**
- * reservation_object_init - initialize a reservation object
+ * reservation_object_get_excl - get the reservation object's
+ * exclusive fence, with update-side lock held
  * @obj: the reservation object
+ *
+ * Returns the exclusive fence (if any).  Does NOT take a
+ * reference. Writers must hold obj->lock, readers may only
+ * hold a RCU read side lock.
+ *
+ * RETURNS
+ * The exclusive fence or NULL
  */
-static inline void
-reservation_object_init(struct reservation_object *obj)
+static inline struct dma_fence *
+reservation_object_get_excl(struct reservation_object *obj)
 {
-	ww_mutex_init(&obj->lock, &reservation_ww_class);
-
-	__seqcount_init(&obj->seq, reservation_seqcount_string, &reservation_seqcount_class);
-	RCU_INIT_POINTER(obj->fence, NULL);
-	RCU_INIT_POINTER(obj->fence_excl, NULL);
-}
-
-/**
- * reservation_object_fini - destroys a reservation object
- * @obj: the reservation object
- */
-static inline void
-reservation_object_fini(struct reservation_object *obj)
-{
-	int i;
-	struct reservation_object_list *fobj;
-	struct dma_fence *excl;
-
-	/*
-	 * This object should be dead and all references must have
-	 * been released to it, so no need to be protected with rcu.
-	 */
-	excl = rcu_dereference_protected(obj->fence_excl, 1);
-	if (excl)
-		dma_fence_put(excl);
-
-	fobj = rcu_dereference_protected(obj->fence, 1);
-	if (fobj) {
-		for (i = 0; i < fobj->shared_count; ++i)
-			dma_fence_put(rcu_dereference_protected(fobj->shared[i], 1));
-
-		kfree(fobj);
-	}
-
-	ww_mutex_destroy(&obj->lock);
+	return rcu_dereference_protected(obj->fence_excl,
+					 reservation_object_held(obj));
 }
 
 /**
@@ -138,6 +113,57 @@ reservation_object_get_list(struct reservation_object *obj)
 {
 	return rcu_dereference_protected(obj->fence,
 					 reservation_object_held(obj));
+}
+
+/**
+ * reservation_object_fences - read consistent fence pointers
+ * @obj: reservation object where we get the fences from
+ * @excl: pointer for the exclusive fence
+ * @list: pointer for the shared fence list
+ *
+ * Make sure we have a consisten exclusive fence and shared fence list.
+ * Must be called with rcu read side lock held.
+ */
+static inline void
+reservation_object_fences(struct reservation_object *obj,
+			  struct dma_fence **excl,
+			  struct reservation_object_list **list,
+			  u32 *shared_count)
+{
+	unsigned int seq;
+
+	do {
+		seq = read_seqcount_begin(&obj->seq);
+		*excl = rcu_dereference(obj->fence_excl);
+		*list = rcu_dereference(obj->fence);
+		*shared_count = *list ? (*list)->shared_count : 0;
+	} while (read_seqcount_retry(&obj->seq, seq));
+}
+
+/**
+ * reservation_object_get_excl_rcu - get the reservation object's
+ * exclusive fence, without lock held.
+ * @obj: the reservation object
+ *
+ * If there is an exclusive fence, this atomically increments it's
+ * reference count and returns it.
+ *
+ * RETURNS
+ * The exclusive fence or NULL if none
+ */
+static inline struct dma_fence *
+reservation_object_get_excl_rcu(struct reservation_object *obj)
+{
+	struct dma_fence *fence;
+
+	if (!rcu_access_pointer(obj->fence_excl))
+		return NULL;
+
+	rcu_read_lock();
+	fence = dma_fence_get_rcu_safe(&obj->fence_excl);
+	rcu_read_unlock();
+
+	return fence;
 }
 
 /**
@@ -184,6 +210,38 @@ reservation_object_lock_interruptible(struct reservation_object *obj,
 	return ww_mutex_lock_interruptible(&obj->lock, ctx);
 }
 
+/**
+ * reservation_object_lock_slow - slowpath lock the reservation object
+ * @obj: the reservation object
+ * @ctx: the locking context
+ *
+ * Acquires the reservation object after a die case. This function
+ * will sleep until the lock becomes available. See reservation_object_lock() as
+ * well.
+ */
+static inline void
+reservation_object_lock_slow(struct reservation_object *obj,
+			     struct ww_acquire_ctx *ctx)
+{
+	ww_mutex_lock_slow(&obj->lock, ctx);
+}
+
+/**
+ * reservation_object_lock_slow_interruptible - slowpath lock the reservation
+ * object, interruptible
+ * @obj: the reservation object
+ * @ctx: the locking context
+ *
+ * Acquires the reservation object interruptible after a die case. This function
+ * will sleep until the lock becomes available. See
+ * reservation_object_lock_interruptible() as well.
+ */
+static inline int
+reservation_object_lock_slow_interruptible(struct reservation_object *obj,
+					   struct ww_acquire_ctx *ctx)
+{
+	return ww_mutex_lock_slow_interruptible(&obj->lock, ctx);
+}
 
 /**
  * reservation_object_trylock - trylock the reservation object
@@ -203,6 +261,31 @@ static inline bool __must_check
 reservation_object_trylock(struct reservation_object *obj)
 {
 	return ww_mutex_trylock(&obj->lock);
+}
+
+/**
+ * reservation_object_is_locked - is the reservation object locked
+ * @obj: the reservation object
+ *
+ * Returns true if the mutex is locked, false if unlocked.
+ */
+static inline bool
+reservation_object_is_locked(struct reservation_object *obj)
+{
+	return ww_mutex_is_locked(&obj->lock);
+}
+
+/**
+ * reservation_object_locking_ctx - returns the context used to lock the object
+ * @obj: the reservation object
+ *
+ * Returns the context used to lock a reservation object or NULL if no context
+ * was used or the object is not locked at all.
+ */
+static inline struct ww_acquire_ctx *
+reservation_object_locking_ctx(struct reservation_object *obj)
+{
+	return READ_ONCE(obj->lock.ctx);
 }
 
 /**
@@ -226,51 +309,8 @@ reservation_object_unlock(struct reservation_object *obj)
 	ww_mutex_unlock(&obj->lock);
 }
 
-/**
- * reservation_object_get_excl - get the reservation object's
- * exclusive fence, with update-side lock held
- * @obj: the reservation object
- *
- * Returns the exclusive fence (if any).  Does NOT take a
- * reference. Writers must hold obj->lock, readers may only
- * hold a RCU read side lock.
- *
- * RETURNS
- * The exclusive fence or NULL
- */
-static inline struct dma_fence *
-reservation_object_get_excl(struct reservation_object *obj)
-{
-	return rcu_dereference_protected(obj->fence_excl,
-					 reservation_object_held(obj));
-}
-
-/**
- * reservation_object_get_excl_rcu - get the reservation object's
- * exclusive fence, without lock held.
- * @obj: the reservation object
- *
- * If there is an exclusive fence, this atomically increments it's
- * reference count and returns it.
- *
- * RETURNS
- * The exclusive fence or NULL if none
- */
-static inline struct dma_fence *
-reservation_object_get_excl_rcu(struct reservation_object *obj)
-{
-	struct dma_fence *fence;
-
-	if (!rcu_access_pointer(obj->fence_excl))
-		return NULL;
-
-	rcu_read_lock();
-	fence = dma_fence_get_rcu_safe(&obj->fence_excl);
-	rcu_read_unlock();
-
-	return fence;
-}
-
+void reservation_object_init(struct reservation_object *obj);
+void reservation_object_fini(struct reservation_object *obj);
 int reservation_object_reserve_shared(struct reservation_object *obj,
 				      unsigned int num_fences);
 void reservation_object_add_shared_fence(struct reservation_object *obj,
