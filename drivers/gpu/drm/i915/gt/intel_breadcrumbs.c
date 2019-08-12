@@ -27,6 +27,7 @@
 #include <uapi/linux/sched/types.h>
 
 #include "i915_drv.h"
+#include "i915_trace.h"
 
 static void irq_enable(struct intel_engine_cs *engine)
 {
@@ -34,9 +35,9 @@ static void irq_enable(struct intel_engine_cs *engine)
 		return;
 
 	/* Caller disables interrupts */
-	spin_lock(&engine->i915->irq_lock);
+	spin_lock(&engine->gt->irq_lock);
 	engine->irq_enable(engine);
-	spin_unlock(&engine->i915->irq_lock);
+	spin_unlock(&engine->gt->irq_lock);
 }
 
 static void irq_disable(struct intel_engine_cs *engine)
@@ -45,9 +46,9 @@ static void irq_disable(struct intel_engine_cs *engine)
 		return;
 
 	/* Caller disables interrupts */
-	spin_lock(&engine->i915->irq_lock);
+	spin_lock(&engine->gt->irq_lock);
 	engine->irq_disable(engine);
-	spin_unlock(&engine->i915->irq_lock);
+	spin_unlock(&engine->gt->irq_lock);
 }
 
 static void __intel_breadcrumbs_disarm_irq(struct intel_breadcrumbs *b)
