@@ -284,4 +284,7 @@
 /* RDA UART */
 #define PORT_RDA	118
 
+/* Sunix UART */
+#define PORT_SUNIX	121
+
 #endif /* _UAPILINUX_SERIAL_CORE_H */
