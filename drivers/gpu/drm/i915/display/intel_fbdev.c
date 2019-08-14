@@ -43,7 +43,7 @@
 #include <drm/i915_drm.h>
 
 #include "i915_drv.h"
-#include "intel_drv.h"
+#include "intel_display_types.h"
 #include "intel_fbdev.h"
 #include "intel_frontbuffer.h"
 
@@ -241,11 +241,8 @@ static int intelfb_create(struct drm_fb_helper *helper,
 	info->fbops = &intelfb_ops;
 
 	/* setup aperture base/size for vesafb takeover */
-	info->apertures->ranges[0].base = dev->mode_config.fb_base;
+	info->apertures->ranges[0].base = ggtt->gmadr.start;
 	info->apertures->ranges[0].size = ggtt->mappable_end;
-
-	info->fix.smem_start = dev->mode_config.fb_base + i915_ggtt_offset(vma);
-	info->fix.smem_len = vma->node.size;
 
 	vaddr = i915_vma_pin_iomap(vma);
 	if (IS_ERR(vaddr)) {
@@ -255,6 +252,10 @@ static int intelfb_create(struct drm_fb_helper *helper,
 	}
 	info->screen_base = vaddr;
 	info->screen_size = vma->node.size;
+
+	/* Our framebuffer is the entirety of fbdev's system memory */
+	info->fix.smem_start = (unsigned long)info->screen_base;
+	info->fix.smem_len = info->screen_size;
 
 	drm_fb_helper_fill_info(info, &ifbdev->helper, sizes);
 
