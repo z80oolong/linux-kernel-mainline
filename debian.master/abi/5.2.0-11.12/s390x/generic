@@ -2905,7 +2905,10 @@ EXPORT_SYMBOL vmlinux 0x00000000	autoremove_wake_function
 EXPORT_SYMBOL vmlinux 0x00000000	avenrun
 EXPORT_SYMBOL vmlinux 0x00000000	balance_dirty_pages_ratelimited
 EXPORT_SYMBOL vmlinux 0x00000000	bcmp
+EXPORT_SYMBOL vmlinux 0x00000000	bd_abort_claiming
+EXPORT_SYMBOL vmlinux 0x00000000	bd_finish_claiming
 EXPORT_SYMBOL vmlinux 0x00000000	bd_set_size
+EXPORT_SYMBOL vmlinux 0x00000000	bd_start_claiming
 EXPORT_SYMBOL vmlinux 0x00000000	bdev_dax_pgoff
 EXPORT_SYMBOL vmlinux 0x00000000	bdev_read_only
 EXPORT_SYMBOL vmlinux 0x00000000	bdev_stack_limits
@@ -10866,6 +10869,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	kick_all_cpus_sync
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	kick_process
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	kill_dax
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	kill_dev_dax
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	kill_device
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	kill_pid_usb_asyncio
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	klist_add_before
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	klist_add_behind
