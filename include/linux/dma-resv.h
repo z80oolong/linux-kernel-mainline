@@ -46,201 +46,39 @@
 #include <linux/rcupdate.h>
 
 extern struct ww_class reservation_ww_class;
-extern struct lock_class_key reservation_seqcount_class;
-extern const char reservation_seqcount_string[];
 
 /**
- * struct reservation_object_list - a list of shared fences
+ * struct dma_resv_list - a list of shared fences
  * @rcu: for internal use
  * @shared_count: table of shared fences
  * @shared_max: for growing shared fence table
  * @shared: shared fence table
  */
-struct reservation_object_list {
+struct dma_resv_list {
 	struct rcu_head rcu;
 	u32 shared_count, shared_max;
 	struct dma_fence __rcu *shared[];
 };
 
 /**
- * struct reservation_object - a reservation object manages fences for a buffer
+ * struct dma_resv - a reservation object manages fences for a buffer
  * @lock: update side lock
  * @seq: sequence count for managing RCU read-side synchronization
  * @fence_excl: the exclusive fence, if there is one currently
  * @fence: list of current shared fences
  */
-struct reservation_object {
+struct dma_resv {
 	struct ww_mutex lock;
-	seqcount_t seq;
 
 	struct dma_fence __rcu *fence_excl;
-	struct reservation_object_list __rcu *fence;
+	struct dma_resv_list __rcu *fence;
 };
 
-#define reservation_object_held(obj) lockdep_is_held(&(obj)->lock.base)
-#define reservation_object_assert_held(obj) \
-	lockdep_assert_held(&(obj)->lock.base)
+#define dma_resv_held(obj) lockdep_is_held(&(obj)->lock.base)
+#define dma_resv_assert_held(obj) lockdep_assert_held(&(obj)->lock.base)
 
 /**
- * reservation_object_get_list - get the reservation object's
- * shared fence list, with update-side lock held
- * @obj: the reservation object
- *
- * Returns the shared fence list.  Does NOT take references to
- * the fence.  The obj->lock must be held.
- */
-static inline struct reservation_object_list *
-reservation_object_get_list(struct reservation_object *obj)
-{
-	return rcu_dereference_protected(obj->fence,
-					 reservation_object_held(obj));
-}
-
-/**
- * reservation_object_lock - lock the reservation object
- * @obj: the reservation object
- * @ctx: the locking context
- *
- * Locks the reservation object for exclusive access and modification. Note,
- * that the lock is only against other writers, readers will run concurrently
- * with a writer under RCU. The seqlock is used to notify readers if they
- * overlap with a writer.
- *
- * As the reservation object may be locked by multiple parties in an
- * undefined order, a #ww_acquire_ctx is passed to unwind if a cycle
- * is detected. See ww_mutex_lock() and ww_acquire_init(). A reservation
- * object may be locked by itself by passing NULL as @ctx.
- */
-static inline int
-reservation_object_lock(struct reservation_object *obj,
-			struct ww_acquire_ctx *ctx)
-{
-	return ww_mutex_lock(&obj->lock, ctx);
-}
-
-/**
- * reservation_object_lock_interruptible - lock the reservation object
- * @obj: the reservation object
- * @ctx: the locking context
- *
- * Locks the reservation object interruptible for exclusive access and
- * modification. Note, that the lock is only against other writers, readers
- * will run concurrently with a writer under RCU. The seqlock is used to
- * notify readers if they overlap with a writer.
- *
- * As the reservation object may be locked by multiple parties in an
- * undefined order, a #ww_acquire_ctx is passed to unwind if a cycle
- * is detected. See ww_mutex_lock() and ww_acquire_init(). A reservation
- * object may be locked by itself by passing NULL as @ctx.
- */
-static inline int
-reservation_object_lock_interruptible(struct reservation_object *obj,
-				      struct ww_acquire_ctx *ctx)
-{
-	return ww_mutex_lock_interruptible(&obj->lock, ctx);
-}
-
-/**
- * reservation_object_lock_slow - slowpath lock the reservation object
- * @obj: the reservation object
- * @ctx: the locking context
- *
- * Acquires the reservation object after a die case. This function
- * will sleep until the lock becomes available. See reservation_object_lock() as
- * well.
- */
-static inline void
-reservation_object_lock_slow(struct reservation_object *obj,
-			     struct ww_acquire_ctx *ctx)
-{
-	ww_mutex_lock_slow(&obj->lock, ctx);
-}
-
-/**
- * reservation_object_lock_slow_interruptible - slowpath lock the reservation
- * object, interruptible
- * @obj: the reservation object
- * @ctx: the locking context
- *
- * Acquires the reservation object interruptible after a die case. This function
- * will sleep until the lock becomes available. See
- * reservation_object_lock_interruptible() as well.
- */
-static inline int
-reservation_object_lock_slow_interruptible(struct reservation_object *obj,
-					   struct ww_acquire_ctx *ctx)
-{
-	return ww_mutex_lock_slow_interruptible(&obj->lock, ctx);
-}
-
-/**
- * reservation_object_trylock - trylock the reservation object
- * @obj: the reservation object
- *
- * Tries to lock the reservation object for exclusive access and modification.
- * Note, that the lock is only against other writers, readers will run
- * concurrently with a writer under RCU. The seqlock is used to notify readers
- * if they overlap with a writer.
- *
- * Also note that since no context is provided, no deadlock protection is
- * possible.
- *
- * Returns true if the lock was acquired, false otherwise.
- */
-static inline bool __must_check
-reservation_object_trylock(struct reservation_object *obj)
-{
-	return ww_mutex_trylock(&obj->lock);
-}
-
-/**
- * reservation_object_is_locked - is the reservation object locked
- * @obj: the reservation object
- *
- * Returns true if the mutex is locked, false if unlocked.
- */
-static inline bool
-reservation_object_is_locked(struct reservation_object *obj)
-{
-	return ww_mutex_is_locked(&obj->lock);
-}
-
-/**
- * reservation_object_locking_ctx - returns the context used to lock the object
- * @obj: the reservation object
- *
- * Returns the context used to lock a reservation object or NULL if no context
- * was used or the object is not locked at all.
- */
-static inline struct ww_acquire_ctx *
-reservation_object_locking_ctx(struct reservation_object *obj)
-{
-	return READ_ONCE(obj->lock.ctx);
-}
-
-/**
- * reservation_object_unlock - unlock the reservation object
- * @obj: the reservation object
- *
- * Unlocks the reservation object following exclusive access.
- */
-static inline void
-reservation_object_unlock(struct reservation_object *obj)
-{
-#ifdef CONFIG_DEBUG_MUTEXES
-	/* Test shared fence slot reservation */
-	if (rcu_access_pointer(obj->fence)) {
-		struct reservation_object_list *fence =
-			reservation_object_get_list(obj);
-
-		fence->shared_max = fence->shared_count;
-	}
-#endif
-	ww_mutex_unlock(&obj->lock);
-}
-
-/**
- * reservation_object_get_excl - get the reservation object's
+ * dma_resv_get_excl - get the reservation object's
  * exclusive fence, with update-side lock held
  * @obj: the reservation object
  *
@@ -251,15 +89,50 @@ reservation_object_unlock(struct reservation_object *obj)
  * RETURNS
  * The exclusive fence or NULL
  */
-static inline struct dma_fence *
-reservation_object_get_excl(struct reservation_object *obj)
+static inline struct dma_fence *dma_resv_get_excl(struct dma_resv *obj)
 {
 	return rcu_dereference_protected(obj->fence_excl,
-					 reservation_object_held(obj));
+					 dma_resv_held(obj));
 }
 
 /**
- * reservation_object_get_excl_rcu - get the reservation object's
+ * dma_resv_get_list - get the reservation object's
+ * shared fence list, with update-side lock held
+ * @obj: the reservation object
+ *
+ * Returns the shared fence list.  Does NOT take references to
+ * the fence.  The obj->lock must be held.
+ */
+static inline struct dma_resv_list *dma_resv_get_list(struct dma_resv *obj)
+{
+	return rcu_dereference_protected(obj->fence,
+					 dma_resv_held(obj));
+}
+
+/**
+ * dma_resv_fences - read consistent fence pointers
+ * @obj: reservation object where we get the fences from
+ * @excl: pointer for the exclusive fence
+ * @list: pointer for the shared fence list
+ *
+ * Make sure we have a consisten exclusive fence and shared fence list.
+ * Must be called with rcu read side lock held.
+ */
+static inline void dma_resv_fences(struct dma_resv *obj,
+				   struct dma_fence **excl,
+				   struct dma_resv_list **list,
+				   u32 *shared_count)
+{
+	do {
+		*excl = rcu_dereference(obj->fence_excl);
+		*list = rcu_dereference(obj->fence);
+		*shared_count = *list ? (*list)->shared_count : 0;
+		smp_rmb(); /* See dma_resv_add_excl_fence */
+	} while (rcu_access_pointer(obj->fence_excl) != *excl);
+}
+
+/**
+ * dma_resv_get_excl_rcu - get the reservation object's
  * exclusive fence, without lock held.
  * @obj: the reservation object
  *
@@ -269,8 +142,7 @@ reservation_object_get_excl(struct reservation_object *obj)
  * RETURNS
  * The exclusive fence or NULL if none
  */
-static inline struct dma_fence *
-reservation_object_get_excl_rcu(struct reservation_object *obj)
+static inline struct dma_fence *dma_resv_get_excl_rcu(struct dma_resv *obj)
 {
 	struct dma_fence *fence;
 
@@ -284,29 +156,157 @@ reservation_object_get_excl_rcu(struct reservation_object *obj)
 	return fence;
 }
 
-void reservation_object_init(struct reservation_object *obj);
-void reservation_object_fini(struct reservation_object *obj);
-int reservation_object_reserve_shared(struct reservation_object *obj,
-				      unsigned int num_fences);
-void reservation_object_add_shared_fence(struct reservation_object *obj,
-					 struct dma_fence *fence);
+/**
+ * dma_resv_lock - lock the reservation object
+ * @obj: the reservation object
+ * @ctx: the locking context
+ *
+ * Locks the reservation object for exclusive access and modification. Note,
+ * that the lock is only against other writers, readers will run concurrently
+ * with a writer under RCU. The seqlock is used to notify readers if they
+ * overlap with a writer.
+ *
+ * As the reservation object may be locked by multiple parties in an
+ * undefined order, a #ww_acquire_ctx is passed to unwind if a cycle
+ * is detected. See ww_mutex_lock() and ww_acquire_init(). A reservation
+ * object may be locked by itself by passing NULL as @ctx.
+ */
+static inline int dma_resv_lock(struct dma_resv *obj,
+				struct ww_acquire_ctx *ctx)
+{
+	return ww_mutex_lock(&obj->lock, ctx);
+}
 
-void reservation_object_add_excl_fence(struct reservation_object *obj,
-				       struct dma_fence *fence);
+/**
+ * dma_resv_lock_interruptible - lock the reservation object
+ * @obj: the reservation object
+ * @ctx: the locking context
+ *
+ * Locks the reservation object interruptible for exclusive access and
+ * modification. Note, that the lock is only against other writers, readers
+ * will run concurrently with a writer under RCU. The seqlock is used to
+ * notify readers if they overlap with a writer.
+ *
+ * As the reservation object may be locked by multiple parties in an
+ * undefined order, a #ww_acquire_ctx is passed to unwind if a cycle
+ * is detected. See ww_mutex_lock() and ww_acquire_init(). A reservation
+ * object may be locked by itself by passing NULL as @ctx.
+ */
+static inline int dma_resv_lock_interruptible(struct dma_resv *obj,
+					      struct ww_acquire_ctx *ctx)
+{
+	return ww_mutex_lock_interruptible(&obj->lock, ctx);
+}
 
-int reservation_object_get_fences_rcu(struct reservation_object *obj,
-				      struct dma_fence **pfence_excl,
-				      unsigned *pshared_count,
-				      struct dma_fence ***pshared);
+/**
+ * dma_resv_lock_slow - slowpath lock the reservation object
+ * @obj: the reservation object
+ * @ctx: the locking context
+ *
+ * Acquires the reservation object after a die case. This function
+ * will sleep until the lock becomes available. See dma_resv_lock() as
+ * well.
+ */
+static inline void dma_resv_lock_slow(struct dma_resv *obj,
+				      struct ww_acquire_ctx *ctx)
+{
+	ww_mutex_lock_slow(&obj->lock, ctx);
+}
 
-int reservation_object_copy_fences(struct reservation_object *dst,
-				   struct reservation_object *src);
+/**
+ * dma_resv_lock_slow_interruptible - slowpath lock the reservation
+ * object, interruptible
+ * @obj: the reservation object
+ * @ctx: the locking context
+ *
+ * Acquires the reservation object interruptible after a die case. This function
+ * will sleep until the lock becomes available. See
+ * dma_resv_lock_interruptible() as well.
+ */
+static inline int dma_resv_lock_slow_interruptible(struct dma_resv *obj,
+						   struct ww_acquire_ctx *ctx)
+{
+	return ww_mutex_lock_slow_interruptible(&obj->lock, ctx);
+}
 
-long reservation_object_wait_timeout_rcu(struct reservation_object *obj,
-					 bool wait_all, bool intr,
-					 unsigned long timeout);
+/**
+ * dma_resv_trylock - trylock the reservation object
+ * @obj: the reservation object
+ *
+ * Tries to lock the reservation object for exclusive access and modification.
+ * Note, that the lock is only against other writers, readers will run
+ * concurrently with a writer under RCU. The seqlock is used to notify readers
+ * if they overlap with a writer.
+ *
+ * Also note that since no context is provided, no deadlock protection is
+ * possible.
+ *
+ * Returns true if the lock was acquired, false otherwise.
+ */
+static inline bool __must_check dma_resv_trylock(struct dma_resv *obj)
+{
+	return ww_mutex_trylock(&obj->lock);
+}
 
-bool reservation_object_test_signaled_rcu(struct reservation_object *obj,
-					  bool test_all);
+/**
+ * dma_resv_is_locked - is the reservation object locked
+ * @obj: the reservation object
+ *
+ * Returns true if the mutex is locked, false if unlocked.
+ */
+static inline bool dma_resv_is_locked(struct dma_resv *obj)
+{
+	return ww_mutex_is_locked(&obj->lock);
+}
+
+/**
+ * dma_resv_locking_ctx - returns the context used to lock the object
+ * @obj: the reservation object
+ *
+ * Returns the context used to lock a reservation object or NULL if no context
+ * was used or the object is not locked at all.
+ */
+static inline struct ww_acquire_ctx *dma_resv_locking_ctx(struct dma_resv *obj)
+{
+	return READ_ONCE(obj->lock.ctx);
+}
+
+/**
+ * dma_resv_unlock - unlock the reservation object
+ * @obj: the reservation object
+ *
+ * Unlocks the reservation object following exclusive access.
+ */
+static inline void dma_resv_unlock(struct dma_resv *obj)
+{
+#ifdef CONFIG_DEBUG_MUTEXES
+	/* Test shared fence slot reservation */
+	if (rcu_access_pointer(obj->fence)) {
+		struct dma_resv_list *fence = dma_resv_get_list(obj);
+
+		fence->shared_max = fence->shared_count;
+	}
+#endif
+	ww_mutex_unlock(&obj->lock);
+}
+
+void dma_resv_init(struct dma_resv *obj);
+void dma_resv_fini(struct dma_resv *obj);
+int dma_resv_reserve_shared(struct dma_resv *obj, unsigned int num_fences);
+void dma_resv_add_shared_fence(struct dma_resv *obj, struct dma_fence *fence);
+
+void dma_resv_add_excl_fence(struct dma_resv *obj, struct dma_fence *fence);
+
+int dma_resv_get_fences_rcu(struct dma_resv *obj,
+			    struct dma_fence **pfence_excl,
+			    unsigned *pshared_count,
+			    struct dma_fence ***pshared);
+
+int dma_resv_copy_fences(struct dma_resv *dst, struct dma_resv *src);
+
+long dma_resv_wait_timeout_rcu(struct dma_resv *obj, bool wait_all, bool intr,
+			       unsigned long timeout);
+
+bool dma_resv_test_signaled_rcu(struct dma_resv *obj, bool test_all);
 
 #endif /* _LINUX_RESERVATION_H */
