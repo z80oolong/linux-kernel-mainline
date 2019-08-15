@@ -42,7 +42,6 @@
 #include "i915_scatterlist.h"
 #include "i915_trace.h"
 #include "i915_vgpu.h"
-#include "intel_drv.h"
 
 #define I915_GFP_ALLOW_FAIL (GFP_KERNEL | __GFP_RETRY_MAYFAIL | __GFP_NOWARN)
 
@@ -1868,7 +1867,6 @@ static struct i915_vma *pd_vma_create(struct gen6_ppgtt *ppgtt, int size)
 		return ERR_PTR(-ENOMEM);
 
 	i915_active_init(i915, &vma->active, NULL, NULL);
-	INIT_ACTIVE_REQUEST(&vma->last_fence);
 
 	vma->vm = &ggtt->vm;
 	vma->ops = &pd_vma_ops;
@@ -2036,6 +2034,27 @@ static void gtt_write_workarounds(struct intel_gt *gt)
 				 GEN8_GAMW_ECO_DEV_RW_IA,
 				 0,
 				 GAMW_ECO_ENABLE_64K_IPS_FIELD);
+
+	if (IS_GEN_RANGE(i915, 8, 11)) {
+		bool can_use_gtt_cache = true;
+
+		/*
+		 * According to the BSpec if we use 2M/1G pages then we also
+		 * need to disable the GTT cache. At least on BDW we can see
+		 * visual corruption when using 2M pages, and not disabling the
+		 * GTT cache.
+		 */
+		if (HAS_PAGE_SIZES(i915, I915_GTT_PAGE_SIZE_2M))
+			can_use_gtt_cache = false;
+
+		/* WaGttCachingOffByDefault */
+		intel_uncore_write(uncore,
+				   HSW_GTT_CACHE_EN,
+				   can_use_gtt_cache ? GTT_CACHE_EN_ALL : 0);
+		WARN_ON_ONCE(can_use_gtt_cache &&
+			     intel_uncore_read(uncore,
+					       HSW_GTT_CACHE_EN) == 0);
+	}
 }
 
 int i915_ppgtt_init_hw(struct intel_gt *gt)
@@ -3085,7 +3104,8 @@ static int i915_gmch_probe(struct i915_ggtt *ggtt)
 	ggtt->vm.vma_ops.clear_pages = clear_pages;
 
 	if (unlikely(ggtt->do_idle_maps))
-		DRM_INFO("applying Ironlake quirks for intel_iommu\n");
+		dev_notice(dev_priv->drm.dev,
+			   "Applying Ironlake quirks for intel_iommu\n");
 
 	return 0;
 }
@@ -3146,7 +3166,7 @@ int i915_ggtt_probe_hw(struct drm_i915_private *i915)
 		return ret;
 
 	if (intel_vtd_active())
-		DRM_INFO("VT-d active for gfx access\n");
+		dev_info(i915->drm.dev, "VT-d active for gfx access\n");
 
 	return 0;
 }

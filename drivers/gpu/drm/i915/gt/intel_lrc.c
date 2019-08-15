@@ -136,9 +136,12 @@
 #include "gem/i915_gem_context.h"
 
 #include "i915_drv.h"
+#include "i915_perf.h"
+#include "i915_trace.h"
 #include "i915_vgpu.h"
 #include "intel_engine_pm.h"
 #include "intel_gt.h"
+#include "intel_gt_pm.h"
 #include "intel_lrc_reg.h"
 #include "intel_mocs.h"
 #include "intel_reset.h"
@@ -216,8 +219,9 @@ static struct virtual_engine *to_virtual_engine(struct intel_engine_cs *engine)
 	return container_of(engine, struct virtual_engine, base);
 }
 
-static int execlists_context_deferred_alloc(struct intel_context *ce,
-					    struct intel_engine_cs *engine);
+static int __execlists_context_alloc(struct intel_context *ce,
+				     struct intel_engine_cs *engine);
+
 static void execlists_init_reg_state(u32 *reg_state,
 				     struct intel_context *ce,
 				     struct intel_engine_cs *engine,
@@ -417,13 +421,17 @@ lrc_descriptor(struct intel_context *ce, struct intel_engine_cs *engine)
 	BUILD_BUG_ON(MAX_CONTEXT_HW_ID > (BIT(GEN8_CTX_ID_WIDTH)));
 	BUILD_BUG_ON(GEN11_MAX_CONTEXT_HW_ID > (BIT(GEN11_SW_CTX_ID_WIDTH)));
 
-	desc = ctx->desc_template;				/* bits  0-11 */
-	GEM_BUG_ON(desc & GENMASK_ULL(63, 12));
+	desc = INTEL_LEGACY_32B_CONTEXT;
+	if (i915_vm_is_4lvl(ce->vm))
+		desc = INTEL_LEGACY_64B_CONTEXT;
+	desc <<= GEN8_CTX_ADDRESSING_MODE_SHIFT;
+
+	desc |= GEN8_CTX_VALID | GEN8_CTX_PRIVILEGE;
+	if (IS_GEN(engine->i915, 8))
+		desc |= GEN8_CTX_L3LLC_COHERENT;
 
 	desc |= i915_ggtt_offset(ce->state) + LRC_HEADER_PAGES * PAGE_SIZE;
 								/* bits 12-31 */
-	GEM_BUG_ON(desc & GENMASK_ULL(63, 32));
-
 	/*
 	 * The following 32bits are copied into the OA reports (dword 2).
 	 * Consider updating oa_get_render_ctx_id in i915_perf.c when changing
@@ -552,6 +560,7 @@ execlists_schedule_in(struct i915_request *rq, int idx)
 		intel_context_get(ce);
 		ce->inflight = rq->engine;
 
+		intel_gt_pm_get(ce->inflight->gt);
 		execlists_context_status_change(rq, INTEL_CONTEXT_SCHEDULE_IN);
 		intel_engine_context_in(ce->inflight);
 	}
@@ -584,6 +593,7 @@ execlists_schedule_out(struct i915_request *rq)
 	if (!intel_context_inflight_count(ce)) {
 		intel_engine_context_out(ce->inflight);
 		execlists_context_status_change(rq, INTEL_CONTEXT_SCHEDULE_OUT);
+		intel_gt_pm_put(ce->inflight->gt);
 
 		/*
 		 * If this is part of a virtual engine, its next request may
@@ -1287,8 +1297,8 @@ done:
 	}
 }
 
-void
-execlists_cancel_port_requests(struct intel_engine_execlists * const execlists)
+static void
+cancel_port_requests(struct intel_engine_execlists * const execlists)
 {
 	struct i915_request * const *port, *rq;
 
@@ -1573,6 +1583,7 @@ static void execlists_context_unpin(struct intel_context *ce)
 {
 	i915_gem_context_unpin_hw_id(ce->gem_context);
 	i915_gem_object_unpin_map(ce->state->obj);
+	intel_ring_reset(ce->ring, ce->ring->tail);
 }
 
 static void
@@ -1605,9 +1616,6 @@ __execlists_context_pin(struct intel_context *ce,
 	void *vaddr;
 	int ret;
 
-	ret = execlists_context_deferred_alloc(ce, engine);
-	if (ret)
-		goto err;
 	GEM_BUG_ON(!ce->state);
 
 	ret = intel_context_active_acquire(ce);
@@ -1646,6 +1654,11 @@ static int execlists_context_pin(struct intel_context *ce)
 	return __execlists_context_pin(ce, ce->engine);
 }
 
+static int execlists_context_alloc(struct intel_context *ce)
+{
+	return __execlists_context_alloc(ce, ce->engine);
+}
+
 static void execlists_context_reset(struct intel_context *ce)
 {
 	/*
@@ -1669,6 +1682,8 @@ static void execlists_context_reset(struct intel_context *ce)
 }
 
 static const struct intel_context_ops execlists_context_ops = {
+	.alloc = execlists_context_alloc,
+
 	.pin = execlists_context_pin,
 	.unpin = execlists_context_unpin,
 
@@ -2238,15 +2253,15 @@ static void reset_csb_pointers(struct intel_engine_cs *engine)
 
 static struct i915_request *active_request(struct i915_request *rq)
 {
-	const struct list_head * const list = &rq->engine->active.requests;
-	const struct intel_context * const context = rq->hw_context;
+	const struct list_head * const list = &rq->timeline->requests;
+	const struct intel_context * const ce = rq->hw_context;
 	struct i915_request *active = NULL;
 
-	list_for_each_entry_from_reverse(rq, list, sched.link) {
+	list_for_each_entry_from_reverse(rq, list, link) {
 		if (i915_request_completed(rq))
 			break;
 
-		if (rq->hw_context != context)
+		if (rq->hw_context != ce)
 			break;
 
 		active = rq;
@@ -2280,18 +2295,6 @@ static void __execlists_reset(struct intel_engine_cs *engine, bool stalled)
 	GEM_BUG_ON(i915_active_is_idle(&ce->active));
 	GEM_BUG_ON(!i915_vma_is_pinned(ce->state));
 	rq = active_request(rq);
-
-	/*
-	 * Catch up with any missed context-switch interrupts.
-	 *
-	 * Ideally we would just read the remaining CSB entries now that we
-	 * know the gpu is idle. However, the CSB registers are sometimes^W
-	 * often trashed across a GPU reset! Instead we have to rely on
-	 * guessing the missed context-switch events by looking at what
-	 * requests were completed.
-	 */
-	execlists_cancel_port_requests(execlists);
-
 	if (!rq) {
 		ce->ring->head = ce->ring->tail;
 		goto out_replay;
@@ -2353,6 +2356,7 @@ out_replay:
 
 unwind:
 	/* Push back any incomplete requests for replay after the reset. */
+	cancel_port_requests(execlists);
 	__unwind_incomplete_requests(engine);
 }
 
@@ -2652,6 +2656,63 @@ static int gen8_emit_flush_render(struct i915_request *request,
 	return 0;
 }
 
+static int gen11_emit_flush_render(struct i915_request *request,
+				   u32 mode)
+{
+	struct intel_engine_cs *engine = request->engine;
+	const u32 scratch_addr =
+		intel_gt_scratch_offset(engine->gt,
+					INTEL_GT_SCRATCH_FIELD_RENDER_FLUSH);
+
+	if (mode & EMIT_FLUSH) {
+		u32 *cs;
+		u32 flags = 0;
+
+		flags |= PIPE_CONTROL_CS_STALL;
+
+		flags |= PIPE_CONTROL_TILE_CACHE_FLUSH;
+		flags |= PIPE_CONTROL_RENDER_TARGET_CACHE_FLUSH;
+		flags |= PIPE_CONTROL_DEPTH_CACHE_FLUSH;
+		flags |= PIPE_CONTROL_DC_FLUSH_ENABLE;
+		flags |= PIPE_CONTROL_FLUSH_ENABLE;
+		flags |= PIPE_CONTROL_QW_WRITE;
+		flags |= PIPE_CONTROL_GLOBAL_GTT_IVB;
+
+		cs = intel_ring_begin(request, 6);
+		if (IS_ERR(cs))
+			return PTR_ERR(cs);
+
+		cs = gen8_emit_pipe_control(cs, flags, scratch_addr);
+		intel_ring_advance(request, cs);
+	}
+
+	if (mode & EMIT_INVALIDATE) {
+		u32 *cs;
+		u32 flags = 0;
+
+		flags |= PIPE_CONTROL_CS_STALL;
+
+		flags |= PIPE_CONTROL_COMMAND_CACHE_INVALIDATE;
+		flags |= PIPE_CONTROL_TLB_INVALIDATE;
+		flags |= PIPE_CONTROL_INSTRUCTION_CACHE_INVALIDATE;
+		flags |= PIPE_CONTROL_TEXTURE_CACHE_INVALIDATE;
+		flags |= PIPE_CONTROL_VF_CACHE_INVALIDATE;
+		flags |= PIPE_CONTROL_CONST_CACHE_INVALIDATE;
+		flags |= PIPE_CONTROL_STATE_CACHE_INVALIDATE;
+		flags |= PIPE_CONTROL_QW_WRITE;
+		flags |= PIPE_CONTROL_GLOBAL_GTT_IVB;
+
+		cs = intel_ring_begin(request, 6);
+		if (IS_ERR(cs))
+			return PTR_ERR(cs);
+
+		cs = gen8_emit_pipe_control(cs, flags, scratch_addr);
+		intel_ring_advance(request, cs);
+	}
+
+	return 0;
+}
+
 /*
  * Reserve space for 2 NOOPs at the end of each request to be
  * used as a workaround for not being allowed to do lite
@@ -2680,53 +2741,69 @@ static u32 *emit_preempt_busywait(struct i915_request *request, u32 *cs)
 	return cs;
 }
 
+static __always_inline u32*
+gen8_emit_fini_breadcrumb_footer(struct i915_request *request,
+				 u32 *cs)
+{
+	*cs++ = MI_USER_INTERRUPT;
+
+	*cs++ = MI_ARB_ON_OFF | MI_ARB_ENABLE;
+	if (intel_engine_has_semaphores(request->engine))
+		cs = emit_preempt_busywait(request, cs);
+
+	request->tail = intel_ring_offset(request, cs);
+	assert_ring_tail_valid(request->ring, request->tail);
+
+	return gen8_emit_wa_tail(request, cs);
+}
+
 static u32 *gen8_emit_fini_breadcrumb(struct i915_request *request, u32 *cs)
 {
 	cs = gen8_emit_ggtt_write(cs,
 				  request->fence.seqno,
 				  request->timeline->hwsp_offset,
 				  0);
-	*cs++ = MI_USER_INTERRUPT;
 
-	*cs++ = MI_ARB_ON_OFF | MI_ARB_ENABLE;
-	if (intel_engine_has_semaphores(request->engine))
-		cs = emit_preempt_busywait(request, cs);
-
-	request->tail = intel_ring_offset(request, cs);
-	assert_ring_tail_valid(request->ring, request->tail);
-
-	return gen8_emit_wa_tail(request, cs);
+	return gen8_emit_fini_breadcrumb_footer(request, cs);
 }
 
 static u32 *gen8_emit_fini_breadcrumb_rcs(struct i915_request *request, u32 *cs)
 {
-	/* XXX flush+write+CS_STALL all in one upsets gem_concurrent_blt:kbl */
 	cs = gen8_emit_ggtt_write_rcs(cs,
 				      request->fence.seqno,
 				      request->timeline->hwsp_offset,
 				      PIPE_CONTROL_RENDER_TARGET_CACHE_FLUSH |
 				      PIPE_CONTROL_DEPTH_CACHE_FLUSH |
 				      PIPE_CONTROL_DC_FLUSH_ENABLE);
+
+	/* XXX flush+write+CS_STALL all in one upsets gem_concurrent_blt:kbl */
 	cs = gen8_emit_pipe_control(cs,
 				    PIPE_CONTROL_FLUSH_ENABLE |
 				    PIPE_CONTROL_CS_STALL,
 				    0);
-	*cs++ = MI_USER_INTERRUPT;
 
-	*cs++ = MI_ARB_ON_OFF | MI_ARB_ENABLE;
-	if (intel_engine_has_semaphores(request->engine))
-		cs = emit_preempt_busywait(request, cs);
+	return gen8_emit_fini_breadcrumb_footer(request, cs);
+}
 
-	request->tail = intel_ring_offset(request, cs);
-	assert_ring_tail_valid(request->ring, request->tail);
+static u32 *gen11_emit_fini_breadcrumb_rcs(struct i915_request *request,
+					   u32 *cs)
+{
+	cs = gen8_emit_ggtt_write_rcs(cs,
+				      request->fence.seqno,
+				      request->timeline->hwsp_offset,
+				      PIPE_CONTROL_CS_STALL |
+				      PIPE_CONTROL_TILE_CACHE_FLUSH |
+				      PIPE_CONTROL_RENDER_TARGET_CACHE_FLUSH |
+				      PIPE_CONTROL_DEPTH_CACHE_FLUSH |
+				      PIPE_CONTROL_DC_FLUSH_ENABLE |
+				      PIPE_CONTROL_FLUSH_ENABLE);
 
-	return gen8_emit_wa_tail(request, cs);
+	return gen8_emit_fini_breadcrumb_footer(request, cs);
 }
 
 static void execlists_park(struct intel_engine_cs *engine)
 {
-	del_timer_sync(&engine->execlists.timer);
-	intel_engine_park(engine);
+	del_timer(&engine->execlists.timer);
 }
 
 void intel_execlists_set_default_submission(struct intel_engine_cs *engine)
@@ -2817,11 +2894,23 @@ logical_ring_default_irqs(struct intel_engine_cs *engine)
 	engine->irq_keep_mask = GT_CONTEXT_SWITCH_INTERRUPT << shift;
 }
 
+static void rcs_submission_override(struct intel_engine_cs *engine)
+{
+	switch (INTEL_GEN(engine->i915)) {
+	case 12:
+	case 11:
+		engine->emit_flush = gen11_emit_flush_render;
+		engine->emit_fini_breadcrumb = gen11_emit_fini_breadcrumb_rcs;
+		break;
+	default:
+		engine->emit_flush = gen8_emit_flush_render;
+		engine->emit_fini_breadcrumb = gen8_emit_fini_breadcrumb_rcs;
+		break;
+	}
+}
+
 int intel_execlists_submission_setup(struct intel_engine_cs *engine)
 {
-	/* Intentionally left blank. */
-	engine->buffer = NULL;
-
 	tasklet_init(&engine->execlists.tasklet,
 		     execlists_submission_tasklet, (unsigned long)engine);
 	timer_setup(&engine->execlists.timer, execlists_submission_timer, 0);
@@ -2829,10 +2918,8 @@ int intel_execlists_submission_setup(struct intel_engine_cs *engine)
 	logical_ring_default_vfuncs(engine);
 	logical_ring_default_irqs(engine);
 
-	if (engine->class == RENDER_CLASS) {
-		engine->emit_flush = gen8_emit_flush_render;
-		engine->emit_fini_breadcrumb = gen8_emit_fini_breadcrumb_rcs;
-	}
+	if (engine->class == RENDER_CLASS)
+		rcs_submission_override(engine);
 
 	return 0;
 }
@@ -3069,28 +3156,16 @@ err_unpin_ctx:
 	return ret;
 }
 
-static struct intel_timeline *
-get_timeline(struct i915_gem_context *ctx, struct intel_gt *gt)
-{
-	if (ctx->timeline)
-		return intel_timeline_get(ctx->timeline);
-	else
-		return intel_timeline_create(gt, NULL);
-}
-
-static int execlists_context_deferred_alloc(struct intel_context *ce,
-					    struct intel_engine_cs *engine)
+static int __execlists_context_alloc(struct intel_context *ce,
+				     struct intel_engine_cs *engine)
 {
 	struct drm_i915_gem_object *ctx_obj;
+	struct intel_ring *ring;
 	struct i915_vma *vma;
 	u32 context_size;
-	struct intel_ring *ring;
-	struct intel_timeline *timeline;
 	int ret;
 
-	if (ce->state)
-		return 0;
-
+	GEM_BUG_ON(ce->state);
 	context_size = round_up(engine->context_size, I915_GTT_PAGE_SIZE);
 
 	/*
@@ -3109,16 +3184,19 @@ static int execlists_context_deferred_alloc(struct intel_context *ce,
 		goto error_deref_obj;
 	}
 
-	timeline = get_timeline(ce->gem_context, engine->gt);
-	if (IS_ERR(timeline)) {
-		ret = PTR_ERR(timeline);
-		goto error_deref_obj;
+	if (!ce->timeline) {
+		struct intel_timeline *tl;
+
+		tl = intel_timeline_create(engine->gt, NULL);
+		if (IS_ERR(tl)) {
+			ret = PTR_ERR(tl);
+			goto error_deref_obj;
+		}
+
+		ce->timeline = tl;
 	}
 
-	ring = intel_engine_create_ring(engine,
-					timeline,
-					ce->gem_context->ring_size);
-	intel_timeline_put(timeline);
+	ring = intel_engine_create_ring(engine, (unsigned long)ce->ring);
 	if (IS_ERR(ring)) {
 		ret = PTR_ERR(ring);
 		goto error_deref_obj;
@@ -3229,12 +3307,16 @@ static void virtual_context_enter(struct intel_context *ce)
 
 	for (n = 0; n < ve->num_siblings; n++)
 		intel_engine_pm_get(ve->siblings[n]);
+
+	intel_timeline_enter(ce->timeline);
 }
 
 static void virtual_context_exit(struct intel_context *ce)
 {
 	struct virtual_engine *ve = container_of(ce, typeof(*ve), context);
 	unsigned int n;
+
+	intel_timeline_exit(ce->timeline);
 
 	for (n = 0; n < ve->num_siblings; n++)
 		intel_engine_pm_put(ve->siblings[n]);
@@ -3535,6 +3617,12 @@ intel_execlists_create_virtual(struct i915_gem_context *ctx,
 	}
 
 	ve->base.flags |= I915_ENGINE_IS_VIRTUAL;
+
+	err = __execlists_context_alloc(&ve->context, siblings[0]);
+	if (err)
+		goto err_put;
+
+	__set_bit(CONTEXT_ALLOC_BIT, &ve->context.flags);
 
 	return &ve->context;
 
