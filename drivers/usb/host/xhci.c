@@ -4301,7 +4301,7 @@ static int xhci_set_usb2_hardware_lpm(struct usb_hcd *hcd,
 	port_num = udev->portnum - 1;
 	pm_addr = ports[port_num]->addr + PORTPMSC;
 	pm_val = readl(pm_addr);
-	hlpm_addr = port_array[port_num] + PORTHLPMC;
+	hlpm_addr = ports[port_num]->addr + PORTHLPMC;
 	field = le32_to_cpu(udev->bos->ext_cap->bmAttributes);
 
 	xhci_dbg(xhci, "%s port %d USB2 hardware LPM\n",
