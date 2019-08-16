@@ -16635,6 +16635,7 @@ EXPORT_SYMBOL_GPL net/netfilter/nf_conntrack 0x00000000	nf_ct_expect_related_rep
 EXPORT_SYMBOL_GPL net/netfilter/nf_conntrack 0x00000000	nf_ct_expect_unregister_notifier
 EXPORT_SYMBOL_GPL net/netfilter/nf_conntrack 0x00000000	nf_ct_extend_register
 EXPORT_SYMBOL_GPL net/netfilter/nf_conntrack 0x00000000	nf_ct_extend_unregister
+EXPORT_SYMBOL_GPL net/netfilter/nf_conntrack 0x00000000	nf_ct_get_id
 EXPORT_SYMBOL_GPL net/netfilter/nf_conntrack 0x00000000	nf_ct_get_tuplepr
 EXPORT_SYMBOL_GPL net/netfilter/nf_conntrack 0x00000000	nf_ct_helper_expectfn_find_by_name
 EXPORT_SYMBOL_GPL net/netfilter/nf_conntrack 0x00000000	nf_ct_helper_expectfn_find_by_symbol
@@ -17464,6 +17465,9 @@ EXPORT_SYMBOL_GPL sound/hda/snd-hda-core 0x00000000	snd_hdac_stream_sync_trigger
 EXPORT_SYMBOL_GPL sound/hda/snd-hda-core 0x00000000	snd_hdac_stream_timecounter_init
 EXPORT_SYMBOL_GPL sound/hda/snd-hda-core 0x00000000	snd_hdac_sync_audio_rate
 EXPORT_SYMBOL_GPL sound/hda/snd-hda-core 0x00000000	snd_hdac_sync_power_state
+EXPORT_SYMBOL_GPL sound/hda/snd-intel-nhlt 0x00000000	intel_nhlt_free
+EXPORT_SYMBOL_GPL sound/hda/snd-intel-nhlt 0x00000000	intel_nhlt_get_dmic_geo
+EXPORT_SYMBOL_GPL sound/hda/snd-intel-nhlt 0x00000000	intel_nhlt_init
 EXPORT_SYMBOL_GPL sound/i2c/other/snd-ak4113 0x00000000	snd_ak4113_build
 EXPORT_SYMBOL_GPL sound/i2c/other/snd-ak4113 0x00000000	snd_ak4113_check_rate_and_errors
 EXPORT_SYMBOL_GPL sound/i2c/other/snd-ak4113 0x00000000	snd_ak4113_create
