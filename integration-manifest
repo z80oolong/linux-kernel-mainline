@@ -1,0 +1,30 @@
+drm drm-fixes a85abd5d45adba75535b7fc6d9f78329a693b7a9
+	Merge tag 'drm-intel-fixes-2019-08-15' of git://anongit.freedesktop.org/drm/drm-intel into drm-fixes
+drm-misc drm-misc-fixes 63daf4e166545363f3b875f5b81aecb46e1e1d19
+	drm/omap: ensure we have a valid dma_mask
+drm-intel drm-intel-fixes daa37200d48906d71c63ce178bf7d410b7e07082
+	Merge tag 'gvt-fixes-2019-08-13' of https://github.com/intel/gvt-linux into drm-intel-fixes
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 8120ed5ebd2aaad1fee1a777effa158e5284b816
+	Merge branch 'vmwgfx-next' of git://people.freedesktop.org/~thomash/linux into drm-next
+drm-misc drm-misc-next-fixes 7aaddd96d5febcf5b24357a326b3038d49a20532
+	drm/modes: Don't apply cmdline's rotation if it wasn't specified
+drm-intel drm-intel-next-fixes c36beba6b296b3c05a0f29753b04775e5ae23886
+	drm/i915: Seal races between async GPU cancellation, retirement and signaling
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next f2cb60e9a3881e679465f84140754bc9d29956ea
+	dma-fence: Store the timestamp in the same union as the cb_list
+drm-intel drm-intel-next-queued 0075a20a6dd150e12d9fcb8f22eb7bc4ba241baf
+	drm/i915/uc: Never fail on uC preparation step
+drm-intel drm-intel-next be6133b8917f8131b76728f11db51a65c91b3fec
+	drm/i915: Update DRIVER_DATE to 20190813
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 19bce474c45be69a284ecee660aa12d8f1e88f18
+	ALSA: usb-audio: Fix a stack buffer overflow bug in check_input_term
+sound-upstream for-next 7c0a69394c265f2bb674c3f5daadfdd5c15ea0d1
+	ALSA: hda - Define a fallback_pin_fixup_tbl for alc269 family
+drm-intel topic/core-for-CI 37a06b48701a9172b929dcc07b43dc49790f4576
+	nvme-pci: Allow PCI bus-level PM to be used if ASPM is disabled
