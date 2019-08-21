@@ -1,5 +1,6 @@
 # The following upstream stable releases have been ported:
 [upstream-stable]
-    linux-4.19.y = v4.19.61
+    linux-4.19.y = v4.19.62
     linux-5.0.y = v5.0.21
-    linux-5.1.y = v5.1.20
+    linux-5.1.y = v5.1.21
+    linux-5.2.y = v5.2.4
