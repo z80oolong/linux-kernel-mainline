@@ -397,13 +397,13 @@ int etnaviv_gem_cpu_prep(struct drm_gem_object *obj, u32 op,
 	}
 
 	if (op & ETNA_PREP_NOSYNC) {
-		if (!reservation_object_test_signaled_rcu(obj->resv,
+		if (!dma_resv_test_signaled_rcu(obj->resv,
 							  write))
 			return -EBUSY;
 	} else {
 		unsigned long remain = etnaviv_timeout_to_jiffies(timeout);
 
-		ret = reservation_object_wait_timeout_rcu(obj->resv,
+		ret = dma_resv_wait_timeout_rcu(obj->resv,
 							  write, true, remain);
 		if (ret <= 0)
 			return ret == 0 ? -ETIMEDOUT : ret;
@@ -459,8 +459,8 @@ static void etnaviv_gem_describe_fence(struct dma_fence *fence,
 static void etnaviv_gem_describe(struct drm_gem_object *obj, struct seq_file *m)
 {
 	struct etnaviv_gem_object *etnaviv_obj = to_etnaviv_bo(obj);
-	struct reservation_object *robj = obj->resv;
-	struct reservation_object_list *fobj;
+	struct dma_resv *robj = obj->resv;
+	struct dma_resv_list *fobj;
 	struct dma_fence *fence;
 	unsigned long off = drm_vma_node_start(&obj->vma_node);
 
@@ -565,8 +565,7 @@ void etnaviv_gem_obj_add(struct drm_device *dev, struct drm_gem_object *obj)
 }
 
 static int etnaviv_gem_new_impl(struct drm_device *dev, u32 size, u32 flags,
-	struct reservation_object *robj, const struct etnaviv_gem_ops *ops,
-	struct drm_gem_object **obj)
+	const struct etnaviv_gem_ops *ops, struct drm_gem_object **obj)
 {
 	struct etnaviv_gem_object *etnaviv_obj;
 	unsigned sz = sizeof(*etnaviv_obj);
@@ -594,8 +593,6 @@ static int etnaviv_gem_new_impl(struct drm_device *dev, u32 size, u32 flags,
 
 	etnaviv_obj->flags = flags;
 	etnaviv_obj->ops = ops;
-	if (robj)
-		etnaviv_obj->base.resv = robj;
 
 	mutex_init(&etnaviv_obj->lock);
 	INIT_LIST_HEAD(&etnaviv_obj->vram_list);
@@ -614,7 +611,7 @@ int etnaviv_gem_new_handle(struct drm_device *dev, struct drm_file *file,
 
 	size = PAGE_ALIGN(size);
 
-	ret = etnaviv_gem_new_impl(dev, size, flags, NULL,
+	ret = etnaviv_gem_new_impl(dev, size, flags,
 				   &etnaviv_gem_shmem_ops, &obj);
 	if (ret)
 		goto fail;
@@ -646,13 +643,12 @@ fail:
 }
 
 int etnaviv_gem_new_private(struct drm_device *dev, size_t size, u32 flags,
-	struct reservation_object *robj, const struct etnaviv_gem_ops *ops,
-	struct etnaviv_gem_object **res)
+	const struct etnaviv_gem_ops *ops, struct etnaviv_gem_object **res)
 {
 	struct drm_gem_object *obj;
 	int ret;
 
-	ret = etnaviv_gem_new_impl(dev, size, flags, robj, ops, &obj);
+	ret = etnaviv_gem_new_impl(dev, size, flags, ops, &obj);
 	if (ret)
 		return ret;
 
@@ -734,7 +730,7 @@ int etnaviv_gem_new_userptr(struct drm_device *dev, struct drm_file *file,
 	struct etnaviv_gem_object *etnaviv_obj;
 	int ret;
 
-	ret = etnaviv_gem_new_private(dev, size, ETNA_BO_CACHED, NULL,
+	ret = etnaviv_gem_new_private(dev, size, ETNA_BO_CACHED,
 				      &etnaviv_gem_userptr_ops, &etnaviv_obj);
 	if (ret)
 		return ret;
