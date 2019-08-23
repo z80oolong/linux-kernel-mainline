@@ -1274,14 +1274,15 @@ free_scratch_page:
 	return ret;
 }
 
-static int gen8_ppgtt_notify_vgt(struct i915_hw_ppgtt *ppgtt, bool create)
+static void gen8_ppgtt_notify_vgt(struct i915_hw_ppgtt *ppgtt, bool create)
 {
-	struct i915_address_space *vm = &ppgtt->vm;
-	struct drm_i915_private *dev_priv = vm->i915;
+	struct drm_i915_private *dev_priv = ppgtt->vm.i915;
 	enum vgt_g2v_type msg;
 	int i;
 
-	if (use_4lvl(vm)) {
+	mutex_lock(&dev_priv->vgpu.lock);
+
+	if (use_4lvl(&ppgtt->vm)) {
 		const u64 daddr = px_dma(&ppgtt->pml4);
 
 		I915_WRITE(vgtif_reg(pdp[0].lo), lower_32_bits(daddr));
@@ -1301,9 +1302,10 @@ static int gen8_ppgtt_notify_vgt(struct i915_hw_ppgtt *ppgtt, bool create)
 				VGT_G2V_PPGTT_L3_PAGE_TABLE_DESTROY);
 	}
 
+	/* g2v_notify atomically (via hv trap) consumes the message packet. */
 	I915_WRITE(vgtif_reg(g2v_notify), msg);
 
-	return 0;
+	mutex_unlock(&dev_priv->vgpu.lock);
 }
 
 static void gen8_free_scratch(struct i915_address_space *vm)
