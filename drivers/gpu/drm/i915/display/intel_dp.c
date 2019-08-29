@@ -70,8 +70,6 @@
 
 /* DP DSC small joiner has 2 FIFOs each of 640 x 6 bytes */
 #define DP_DSC_MAX_SMALL_JOINER_RAM_BUFFER	61440
-#define DP_DSC_MIN_SUPPORTED_BPC		8
-#define DP_DSC_MAX_SUPPORTED_BPC		10
 
 /* DP DSC throughput values used for slice count calculations KPixels/s */
 #define DP_DSC_PEAK_PIXEL_RATE			2720000
@@ -1739,8 +1737,14 @@ static bool intel_dp_source_supports_fec(struct intel_dp *intel_dp,
 {
 	struct drm_i915_private *dev_priv = dp_to_i915(intel_dp);
 
-	return INTEL_GEN(dev_priv) >= 11 &&
-		pipe_config->cpu_transcoder != TRANSCODER_A;
+	/* On TGL, FEC is supported on all Pipes */
+	if (INTEL_GEN(dev_priv) >= 12)
+		return true;
+
+	if (IS_GEN(dev_priv, 11) && pipe_config->cpu_transcoder != TRANSCODER_A)
+		return true;
+
+	return false;
 }
 
 static bool intel_dp_supports_fec(struct intel_dp *intel_dp,
@@ -1755,8 +1759,15 @@ static bool intel_dp_source_supports_dsc(struct intel_dp *intel_dp,
 {
 	struct drm_i915_private *dev_priv = dp_to_i915(intel_dp);
 
-	return INTEL_GEN(dev_priv) >= 10 &&
-		pipe_config->cpu_transcoder != TRANSCODER_A;
+	/* On TGL, DSC is supported on all Pipes */
+	if (INTEL_GEN(dev_priv) >= 12)
+		return true;
+
+	if (INTEL_GEN(dev_priv) >= 10 &&
+	    pipe_config->cpu_transcoder != TRANSCODER_A)
+		return true;
+
+	return false;
 }
 
 static bool intel_dp_supports_dsc(struct intel_dp *intel_dp,
@@ -1915,11 +1926,17 @@ static int intel_dp_dsc_compute_config(struct intel_dp *intel_dp,
 	if (!intel_dp_supports_dsc(intel_dp, pipe_config))
 		return -EINVAL;
 
-	dsc_max_bpc = min_t(u8, DP_DSC_MAX_SUPPORTED_BPC,
-			    conn_state->max_requested_bpc);
+	/* Max DSC Input BPC for ICL is 10 and for TGL+ is 12 */
+	if (INTEL_GEN(dev_priv) >= 12)
+		dsc_max_bpc = min_t(u8, 12, conn_state->max_requested_bpc);
+	else
+		dsc_max_bpc = min_t(u8, 10,
+				    conn_state->max_requested_bpc);
 
 	pipe_bpp = intel_dp_dsc_compute_bpp(intel_dp, dsc_max_bpc);
-	if (pipe_bpp < DP_DSC_MIN_SUPPORTED_BPC * 3) {
+
+	/* Min Input BPC for ICL+ is 8 */
+	if (pipe_bpp < 8 * 3) {
 		DRM_DEBUG_KMS("No DSC support for less than 8bpc\n");
 		return -EINVAL;
 	}
@@ -3950,13 +3967,13 @@ void intel_dp_set_idle_link_train(struct intel_dp *intel_dp)
 	I915_WRITE(DP_TP_CTL(port), val);
 
 	/*
-	 * On PORT_A we can have only eDP in SST mode. There the only reason
-	 * we need to set idle transmission mode is to work around a HW issue
-	 * where we enable the pipe while not in idle link-training mode.
+	 * Until TGL on PORT_A we can have only eDP in SST mode. There the only
+	 * reason we need to set idle transmission mode is to work around a HW
+	 * issue where we enable the pipe while not in idle link-training mode.
 	 * In this case there is requirement to wait for a minimum number of
 	 * idle patterns to be sent.
 	 */
-	if (port == PORT_A)
+	if (port == PORT_A && INTEL_GEN(dev_priv) < 12)
 		return;
 
 	if (intel_de_wait_for_set(dev_priv, DP_TP_STATUS(port),
