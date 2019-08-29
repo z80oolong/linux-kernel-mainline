@@ -1,0 +1,30 @@
+drm drm-fixes a55aa89aab90fae7c815b0551b07be37db359d76
+	Linux 5.3-rc6
+drm-misc drm-misc-fixes 807f6c8472da716e29744e1fa35480b08af3e4bc
+	drm/ingenic: Hardcode panel type to DPI
+drm-intel drm-intel-fixes 32f0a982650b123bdab36865617d3e03ebcacf3b
+	drm/i915: Call dma_set_max_seg_size() in i915_driver_hw_probe()
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 578d2342ec702e5fb8a77983fabb3754ae3e9660
+	Merge tag 'drm-next-5.4-2019-08-23' of git://people.freedesktop.org/~agd5f/linux into drm-next
+drm-misc drm-misc-next-fixes 578d2342ec702e5fb8a77983fabb3754ae3e9660
+	Merge tag 'drm-next-5.4-2019-08-23' of git://people.freedesktop.org/~agd5f/linux into drm-next
+drm-intel drm-intel-next-fixes c36beba6b296b3c05a0f29753b04775e5ae23886
+	drm/i915: Seal races between async GPU cancellation, retirement and signaling
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 268de6530aa18fe5773062367fd119f0045f6e88
+	drm: mst: Fix query_payload ack reply struct
+drm-intel drm-intel-next-queued 11988e393813f520974f69bf0e55c367a1cbac48
+	drm/i915/execlists: Try rearranging breadcrumb flush
+drm-intel drm-intel-next be91233b1053d9725d3a437e3da44ccff2639477
+	drm/i915: Update DRIVER_DATE to 20190822
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 333f31436d3db19f4286f8862a00ea1d8d8420a1
+	ALSA: hda - Fix potential endless loop at applying quirks
+sound-upstream for-next f155e79ab516c9ed2adb2f337fb4ff58b7474428
+	ALSA: firewire-lib: fix isoc cycle count to which rx packet is scheduled
+drm-intel topic/core-for-CI e67b105c23df21359de992a91670ec5ca3bd57c6
+	uapi/perf: Squelch compiler warning
