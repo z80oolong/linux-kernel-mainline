@@ -2633,6 +2633,8 @@ static struct hist_field *create_alias(struct hist_trigger_data *hist_data,
 		return NULL;
 	}
 
+	alias->var_ref_idx = var_ref->var_ref_idx;
+
 	return alias;
 }
 
