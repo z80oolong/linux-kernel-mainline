@@ -1,0 +1,30 @@
+drm drm-fixes 1c0d63eb0e824cb2916a77523ec7a4fa0e9753c8
+	Merge tag 'drm-intel-fixes-2019-08-29' of git://anongit.freedesktop.org/drm/drm-intel into drm-fixes
+drm-misc drm-misc-fixes 424c38a4e32509ae82dc9d7300432295806cb911
+	drm/selftests: modes: Add more unit tests for the cmdline parser
+drm-intel drm-intel-fixes 32f0a982650b123bdab36865617d3e03ebcacf3b
+	drm/i915: Call dma_set_max_seg_size() in i915_driver_hw_probe()
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 578d2342ec702e5fb8a77983fabb3754ae3e9660
+	Merge tag 'drm-next-5.4-2019-08-23' of git://people.freedesktop.org/~agd5f/linux into drm-next
+drm-misc drm-misc-next-fixes 45d0dbd15a3b89ced53e058bc71b751e6473b664
+	drm/panfrost: Remove unnecessary hwaccess_lock spin_lock
+drm-intel drm-intel-next-fixes c36beba6b296b3c05a0f29753b04775e5ae23886
+	drm/i915: Seal races between async GPU cancellation, retirement and signaling
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next acff2f86b195653a9487fe3dbdbc821d77eff54a
+	drm/sti: Include the right header
+drm-intel drm-intel-next-queued 9e362992ff34cab695e669ef1e3f4f65463087e5
+	drm/i915: Clean up HDMI deep color handling a bit
+drm-intel drm-intel-next be91233b1053d9725d3a437e3da44ccff2639477
+	drm/i915: Update DRIVER_DATE to 20190822
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus d33cd42d86671bed870827aa399aeb9f1da74119
+	ALSA: hda/realtek - Add quirk for HP Pavilion 15
+sound-upstream for-next 94044dfb0bcf270ee5cebd590cfa0c2a1a979687
+	MAINTAINERS: update entry of firewire audio drivers
+drm-intel topic/core-for-CI e67b105c23df21359de992a91670ec5ca3bd57c6
+	uapi/perf: Squelch compiler warning
