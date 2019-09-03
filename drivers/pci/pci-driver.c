@@ -1323,6 +1323,10 @@ static int pci_pm_runtime_suspend(struct device *dev)
 
 	if (!pci_dev->state_saved) {
 		pci_save_state(pci_dev);
+
+		if (!pm || !pm->runtime_suspend)
+			return -ENOSYS;
+
 		pci_finish_runtime_suspend(pci_dev);
 	}
 
