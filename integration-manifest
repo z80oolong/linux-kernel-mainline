@@ -1,0 +1,30 @@
+drm drm-fixes 1e19ec6c3c417a0893fcfae7abfba623e781d876
+	Merge tag 'drm-misc-fixes-2019-09-05' of git://anongit.freedesktop.org/drm/drm-misc into drm-fixes
+drm-misc drm-misc-fixes a3200debde5fda3e25f7e22cb2bc17a9280f7811
+	drm/modes: Make the whitelist more const
+drm-intel drm-intel-fixes 089cf7f6ecb266b6a4164919a2e69bd2f938374a
+	Linux 5.3-rc7
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 9a60b2990d6c2b7ab935fe0a5cc274de67d98bed
+	Merge branch 'etnaviv/next' of https://git.pengutronix.de/git/lst/linux into drm-next
+drm-misc drm-misc-next-fixes 88537ddbbe4c755e193aa220a306395edf08a4cf
+	drm/mcde: Fix DSI transfers
+drm-intel drm-intel-next-fixes 6e5c5272ca00809aae20817efb6f25881268b50b
+	drm/i915: Use NOEVICT for first pass on attemping to pin a GGTT mmap
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 464828dfb1c9aa0febe17d6344d0d0400c151d7c
+	fbdev/sa1100fb: Remove even more dead code
+drm-intel drm-intel-next-queued 42014f69bb235f1123a6f8befb58b3e350a6f180
+	drm/i915: Hook up GT power management
+drm-intel drm-intel-next be91233b1053d9725d3a437e3da44ccff2639477
+	drm/i915: Update DRIVER_DATE to 20190822
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 2a36c16efab254dd6017efeb35ad88ecc96f2328
+	ALSA: hda/realtek - Fix the problem of two front mics on a ThinkCentre
+sound-upstream for-next e6e2fe2b8f7a4abd24170225050597ebc9f1427b
+	ALSA: firewire-tascam: add note for FE-8
+drm-intel topic/core-for-CI e67b105c23df21359de992a91670ec5ca3bd57c6
+	uapi/perf: Squelch compiler warning
