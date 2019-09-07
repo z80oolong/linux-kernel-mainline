@@ -132,9 +132,15 @@ static void gen6_ggtt_invalidate(struct i915_ggtt *ggtt)
 static void guc_ggtt_invalidate(struct i915_ggtt *ggtt)
 {
 	struct intel_uncore *uncore = ggtt->vm.gt->uncore;
+	struct drm_i915_private *i915 = ggtt->vm.i915;
 
 	gen6_ggtt_invalidate(ggtt);
-	intel_uncore_write_fw(uncore, GEN8_GTCR, GEN8_GTCR_INVALIDATE);
+
+	if (INTEL_GEN(i915) >= 12)
+		intel_uncore_write_fw(uncore, GEN12_GUC_TLB_INV_CR,
+				      GEN12_GUC_TLB_INV_CR_INVALIDATE);
+	else
+		intel_uncore_write_fw(uncore, GEN8_GTCR, GEN8_GTCR_INVALIDATE);
 }
 
 static void gmch_ggtt_invalidate(struct i915_ggtt *ggtt)
@@ -162,6 +168,7 @@ static int ppgtt_bind_vma(struct i915_vma *vma,
 		pte_flags |= PTE_READ_ONLY;
 
 	vma->vm->insert_entries(vma->vm, vma, cache_level, pte_flags);
+	wmb();
 
 	return 0;
 }
@@ -816,17 +823,6 @@ release_pd_entry(struct i915_page_directory * const pd,
 	return free;
 }
 
-/*
- * PDE TLBs are a pain to invalidate on GEN8+. When we modify
- * the page table structures, we mark them dirty so that
- * context switching/execlist queuing code takes extra steps
- * to ensure that tlbs are flushed.
- */
-static void mark_tlbs_dirty(struct i915_ppgtt *ppgtt)
-{
-	ppgtt->pd_dirty_engines = ALL_ENGINES;
-}
-
 static void gen8_ppgtt_notify_vgt(struct i915_ppgtt *ppgtt, bool create)
 {
 	struct drm_i915_private *dev_priv = ppgtt->vm.i915;
@@ -1422,6 +1418,7 @@ static int gen8_preallocate_top_level_pdp(struct i915_ppgtt *ppgtt)
 		set_pd_entry(pd, idx, pde);
 		atomic_inc(px_used(pde)); /* keep pinned */
 	}
+	wmb();
 
 	return 0;
 }
@@ -1509,11 +1506,9 @@ static struct i915_ppgtt *gen8_ppgtt_create(struct drm_i915_private *i915)
 	}
 
 	if (!i915_vm_is_4lvl(&ppgtt->vm)) {
-		if (intel_vgpu_active(i915)) {
-			err = gen8_preallocate_top_level_pdp(ppgtt);
-			if (err)
-				goto err_free_pd;
-		}
+		err = gen8_preallocate_top_level_pdp(ppgtt);
+		if (err)
+			goto err_free_pd;
 	}
 
 	ppgtt->vm.insert_entries = gen8_ppgtt_insert;
@@ -1729,10 +1724,8 @@ static int gen6_alloc_va_range(struct i915_address_space *vm,
 	}
 	spin_unlock(&pd->lock);
 
-	if (flush) {
-		mark_tlbs_dirty(&ppgtt->base);
+	if (flush)
 		gen6_ggtt_invalidate(vm->gt->ggtt);
-	}
 
 	goto out;
 
@@ -1827,7 +1820,6 @@ static int pd_vma_bind(struct i915_vma *vma,
 	gen6_for_all_pdes(pt, ppgtt->base.pd, pde)
 		gen6_write_pde(ppgtt, pde, pt);
 
-	mark_tlbs_dirty(&ppgtt->base);
 	gen6_ggtt_invalidate(ggtt);
 
 	return 0;
@@ -2023,7 +2015,7 @@ static void gtt_write_workarounds(struct intel_gt *gt)
 		intel_uncore_write(uncore,
 				   GEN8_L3_LRA_1_GPGPU,
 				   GEN9_L3_LRA_1_GPGPU_DEFAULT_VALUE_BXT);
-	else if (INTEL_GEN(i915) >= 9)
+	else if (INTEL_GEN(i915) >= 9 && INTEL_GEN(i915) <= 11)
 		intel_uncore_write(uncore,
 				   GEN8_L3_LRA_1_GPGPU,
 				   GEN9_L3_LRA_1_GPGPU_DEFAULT_VALUE_SKL);
@@ -2202,7 +2194,7 @@ static void gen8_ggtt_insert_entries(struct i915_address_space *vm,
 
 	gtt_entries = (gen8_pte_t __iomem *)ggtt->gsm;
 	gtt_entries += vma->node.start / I915_GTT_PAGE_SIZE;
-	for_each_sgt_dma(addr, sgt_iter, vma->pages)
+	for_each_sgt_daddr(addr, sgt_iter, vma->pages)
 		gen8_set_pte(gtt_entries++, pte_encode | addr);
 
 	/*
@@ -2243,7 +2235,7 @@ static void gen6_ggtt_insert_entries(struct i915_address_space *vm,
 	unsigned int i = vma->node.start / I915_GTT_PAGE_SIZE;
 	struct sgt_iter iter;
 	dma_addr_t addr;
-	for_each_sgt_dma(addr, iter, vma->pages)
+	for_each_sgt_daddr(addr, iter, vma->pages)
 		iowrite32(vm->pte_encode(addr, level, flags), &entries[i++]);
 
 	/*
@@ -2604,6 +2596,8 @@ static int init_aliasing_ppgtt(struct i915_ggtt *ggtt)
 
 	GEM_BUG_ON(ggtt->vm.vma_ops.unbind_vma != ggtt_unbind_vma);
 	ggtt->vm.vma_ops.unbind_vma = aliasing_gtt_unbind_vma;
+
+	ppgtt->vm.total = ggtt->vm.total;
 
 	return 0;
 
