@@ -137,6 +137,7 @@ static bool switch_to_kernel_context_sync(struct intel_gt *gt)
 
 bool i915_gem_load_power_context(struct drm_i915_private *i915)
 {
+	intel_gt_pm_enable(&i915->gt);
 	return switch_to_kernel_context_sync(&i915->gt);
 }
 
@@ -240,9 +241,6 @@ void i915_gem_resume(struct drm_i915_private *i915)
 
 	mutex_lock(&i915->drm.struct_mutex);
 	intel_uncore_forcewake_get(&i915->uncore, FORCEWAKE_ALL);
-
-	i915_gem_restore_gtt_mappings(i915);
-	i915_gem_restore_fences(i915);
 
 	if (i915_gem_init_hw(i915))
 		goto err_wedged;

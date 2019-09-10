@@ -295,7 +295,7 @@ i915_vma_compare(struct i915_vma *vma,
 
 int i915_vma_bind(struct i915_vma *vma, enum i915_cache_level cache_level,
 		  u32 flags);
-bool i915_gem_valid_gtt_space(struct i915_vma *vma, unsigned long cache_level);
+bool i915_gem_valid_gtt_space(struct i915_vma *vma, unsigned long color);
 bool i915_vma_misplaced(const struct i915_vma *vma,
 			u64 size, u64 alignment, u64 flags);
 void __i915_vma_set_map_and_fenceable(struct i915_vma *vma);
@@ -371,6 +371,12 @@ static inline bool i915_vma_is_bound(const struct i915_vma *vma,
 				     unsigned int where)
 {
 	return vma->flags & where;
+}
+
+static inline bool i915_node_color_differs(const struct drm_mm_node *node,
+					   unsigned long color)
+{
+	return node->allocated && node->color != color;
 }
 
 /**
