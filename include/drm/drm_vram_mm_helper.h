@@ -15,6 +15,8 @@ struct drm_device;
 	&ttm_bo_driver.evict_flags
  * @verify_access:	Provides an implementation for \
 	struct &ttm_bo_driver.verify_access
+ * @move_notify:	Provides an implementation for
+ *			struct &ttm_bo_driver.move_notify
  *
  * These callback function integrate VRAM MM with TTM buffer objects. New
  * functions can be added if necessary.
@@ -23,6 +25,8 @@ struct drm_vram_mm_funcs {
 	void (*evict_flags)(struct ttm_buffer_object *bo,
 			    struct ttm_placement *placement);
 	int (*verify_access)(struct ttm_buffer_object *bo, struct file *filp);
+	void (*move_notify)(struct ttm_buffer_object *bo, bool evict,
+			    struct ttm_mem_reg *new_mem);
 };
 
 /**
@@ -60,6 +64,7 @@ static inline struct drm_vram_mm *drm_vram_mm_of_bdev(
 	return container_of(bdev, struct drm_vram_mm, bdev);
 }
 
+int drm_vram_mm_debugfs_init(struct drm_minor *minor);
 int drm_vram_mm_init(struct drm_vram_mm *vmm, struct drm_device *dev,
 		     uint64_t vram_base, size_t vram_size,
 		     const struct drm_vram_mm_funcs *funcs);
