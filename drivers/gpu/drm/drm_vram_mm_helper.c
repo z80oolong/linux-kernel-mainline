@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include <drm/drm_debugfs.h>
 #include <drm/drm_device.h>
 #include <drm/drm_file.h>
+#include <drm/drm_gem_ttm_helper.h>
 #include <drm/drm_vram_mm_helper.h>
 
 #include <drm/ttm/ttm_page_alloc.h>
@@ -98,6 +100,17 @@ static int bo_driver_verify_access(struct ttm_buffer_object *bo,
 	return vmm->funcs->verify_access(bo, filp);
 }
 
+static void bo_driver_move_notify(struct ttm_buffer_object *bo,
+				  bool evict,
+				  struct ttm_mem_reg *new_mem)
+{
+	struct drm_vram_mm *vmm = drm_vram_mm_of_bdev(bo->bdev);
+
+	if (!vmm->funcs || !vmm->funcs->move_notify)
+		return;
+	vmm->funcs->move_notify(bo, evict, new_mem);
+}
+
 static int bo_driver_io_mem_reserve(struct ttm_bo_device *bdev,
 				    struct ttm_mem_reg *mem)
 {
@@ -140,6 +153,7 @@ static struct ttm_bo_driver bo_driver = {
 	.eviction_valuable = ttm_bo_eviction_valuable,
 	.evict_flags = bo_driver_evict_flags,
 	.verify_access = bo_driver_verify_access,
+	.move_notify = bo_driver_move_notify,
 	.io_mem_reserve = bo_driver_io_mem_reserve,
 	.io_mem_free = bo_driver_io_mem_free,
 };
@@ -147,6 +161,48 @@ static struct ttm_bo_driver bo_driver = {
 /*
  * struct drm_vram_mm
  */
+
+#if defined(CONFIG_DEBUG_FS)
+static int drm_vram_mm_debugfs(struct seq_file *m, void *data)
+{
+	struct drm_info_node *node = (struct drm_info_node *) m->private;
+	struct drm_vram_mm *vmm = node->minor->dev->vram_mm;
+	struct drm_mm *mm = vmm->bdev.man[TTM_PL_VRAM].priv;
+	struct ttm_bo_global *glob = vmm->bdev.glob;
+	struct drm_printer p = drm_seq_file_printer(m);
+
+	spin_lock(&glob->lru_lock);
+	drm_mm_print(mm, &p);
+	spin_unlock(&glob->lru_lock);
+	return 0;
+}
+
+static const struct drm_info_list drm_vram_mm_debugfs_list[] = {
+	{ "vram-mm", drm_vram_mm_debugfs, 0, NULL },
+};
+#endif
+
+/**
+ * drm_vram_mm_debugfs_init() - Register VRAM MM debugfs file.
+ *
+ * @minor: drm minor device.
+ *
+ * Returns:
+ * 0 on success, or
+ * a negative error code otherwise.
+ */
+int drm_vram_mm_debugfs_init(struct drm_minor *minor)
+{
+	int ret = 0;
+
+#if defined(CONFIG_DEBUG_FS)
+	ret = drm_debugfs_create_files(drm_vram_mm_debugfs_list,
+				       ARRAY_SIZE(drm_vram_mm_debugfs_list),
+				       minor->debugfs_root, minor);
+#endif
+	return ret;
+}
+EXPORT_SYMBOL(drm_vram_mm_debugfs_init);
 
 /**
  * drm_vram_mm_init() - Initialize an instance of VRAM MM.
@@ -172,6 +228,7 @@ int drm_vram_mm_init(struct drm_vram_mm *vmm, struct drm_device *dev,
 
 	ret = ttm_bo_device_init(&vmm->bdev, &bo_driver,
 				 dev->anon_inode->i_mapping,
+				 dev->vma_offset_manager,
 				 true);
 	if (ret)
 		return ret;
