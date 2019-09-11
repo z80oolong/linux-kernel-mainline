@@ -17396,7 +17396,6 @@ EXPORT_SYMBOL_GPL sound/pci/hda/snd-hda-codec-generic 0x00000000	snd_hda_gen_lin
 EXPORT_SYMBOL_GPL sound/pci/hda/snd-hda-codec-generic 0x00000000	snd_hda_gen_mic_autoswitch
 EXPORT_SYMBOL_GPL sound/pci/hda/snd-hda-codec-generic 0x00000000	snd_hda_gen_parse_auto_config
 EXPORT_SYMBOL_GPL sound/pci/hda/snd-hda-codec-generic 0x00000000	snd_hda_gen_path_power_filter
-EXPORT_SYMBOL_GPL sound/pci/hda/snd-hda-codec-generic 0x00000000	snd_hda_gen_reboot_notify
 EXPORT_SYMBOL_GPL sound/pci/hda/snd-hda-codec-generic 0x00000000	snd_hda_gen_spec_init
 EXPORT_SYMBOL_GPL sound/pci/hda/snd-hda-codec-generic 0x00000000	snd_hda_gen_stream_pm
 EXPORT_SYMBOL_GPL sound/pci/hda/snd-hda-codec-generic 0x00000000	snd_hda_gen_update_outputs
