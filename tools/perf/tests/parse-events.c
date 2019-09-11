@@ -22,7 +22,7 @@ static bool kvm_s390_create_vm_valid(void)
 	char *eventfile;
 	bool rc = false;
 
-	eventfile = get_events_file("kvm-s390");
+	eventfile = get_tracing_file("events/kvm-s390");
 
 	if (eventfile) {
 		DIR *mydir = opendir(eventfile);
@@ -31,7 +31,7 @@ static bool kvm_s390_create_vm_valid(void)
 			rc = true;
 			closedir(mydir);
 		}
-		put_events_file(eventfile);
+		put_tracing_file(eventfile);
 	}
 
 	return rc;
