@@ -420,7 +420,7 @@ static const struct intel_device_info intel_sandybridge_m_gt2_info = {
 	.has_rc6 = 1, \
 	.has_rc6p = 1, \
 	.has_rps = true, \
-	.ppgtt_type = INTEL_PPGTT_FULL, \
+	.ppgtt_type = INTEL_PPGTT_ALIASING, \
 	.ppgtt_size = 31, \
 	IVB_PIPE_OFFSETS, \
 	IVB_CURSOR_OFFSETS, \
@@ -476,7 +476,7 @@ static const struct intel_device_info intel_valleyview_info = {
 	.has_rps = true,
 	.display.has_gmch = 1,
 	.display.has_hotplug = 1,
-	.ppgtt_type = INTEL_PPGTT_FULL,
+	.ppgtt_type = INTEL_PPGTT_ALIASING,
 	.ppgtt_size = 31,
 	.has_snoop = true,
 	.has_coherent_ggtt = false,
@@ -570,7 +570,7 @@ static const struct intel_device_info intel_cherryview_info = {
 	.has_rps = true,
 	.has_logical_ring_contexts = 1,
 	.display.has_gmch = 1,
-	.ppgtt_type = INTEL_PPGTT_FULL,
+	.ppgtt_type = INTEL_PPGTT_ALIASING,
 	.ppgtt_size = 32,
 	.has_reset_engine = 1,
 	.has_snoop = true,
@@ -797,6 +797,7 @@ static const struct intel_device_info intel_tigerlake_12_info = {
 	.display.has_modular_fia = 1,
 	.engine_mask =
 		BIT(RCS0) | BIT(BCS0) | BIT(VECS0) | BIT(VCS0) | BIT(VCS2),
+	.has_rc6 = false, /* XXX disabled for debugging */
 };
 
 #undef GEN
