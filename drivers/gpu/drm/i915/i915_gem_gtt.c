@@ -132,9 +132,15 @@ static void gen6_ggtt_invalidate(struct i915_ggtt *ggtt)
 static void guc_ggtt_invalidate(struct i915_ggtt *ggtt)
 {
 	struct intel_uncore *uncore = ggtt->vm.gt->uncore;
+	struct drm_i915_private *i915 = ggtt->vm.i915;
 
 	gen6_ggtt_invalidate(ggtt);
-	intel_uncore_write_fw(uncore, GEN8_GTCR, GEN8_GTCR_INVALIDATE);
+
+	if (INTEL_GEN(i915) >= 12)
+		intel_uncore_write_fw(uncore, GEN12_GUC_TLB_INV_CR,
+				      GEN12_GUC_TLB_INV_CR_INVALIDATE);
+	else
+		intel_uncore_write_fw(uncore, GEN8_GTCR, GEN8_GTCR_INVALIDATE);
 }
 
 static void gmch_ggtt_invalidate(struct i915_ggtt *ggtt)
@@ -149,7 +155,7 @@ static int ppgtt_bind_vma(struct i915_vma *vma,
 	u32 pte_flags;
 	int err;
 
-	if (!(vma->flags & I915_VMA_LOCAL_BIND)) {
+	if (!i915_vma_is_bound(vma, I915_VMA_LOCAL_BIND)) {
 		err = vma->vm->allocate_va_range(vma->vm,
 						 vma->node.start, vma->size);
 		if (err)
@@ -162,6 +168,7 @@ static int ppgtt_bind_vma(struct i915_vma *vma,
 		pte_flags |= PTE_READ_ONLY;
 
 	vma->vm->insert_entries(vma->vm, vma, cache_level, pte_flags);
+	wmb();
 
 	return 0;
 }
@@ -816,17 +823,6 @@ release_pd_entry(struct i915_page_directory * const pd,
 	return free;
 }
 
-/*
- * PDE TLBs are a pain to invalidate on GEN8+. When we modify
- * the page table structures, we mark them dirty so that
- * context switching/execlist queuing code takes extra steps
- * to ensure that tlbs are flushed.
- */
-static void mark_tlbs_dirty(struct i915_ppgtt *ppgtt)
-{
-	ppgtt->pd_dirty_engines = ALL_ENGINES;
-}
-
 static void gen8_ppgtt_notify_vgt(struct i915_ppgtt *ppgtt, bool create)
 {
 	struct drm_i915_private *dev_priv = ppgtt->vm.i915;
@@ -1422,6 +1418,7 @@ static int gen8_preallocate_top_level_pdp(struct i915_ppgtt *ppgtt)
 		set_pd_entry(pd, idx, pde);
 		atomic_inc(px_used(pde)); /* keep pinned */
 	}
+	wmb();
 
 	return 0;
 }
@@ -1489,8 +1486,10 @@ static struct i915_ppgtt *gen8_ppgtt_create(struct drm_i915_private *i915)
 	 *
 	 * Gen11 has HSDES#:1807136187 unresolved. Disable ro support
 	 * for now.
+	 *
+	 * Gen12 has inherited the same read-only fault issue from gen11.
 	 */
-	ppgtt->vm.has_read_only = INTEL_GEN(i915) != 11;
+	ppgtt->vm.has_read_only = !IS_GEN_RANGE(i915, 11, 12);
 
 	/* There are only few exceptions for gen >=6. chv and bxt.
 	 * And we are not sure about the latter so play safe for now.
@@ -1509,11 +1508,9 @@ static struct i915_ppgtt *gen8_ppgtt_create(struct drm_i915_private *i915)
 	}
 
 	if (!i915_vm_is_4lvl(&ppgtt->vm)) {
-		if (intel_vgpu_active(i915)) {
-			err = gen8_preallocate_top_level_pdp(ppgtt);
-			if (err)
-				goto err_free_pd;
-		}
+		err = gen8_preallocate_top_level_pdp(ppgtt);
+		if (err)
+			goto err_free_pd;
 	}
 
 	ppgtt->vm.insert_entries = gen8_ppgtt_insert;
@@ -1729,10 +1726,8 @@ static int gen6_alloc_va_range(struct i915_address_space *vm,
 	}
 	spin_unlock(&pd->lock);
 
-	if (flush) {
-		mark_tlbs_dirty(&ppgtt->base);
+	if (flush)
 		gen6_ggtt_invalidate(vm->gt->ggtt);
-	}
 
 	goto out;
 
@@ -1827,7 +1822,6 @@ static int pd_vma_bind(struct i915_vma *vma,
 	gen6_for_all_pdes(pt, ppgtt->base.pd, pde)
 		gen6_write_pde(ppgtt, pde, pt);
 
-	mark_tlbs_dirty(&ppgtt->base);
 	gen6_ggtt_invalidate(ggtt);
 
 	return 0;
@@ -1885,7 +1879,7 @@ static struct i915_vma *pd_vma_create(struct gen6_ppgtt *ppgtt, int size)
 
 	vma->size = size;
 	vma->fence_size = size;
-	vma->flags = I915_VMA_GGTT;
+	atomic_set(&vma->flags, I915_VMA_GGTT);
 	vma->ggtt_view.type = I915_GGTT_VIEW_ROTATED; /* prevent fencing */
 
 	INIT_LIST_HEAD(&vma->obj_link);
@@ -2023,7 +2017,7 @@ static void gtt_write_workarounds(struct intel_gt *gt)
 		intel_uncore_write(uncore,
 				   GEN8_L3_LRA_1_GPGPU,
 				   GEN9_L3_LRA_1_GPGPU_DEFAULT_VALUE_BXT);
-	else if (INTEL_GEN(i915) >= 9)
+	else if (INTEL_GEN(i915) >= 9 && INTEL_GEN(i915) <= 11)
 		intel_uncore_write(uncore,
 				   GEN8_L3_LRA_1_GPGPU,
 				   GEN9_L3_LRA_1_GPGPU_DEFAULT_VALUE_SKL);
@@ -2202,7 +2196,7 @@ static void gen8_ggtt_insert_entries(struct i915_address_space *vm,
 
 	gtt_entries = (gen8_pte_t __iomem *)ggtt->gsm;
 	gtt_entries += vma->node.start / I915_GTT_PAGE_SIZE;
-	for_each_sgt_dma(addr, sgt_iter, vma->pages)
+	for_each_sgt_daddr(addr, sgt_iter, vma->pages)
 		gen8_set_pte(gtt_entries++, pte_encode | addr);
 
 	/*
@@ -2243,7 +2237,7 @@ static void gen6_ggtt_insert_entries(struct i915_address_space *vm,
 	unsigned int i = vma->node.start / I915_GTT_PAGE_SIZE;
 	struct sgt_iter iter;
 	dma_addr_t addr;
-	for_each_sgt_dma(addr, iter, vma->pages)
+	for_each_sgt_daddr(addr, iter, vma->pages)
 		iowrite32(vm->pte_encode(addr, level, flags), &entries[i++]);
 
 	/*
@@ -2448,7 +2442,7 @@ static int ggtt_bind_vma(struct i915_vma *vma,
 	 * GLOBAL/LOCAL_BIND, it's all the same ptes. Hence unconditionally
 	 * upgrade to both bound if we bind either to avoid double-binding.
 	 */
-	vma->flags |= I915_VMA_GLOBAL_BIND | I915_VMA_LOCAL_BIND;
+	atomic_or(I915_VMA_GLOBAL_BIND | I915_VMA_LOCAL_BIND, &vma->flags);
 
 	return 0;
 }
@@ -2478,7 +2472,7 @@ static int aliasing_gtt_bind_vma(struct i915_vma *vma,
 	if (flags & I915_VMA_LOCAL_BIND) {
 		struct i915_ppgtt *alias = i915_vm_to_ggtt(vma->vm)->alias;
 
-		if (!(vma->flags & I915_VMA_LOCAL_BIND)) {
+		if (!i915_vma_is_bound(vma, I915_VMA_LOCAL_BIND)) {
 			ret = alias->vm.allocate_va_range(&alias->vm,
 							  vma->node.start,
 							  vma->size);
@@ -2506,7 +2500,7 @@ static void aliasing_gtt_unbind_vma(struct i915_vma *vma)
 {
 	struct drm_i915_private *i915 = vma->vm->i915;
 
-	if (vma->flags & I915_VMA_GLOBAL_BIND) {
+	if (i915_vma_is_bound(vma, I915_VMA_GLOBAL_BIND)) {
 		struct i915_address_space *vm = vma->vm;
 		intel_wakeref_t wakeref;
 
@@ -2514,7 +2508,7 @@ static void aliasing_gtt_unbind_vma(struct i915_vma *vma)
 			vm->clear_range(vm, vma->node.start, vma->size);
 	}
 
-	if (vma->flags & I915_VMA_LOCAL_BIND) {
+	if (i915_vma_is_bound(vma, I915_VMA_LOCAL_BIND)) {
 		struct i915_address_space *vm =
 			&i915_vm_to_ggtt(vma->vm)->alias->vm;
 
@@ -2555,12 +2549,12 @@ static int ggtt_set_pages(struct i915_vma *vma)
 	return 0;
 }
 
-static void i915_gtt_color_adjust(const struct drm_mm_node *node,
-				  unsigned long color,
-				  u64 *start,
-				  u64 *end)
+static void i915_ggtt_color_adjust(const struct drm_mm_node *node,
+				   unsigned long color,
+				   u64 *start,
+				   u64 *end)
 {
-	if (node->allocated && node->color != color)
+	if (i915_node_color_differs(node, color))
 		*start += I915_GTT_PAGE_SIZE;
 
 	/* Also leave a space between the unallocated reserved node after the
@@ -2604,6 +2598,8 @@ static int init_aliasing_ppgtt(struct i915_ggtt *ggtt)
 
 	GEM_BUG_ON(ggtt->vm.vma_ops.unbind_vma != ggtt_unbind_vma);
 	ggtt->vm.vma_ops.unbind_vma = aliasing_gtt_unbind_vma;
+
+	ppgtt->vm.total = ggtt->vm.total;
 
 	return 0;
 
@@ -3212,7 +3208,7 @@ static int ggtt_init_hw(struct i915_ggtt *ggtt)
 	ggtt->vm.has_read_only = IS_VALLEYVIEW(i915);
 
 	if (!HAS_LLC(i915) && !HAS_PPGTT(i915))
-		ggtt->vm.mm.color_adjust = i915_gtt_color_adjust;
+		ggtt->vm.mm.color_adjust = i915_ggtt_color_adjust;
 
 	if (!io_mapping_init_wc(&ggtt->iomap,
 				ggtt->gmadr.start,
@@ -3314,7 +3310,7 @@ static void ggtt_restore_mappings(struct i915_ggtt *ggtt)
 	list_for_each_entry_safe(vma, vn, &ggtt->vm.bound_list, vm_link) {
 		struct drm_i915_gem_object *obj = vma->obj;
 
-		if (!(vma->flags & I915_VMA_GLOBAL_BIND))
+		if (!i915_vma_is_bound(vma, I915_VMA_GLOBAL_BIND))
 			continue;
 
 		mutex_unlock(&ggtt->vm.mutex);
