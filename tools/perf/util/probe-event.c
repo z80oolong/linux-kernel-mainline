@@ -2328,6 +2328,7 @@ void clear_probe_trace_event(struct probe_trace_event *tev)
 	}
 	free(tev->args);
 	memset(tev, 0, sizeof(*tev));
+	tev->nargs = 0;
 }
 
 struct kprobe_blacklist_node {
