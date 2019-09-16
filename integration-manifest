@@ -1,0 +1,30 @@
+drm drm-fixes e6bb711600db23eef2fa0c16a2d361e17b45bb28
+	Merge tag 'drm-misc-fixes-2019-09-12' of git://anongit.freedesktop.org/drm/drm-misc into drm-fixes
+drm-misc drm-misc-fixes 21670bd78a25001cf8ef2679b378c73fb73b904f
+	drm/lima: fix lima_gem_wait() return value
+drm-intel drm-intel-fixes 4d856f72c10ecb060868ed10ff1b1453943fc6c8
+	Linux 5.3
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 9a60b2990d6c2b7ab935fe0a5cc274de67d98bed
+	Merge branch 'etnaviv/next' of https://git.pengutronix.de/git/lst/linux into drm-next
+drm-misc drm-misc-next-fixes 2472518e44eee3a45bd436a4162046790b74767a
+	Revert "drm/bridge: adv7511: Attach to DSI host at probe time"
+drm-intel drm-intel-next-fixes cf1d479cb80de7b8403159a78514f98c17fe8ec1
+	drm/i915: Don't mix srcu tag and negative error codes
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 62afb4ad425af2bc6ac6ff6d697825ae47c25211
+	drm/connector: Allow max possible encoders to attach to a connector
+drm-intel drm-intel-next-queued bb120e1171a966429287865134265811887daa6c
+	drm/i915: Show the logical context ring state on dumping
+drm-intel drm-intel-next be91233b1053d9725d3a437e3da44ccff2639477
+	drm/i915: Update DRIVER_DATE to 20190822
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 543242211879ebe021b00f7e33eb4e733bcd6c47
+	ALSA: hda/realtek - Fix alienware headset mic
+sound-upstream for-next 543242211879ebe021b00f7e33eb4e733bcd6c47
+	ALSA: hda/realtek - Fix alienware headset mic
+drm-intel topic/core-for-CI a15a0fc0699a77944c004014ad343c5731fe52eb
+	HAX iommu/intel: Ignore igfx_off
