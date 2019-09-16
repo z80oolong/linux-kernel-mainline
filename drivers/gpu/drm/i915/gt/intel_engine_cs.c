@@ -948,6 +948,7 @@ void intel_engine_get_instdone(struct intel_engine_cs *engine,
 			       struct intel_instdone *instdone)
 {
 	struct drm_i915_private *i915 = engine->i915;
+	const struct sseu_dev_info *sseu = &RUNTIME_INFO(i915)->sseu;
 	struct intel_uncore *uncore = engine->uncore;
 	u32 mmio_base = engine->mmio_base;
 	int slice;
@@ -965,7 +966,7 @@ void intel_engine_get_instdone(struct intel_engine_cs *engine,
 
 		instdone->slice_common =
 			intel_uncore_read(uncore, GEN7_SC_INSTDONE);
-		for_each_instdone_slice_subslice(i915, slice, subslice) {
+		for_each_instdone_slice_subslice(i915, sseu, slice, subslice) {
 			instdone->sampler[slice][subslice] =
 				read_subslice_reg(engine, slice, subslice,
 						  GEN7_SAMPLER_INSTDONE);
@@ -1118,6 +1119,8 @@ bool intel_engine_can_store_dword(struct intel_engine_cs *engine)
 	case 3:
 		/* maybe only uses physical not virtual addresses */
 		return !(IS_I915G(engine->i915) || IS_I915GM(engine->i915));
+	case 4:
+		return !IS_I965G(engine->i915); /* who knows! */
 	case 6:
 		return engine->class != VIDEO_DECODE_CLASS; /* b0rked */
 	default:
@@ -1401,6 +1404,11 @@ void intel_engine_dump(struct intel_engine_cs *engine,
 			   rq->timeline->hwsp_offset);
 
 		print_request_ring(m, rq);
+
+		if (rq->hw_context->lrc_reg_state) {
+			drm_printf(m, "Logical Ring Context:\n");
+			hexdump(m, rq->hw_context->lrc_reg_state, PAGE_SIZE);
+		}
 	}
 	spin_unlock_irqrestore(&engine->active.lock, flags);
 
