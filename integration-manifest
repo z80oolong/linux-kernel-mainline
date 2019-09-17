@@ -1,0 +1,30 @@
+drm drm-fixes e6bb711600db23eef2fa0c16a2d361e17b45bb28
+	Merge tag 'drm-misc-fixes-2019-09-12' of git://anongit.freedesktop.org/drm/drm-misc into drm-fixes
+drm-misc drm-misc-fixes 21670bd78a25001cf8ef2679b378c73fb73b904f
+	drm/lima: fix lima_gem_wait() return value
+drm-intel drm-intel-fixes 4d856f72c10ecb060868ed10ff1b1453943fc6c8
+	Linux 5.3
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 945b584c94f8c665b2df3834a8a6a8faf256cd5f
+	Merge branch 'linux-5.4' of git://github.com/skeggsb/linux into drm-next
+drm-misc drm-misc-next-fixes 2472518e44eee3a45bd436a4162046790b74767a
+	Revert "drm/bridge: adv7511: Attach to DSI host at probe time"
+drm-intel drm-intel-next-fixes cf1d479cb80de7b8403159a78514f98c17fe8ec1
+	drm/i915: Don't mix srcu tag and negative error codes
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next a859f1270a993ba3e8882eb572ff7151556fc04f
+	drm/encoder: Don't raise voice in drm_encoder_mask() documentation
+drm-intel drm-intel-next-queued c210e85b8f3371168ce78c8da00b913839a84ec7
+	drm/i915/tgl: Extend MI_SEMAPHORE_WAIT
+drm-intel drm-intel-next be91233b1053d9725d3a437e3da44ccff2639477
+	drm/i915: Update DRIVER_DATE to 20190822
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 029d2c0fd61eac74700fb4ffff36fc63bfff7e5e
+	ALSA: usb-audio: Add Hiby device family to quirks for native DSD support
+sound-upstream for-next 029d2c0fd61eac74700fb4ffff36fc63bfff7e5e
+	ALSA: usb-audio: Add Hiby device family to quirks for native DSD support
+drm-intel topic/core-for-CI a15a0fc0699a77944c004014ad343c5731fe52eb
+	HAX iommu/intel: Ignore igfx_off
