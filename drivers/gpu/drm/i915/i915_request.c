@@ -169,16 +169,17 @@ remove_from_client(struct i915_request *request)
 {
 	struct drm_i915_file_private *file_priv;
 
-	file_priv = READ_ONCE(request->file_priv);
-	if (!file_priv)
+	if (!READ_ONCE(request->file_priv))
 		return;
 
-	spin_lock(&file_priv->mm.lock);
-	if (request->file_priv) {
+	rcu_read_lock();
+	file_priv = xchg(&request->file_priv, NULL);
+	if (file_priv) {
+		spin_lock(&file_priv->mm.lock);
 		list_del(&request->client_link);
-		request->file_priv = NULL;
+		spin_unlock(&file_priv->mm.lock);
 	}
-	spin_unlock(&file_priv->mm.lock);
+	rcu_read_unlock();
 }
 
 static void free_capture_list(struct i915_request *request)
@@ -192,6 +193,27 @@ static void free_capture_list(struct i915_request *request)
 		kfree(capture);
 		capture = next;
 	}
+}
+
+static void remove_from_engine(struct i915_request *rq)
+{
+	struct intel_engine_cs *engine, *locked;
+
+	/*
+	 * Virtual engines complicate acquiring the engine timeline lock,
+	 * as their rq->engine pointer is not stable until under that
+	 * engine lock. The simple ploy we use is to take the lock then
+	 * check that the rq still belongs to the newly locked engine.
+	 */
+	locked = READ_ONCE(rq->engine);
+	spin_lock(&locked->active.lock);
+	while (unlikely(locked != (engine = READ_ONCE(rq->engine)))) {
+		spin_unlock(&locked->active.lock);
+		spin_lock(&engine->active.lock);
+		locked = engine;
+	}
+	list_del(&rq->sched.link);
+	spin_unlock(&locked->active.lock);
 }
 
 static bool i915_request_retire(struct i915_request *rq)
@@ -259,9 +281,7 @@ static bool i915_request_retire(struct i915_request *rq)
 	 * request that we have removed from the HW and put back on a run
 	 * queue.
 	 */
-	spin_lock(&rq->engine->active.lock);
-	list_del(&rq->sched.link);
-	spin_unlock(&rq->engine->active.lock);
+	remove_from_engine(rq);
 
 	spin_lock(&rq->lock);
 	i915_request_mark_complete(rq);
@@ -782,7 +802,9 @@ emit_semaphore_wait(struct i915_request *to,
 		    struct i915_request *from,
 		    gfp_t gfp)
 {
+	const int has_token = INTEL_GEN(to->i915) >= 12;
 	u32 hwsp_offset;
+	int len;
 	u32 *cs;
 	int err;
 
@@ -809,7 +831,11 @@ emit_semaphore_wait(struct i915_request *to,
 	if (err)
 		return err;
 
-	cs = intel_ring_begin(to, 4);
+	len = 4;
+	if (has_token)
+		len += 2;
+
+	cs = intel_ring_begin(to, len);
 	if (IS_ERR(cs))
 		return PTR_ERR(cs);
 
@@ -821,13 +847,18 @@ emit_semaphore_wait(struct i915_request *to,
 	 * (post-wrap) values than they were expecting (and so wait
 	 * forever).
 	 */
-	*cs++ = MI_SEMAPHORE_WAIT |
-		MI_SEMAPHORE_GLOBAL_GTT |
-		MI_SEMAPHORE_POLL |
-		MI_SEMAPHORE_SAD_GTE_SDD;
+	*cs++ = (MI_SEMAPHORE_WAIT |
+		 MI_SEMAPHORE_GLOBAL_GTT |
+		 MI_SEMAPHORE_POLL |
+		 MI_SEMAPHORE_SAD_GTE_SDD) +
+		has_token;
 	*cs++ = from->fence.seqno;
 	*cs++ = hwsp_offset;
 	*cs++ = 0;
+	if (has_token) {
+		*cs++ = 0;
+		*cs++ = MI_NOOP;
+	}
 
 	intel_ring_advance(to, cs);
 	to->sched.semaphores |= from->engine->mask;
@@ -923,7 +954,7 @@ i915_request_await_dma_fence(struct i915_request *rq, struct dma_fence *fence)
 			ret = i915_request_await_request(rq, to_request(fence));
 		else
 			ret = i915_sw_fence_await_dma_fence(&rq->submit, fence,
-							    I915_FENCE_TIMEOUT,
+							    fence->context ? I915_FENCE_TIMEOUT : 0,
 							    I915_FENCE_GFP);
 		if (ret < 0)
 			return ret;
