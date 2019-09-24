@@ -550,6 +550,13 @@ static void alc_fixup_sku_ignore(struct hda_codec *codec,
 	}
 }
 
+static void alc_fixup_skip_force_resume(struct hda_codec *codec,
+					const struct hda_fixup *fix, int action)
+{
+	if (action == HDA_FIXUP_ACT_PRE_PROBE)
+		codec->relaxed_resume = 1;
+}
+
 static void alc_fixup_no_depop_delay(struct hda_codec *codec,
 				    const struct hda_fixup *fix, int action)
 {
@@ -5738,6 +5745,7 @@ enum {
 	ALC256_FIXUP_ASUS_MIC_NO_PRESENCE,
 	ALC299_FIXUP_PREDATOR_SPK,
 	ALC294_FIXUP_ASUS_INTSPK_HEADSET_MIC,
+	ALC256_FIXUP_SKIP_FORCE_RESUME,
 };
 
 static const struct hda_fixup alc269_fixups[] = {
@@ -6751,6 +6759,10 @@ static const struct hda_fixup alc269_fixups[] = {
 			{ }
 		}
 	},
+	[ALC256_FIXUP_SKIP_FORCE_RESUME] = {
+		.type = HDA_FIXUP_FUNC,
+		.v.func = alc_fixup_skip_force_resume,
+	},
 	[ALC294_FIXUP_ASUS_INTSPK_HEADSET_MIC] = {
 		.type = HDA_FIXUP_PINS,
 		.v.pins = (const struct hda_pintbl[]) {
@@ -6830,7 +6842,9 @@ static const struct snd_pci_quirk alc269_fixup_tbl[] = {
 	SND_PCI_QUIRK(0x1028, 0x0873, "Dell Precision 3930", ALC255_FIXUP_DUMMY_LINEOUT_VERB),
 	SND_PCI_QUIRK(0x1028, 0x08ad, "Dell WYSE AIO", ALC225_FIXUP_DELL_WYSE_AIO_MIC_NO_PRESENCE),
 	SND_PCI_QUIRK(0x1028, 0x08ae, "Dell WYSE NB", ALC225_FIXUP_DELL1_MIC_NO_PRESENCE),
+	SND_PCI_QUIRK(0x1028, 0x091b, "Dell", ALC256_FIXUP_SKIP_FORCE_RESUME),
 	SND_PCI_QUIRK(0x1028, 0x0935, "Dell", ALC274_FIXUP_DELL_AIO_LINEOUT_VERB),
+	SND_PCI_QUIRK(0x1028, 0x097f, "Dell", ALC256_FIXUP_SKIP_FORCE_RESUME),
 	SND_PCI_QUIRK(0x1028, 0x164a, "Dell", ALC293_FIXUP_DELL1_MIC_NO_PRESENCE),
 	SND_PCI_QUIRK(0x1028, 0x164b, "Dell", ALC293_FIXUP_DELL1_MIC_NO_PRESENCE),
 	SND_PCI_QUIRK(0x103c, 0x1586, "HP", ALC269_FIXUP_HP_MUTE_LED_MIC2),
