@@ -21,6 +21,7 @@ static int mlxsw_sp_flower_parse_actions(struct mlxsw_sp *mlxsw_sp,
 					 struct netlink_ext_ack *extack)
 {
 	const struct tc_action *a;
+	int mirror_act_count = 0;
 	int err, i;
 
 	if (!tcf_exts_has_actions(exts))
@@ -86,6 +87,11 @@ static int mlxsw_sp_flower_parse_actions(struct mlxsw_sp *mlxsw_sp,
 				return err;
 		} else if (is_tcf_mirred_egress_mirror(a)) {
 			struct net_device *out_dev = tcf_mirred_dev(a);
+
+			if (mirror_act_count++) {
+				NL_SET_ERR_MSG_MOD(extack, "Multiple mirror actions per rule are not supported");
+				return -EOPNOTSUPP;
+			}
 
 			err = mlxsw_sp_acl_rulei_act_mirror(mlxsw_sp, rulei,
 							    block, out_dev,
