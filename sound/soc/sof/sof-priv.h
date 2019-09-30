@@ -427,6 +427,7 @@ struct snd_sof_dev {
 	u32 dtrace_error;
 	u32 msi_enabled;
 
+	u32 capture_stream_num;
 	void *private;			/* core does not touch this */
 };
 
