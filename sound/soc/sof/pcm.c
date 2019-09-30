@@ -314,6 +314,7 @@ static int sof_pcm_trigger(struct snd_pcm_substream *substream, int cmd)
 	struct snd_sof_pcm *spcm;
 	struct sof_ipc_stream stream;
 	struct sof_ipc_reply reply;
+	bool ipc_first = false;
 	int ret;
 
 	/* nothing to do for BE */
@@ -334,6 +335,7 @@ static int sof_pcm_trigger(struct snd_pcm_substream *substream, int cmd)
 	switch (cmd) {
 	case SNDRV_PCM_TRIGGER_PAUSE_PUSH:
 		stream.hdr.cmd |= SOF_IPC_STREAM_TRIG_PAUSE;
+		ipc_first = true;
 		break;
 	case SNDRV_PCM_TRIGGER_PAUSE_RELEASE:
 		stream.hdr.cmd |= SOF_IPC_STREAM_TRIG_RELEASE;
@@ -354,17 +356,22 @@ static int sof_pcm_trigger(struct snd_pcm_substream *substream, int cmd)
 	case SNDRV_PCM_TRIGGER_SUSPEND:
 	case SNDRV_PCM_TRIGGER_STOP:
 		stream.hdr.cmd |= SOF_IPC_STREAM_TRIG_STOP;
+		ipc_first = true;
 		break;
 	default:
 		dev_err(sdev->dev, "error: unhandled trigger cmd %d\n", cmd);
 		return -EINVAL;
 	}
 
-	snd_sof_pcm_platform_trigger(sdev, substream, cmd);
+	if (!ipc_first)
+		snd_sof_pcm_platform_trigger(sdev, substream, cmd);
 
 	/* send IPC to the DSP */
 	ret = sof_ipc_tx_message(sdev->ipc, stream.hdr.cmd, &stream,
 				 sizeof(stream), &reply, sizeof(reply));
+
+	if (ipc_first)
+		snd_sof_pcm_platform_trigger(sdev, substream, cmd);
 
 	if (ret < 0 || cmd != SNDRV_PCM_TRIGGER_SUSPEND)
 		return ret;
