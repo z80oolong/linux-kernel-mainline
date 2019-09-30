@@ -1186,6 +1186,26 @@ static void execlists_submit_ports(struct intel_engine_cs *engine)
 	/* we need to manually load the submit queue */
 	if (execlists->ctrl_reg)
 		writel(EL_CTRL_LOAD, execlists->ctrl_reg);
+
+	/*
+	 * Now this is evil magic.
+	 *
+	 * Adding the same udelay() to process_csb before we clear
+	 * execlists->pending (that is after we receive the HW ack for this
+	 * submit and before we can submit again) does not relieve the symptoms
+	 * (machine lockup). So is the active difference here the wait under
+	 * the irq-off spinlock? That gives more credance to the theory that
+	 * the issue is interrupt delivery. Also note that we still rely on
+	 * disabling RPS, again that seems like an issue with simultaneous
+	 * GT interrupts being delivered to the same CPU.
+	 */
+	if (IS_TIGERLAKE(engine->i915)) {
+		u64 start = local_clock();
+
+		while (READ_ONCE(*execlists->pending) && /* wait for ack */
+		       (local_clock() - start) >> 22 == 0) /* ~4ms timeout */
+			cpu_relax();
+	}
 }
 
 static bool ctx_single_port_submission(const struct intel_context *ce)
