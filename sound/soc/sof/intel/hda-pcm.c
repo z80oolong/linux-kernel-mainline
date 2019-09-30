@@ -215,6 +215,15 @@ int hda_dsp_pcm_open(struct snd_sof_dev *sdev,
 		return -ENODEV;
 	}
 
+	if (substream->stream == SNDRV_PCM_STREAM_CAPTURE) {
+		sdev->capture_stream_num++;
+		if (sdev->capture_stream_num == 1)
+			snd_sof_dsp_update_bits(sdev, HDA_DSP_HDA_BAR,
+						HDA_DSP_EM2,
+						HDA_DSP_L1SEN,
+						0);
+	}
+
 	/* binding pcm substream to hda stream */
 	substream->runtime->private_data = &dsp_stream->hstream;
 	return 0;
@@ -232,6 +241,15 @@ int hda_dsp_pcm_close(struct snd_sof_dev *sdev,
 	if (ret) {
 		dev_dbg(sdev->dev, "stream %s not opened!\n", substream->name);
 		return -ENODEV;
+	}
+
+	if (substream->stream == SNDRV_PCM_STREAM_CAPTURE) {
+		sdev->capture_stream_num--;
+		if (sdev->capture_stream_num == 0)
+			snd_sof_dsp_update_bits(sdev, HDA_DSP_HDA_BAR,
+						HDA_DSP_EM2,
+						HDA_DSP_L1SEN,
+						1);
 	}
 
 	/* unbinding pcm substream to hda stream */
