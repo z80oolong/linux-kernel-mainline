@@ -332,6 +332,9 @@
 #define SOF_SKL_NUM_DAIS		8
 #endif
 
+#define HDA_DSP_EM2		0x1030
+#define HDA_DSP_L1SEN		BIT(13)
+
 /* Intel HD Audio SRAM Window 0*/
 #define HDA_ADSP_SRAM0_BASE_SKL		0x8000
 
