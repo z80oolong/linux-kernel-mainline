@@ -1288,9 +1288,6 @@ static struct tb_xdomain *switch_find_xdomain(struct tb_switch *sw,
 		struct tb_port *port = &sw->ports[i];
 		struct tb_xdomain *xd;
 
-		if (tb_is_upstream_port(port))
-			continue;
-
 		if (port->xdomain) {
 			xd = port->xdomain;
 
@@ -1305,7 +1302,7 @@ static struct tb_xdomain *switch_find_xdomain(struct tb_switch *sw,
 				   lookup->route == xd->route) {
 				return xd;
 			}
-		} else if (port->remote) {
+		} else if (tb_port_has_remote(port)) {
 			xd = switch_find_xdomain(port->remote->sw, lookup);
 			if (xd)
 				return xd;
