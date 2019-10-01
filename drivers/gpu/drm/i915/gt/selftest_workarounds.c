@@ -565,6 +565,14 @@ static int check_dirty_whitelist(struct i915_gem_context *ctx,
 				goto err_request;
 		}
 
+		i915_vma_lock(batch);
+		err = i915_request_await_object(rq, batch->obj, false);
+		if (err == 0)
+			err = i915_vma_move_to_active(batch, rq, 0);
+		i915_vma_unlock(batch);
+		if (err)
+			goto err_request;
+
 		err = engine->emit_bb_start(rq,
 					    batch->node.start, PAGE_SIZE,
 					    0);
@@ -739,7 +747,7 @@ static int live_reset_whitelist(void *arg)
 
 	igt_global_reset_lock(&i915->gt);
 
-	if (intel_has_reset_engine(i915)) {
+	if (intel_has_reset_engine(&i915->gt)) {
 		err = check_whitelist_across_reset(engine,
 						   do_engine_reset,
 						   "engine");
@@ -747,7 +755,7 @@ static int live_reset_whitelist(void *arg)
 			goto out;
 	}
 
-	if (intel_has_gpu_reset(i915)) {
+	if (intel_has_gpu_reset(&i915->gt)) {
 		err = check_whitelist_across_reset(engine,
 						   do_device_reset,
 						   "device");
@@ -849,6 +857,14 @@ static int scrub_whitelisted_registers(struct i915_gem_context *ctx,
 		if (err)
 			goto err_request;
 	}
+
+	i915_vma_lock(batch);
+	err = i915_request_await_object(rq, batch->obj, false);
+	if (err == 0)
+		err = i915_vma_move_to_active(batch, rq, 0);
+	i915_vma_unlock(batch);
+	if (err)
+		goto err_request;
 
 	/* Perform the writes from an unprivileged "user" batch */
 	err = engine->emit_bb_start(rq, batch->node.start, 0, 0);
@@ -1115,7 +1131,7 @@ live_gpu_reset_workarounds(void *arg)
 	struct wa_lists lists;
 	bool ok;
 
-	if (!intel_has_gpu_reset(i915))
+	if (!intel_has_gpu_reset(&i915->gt))
 		return 0;
 
 	ctx = kernel_context(i915);
@@ -1162,7 +1178,7 @@ live_engine_reset_workarounds(void *arg)
 	struct wa_lists lists;
 	int ret = 0;
 
-	if (!intel_has_reset_engine(i915))
+	if (!intel_has_reset_engine(&i915->gt))
 		return 0;
 
 	ctx = kernel_context(i915);
