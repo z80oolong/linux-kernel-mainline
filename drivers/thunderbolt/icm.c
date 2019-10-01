@@ -56,6 +56,7 @@
  * @safe_mode: ICM is in safe mode
  * @max_boot_acl: Maximum number of preboot ACL entries (%0 if not supported)
  * @rpm: Does the controller support runtime PM (RTD3)
+ * @can_upgrade_nvm: Can the NVM firmware be upgrade on this controller
  * @is_supported: Checks if we can support ICM on this controller
  * @get_mode: Read and return the ICM firmware mode (optional)
  * @get_route: Find a route string for given switch
@@ -74,6 +75,7 @@ struct icm {
 	int vnd_cap;
 	bool safe_mode;
 	bool rpm;
+	bool can_upgrade_nvm;
 	bool (*is_supported)(struct tb *tb);
 	int (*get_mode)(struct tb *tb);
 	int (*get_route)(struct tb *tb, u8 link, u8 depth, u64 *route);
@@ -1852,12 +1854,7 @@ static int icm_start(struct tb *tb)
 	if (!tb->root_switch)
 		return -ENODEV;
 
-	/*
-	 * NVM upgrade has not been tested on Apple systems and they
-	 * don't provide images publicly either. To be on the safe side
-	 * prevent root switch NVM upgrade on Macs for now.
-	 */
-	tb->root_switch->no_nvm_upgrade = x86_apple_machine;
+	tb->root_switch->no_nvm_upgrade = !icm->can_upgrade_nvm;
 	tb->root_switch->rpm = icm->rpm;
 
 	ret = tb_switch_add(tb->root_switch);
@@ -1956,6 +1953,7 @@ struct tb *icm_probe(struct tb_nhi *nhi)
 	switch (nhi->pdev->device) {
 	case PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_NHI:
 	case PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI:
+		icm->can_upgrade_nvm = true;
 		icm->is_supported = icm_fr_is_supported;
 		icm->get_route = icm_fr_get_route;
 		icm->save_devices = icm_fr_save_devices;
@@ -1973,6 +1971,13 @@ struct tb *icm_probe(struct tb_nhi *nhi)
 	case PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_C_4C_NHI:
 	case PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_C_2C_NHI:
 		icm->max_boot_acl = ICM_AR_PREBOOT_ACL_ENTRIES;
+		/*
+		 * NVM upgrade has not been tested on Apple systems and
+		 * they don't provide images publicly either. To be on
+		 * the safe side prevent root switch NVM upgrade on Macs
+		 * for now.
+		 */
+		icm->can_upgrade_nvm = !x86_apple_machine;
 		icm->is_supported = icm_ar_is_supported;
 		icm->get_mode = icm_ar_get_mode;
 		icm->get_route = icm_ar_get_route;
@@ -1988,6 +1993,7 @@ struct tb *icm_probe(struct tb_nhi *nhi)
 	case PCI_DEVICE_ID_INTEL_TITAN_RIDGE_2C_NHI:
 	case PCI_DEVICE_ID_INTEL_TITAN_RIDGE_4C_NHI:
 		icm->max_boot_acl = ICM_AR_PREBOOT_ACL_ENTRIES;
+		icm->can_upgrade_nvm = !x86_apple_machine;
 		icm->is_supported = icm_ar_is_supported;
 		icm->get_mode = icm_ar_get_mode;
 		icm->driver_ready = icm_tr_driver_ready;
