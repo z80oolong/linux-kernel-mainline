@@ -11,7 +11,7 @@ arch/x86/platform/efi/efi_stub_32.S .text efi_call_phys jmp *%ecx
 arch/x86/platform/efi/efi_stub_32.S .text efi_call_phys jmp *%edx
 arch/x86/platform/efi/efi_stub_32.S .text efi_call_phys jmp *%edx
 drivers/video/fbdev/uvesafb.c .text uvesafb_pan_display call *(%edi)
-drivers/video/fbdev/uvesafb.c .text uvesafb_setpalette.isra.7 call *(%esi)
+drivers/video/fbdev/uvesafb.c .text uvesafb_setpalette.isra.8 call *(%esi)
 drivers/video/fbdev/vesafb.c .text vesafb_pan_display call *(%edi)
 drivers/video/fbdev/vesafb.c .text vesafb_setcolreg call *(%esi)
 drivers/watchdog/hpwdt.c .text asminline_call call *0xc(%ebp)
