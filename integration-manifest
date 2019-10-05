@@ -1,0 +1,32 @@
+drm drm-fixes 07bba341c99694a4fe6b07edfa4f97ca90c8784c
+	Merge tag 'drm-intel-fixes-2019-10-03-1' of git://anongit.freedesktop.org/drm/drm-intel into drm-fixes
+drm-misc drm-misc-fixes b6559bf3ac32acfe34e17c73d68581e7f7415785
+	Merge drm-misc-next-fixes-2019-10-02 into drm-misc-fixes
+drm-intel drm-intel-fixes 485f682be9fc8d41376936a3b01423edd07b9a75
+	Revert "drm/i915: Fix DP-MST crtc_mask"
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 54ecb8f7028c5eb3d740bb82b0f1d90f2df63c5c
+	Linux 5.4-rc1
+drm-misc drm-misc-next-fixes d7d44b6fe40a98e960be92ea8617954c2596d140
+	drm/tilcdc: include linux/pinctrl/consumer.h again
+drm-intel drm-intel-next-fixes 458863e08e13ecf22b9ba1ee6d4baba0ce9990ea
+	drm/i915: Mark contents as dirty on a write fault
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 839313509182c3043a073a78bd41e4296af0a7a2
+	drm/mcde: Fix reference to DOC comment
+drm-intel drm-intel-next-queued 0e5493cab5ef90fb91f89a2dc84259c7a7d7fd50
+	drm/i915/stolen: make the object creation interface consistent
+drm-intel drm-intel-next 9cd6c339e34ab13479fb139b0b9f5ffc9743bfc1
+	drm/i915: Update DRIVER_DATE to 20190927
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus f41f900568d9ffd896cc941db7021eb14bd55910
+	ALSA: usb-audio: Add DSD support for EVGA NU Audio
+sound-upstream for-next f41f900568d9ffd896cc941db7021eb14bd55910
+	ALSA: usb-audio: Add DSD support for EVGA NU Audio
+drm-intel topic/core-for-CI deefa8cefd492efcb86ed6edac4e29e1ac86334e
+	HAX iommu/intel: Ignore igfx_off
+drm drm-5.4-merge 4862bccb89898d5a4820daf9bff820593c77a305
+	Merge branch 'drm-next' of ssh://git.freedesktop.org/git/drm/drm
