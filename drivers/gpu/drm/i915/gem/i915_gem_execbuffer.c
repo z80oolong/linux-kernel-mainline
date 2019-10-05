@@ -902,7 +902,7 @@ static void reloc_cache_init(struct reloc_cache *cache,
 	cache->use_64bit_reloc = HAS_64BIT_RELOC(i915);
 	cache->has_fence = cache->gen < 4;
 	cache->needs_unfenced = INTEL_INFO(i915)->unfenced_needs_alignment;
-	cache->node.allocated = false;
+	cache->node.flags = 0;
 	cache->rq = NULL;
 	cache->rq_size = 0;
 }
@@ -963,7 +963,7 @@ static void reloc_cache_reset(struct reloc_cache *cache)
 		intel_gt_flush_ggtt_writes(ggtt->vm.gt);
 		io_mapping_unmap_atomic((void __iomem *)vaddr);
 
-		if (cache->node.allocated) {
+		if (drm_mm_node_allocated(&cache->node)) {
 			ggtt->vm.clear_range(&ggtt->vm,
 					     cache->node.start,
 					     cache->node.size);
@@ -1056,7 +1056,7 @@ static void *reloc_iomap(struct drm_i915_gem_object *obj,
 	}
 
 	offset = cache->node.start;
-	if (cache->node.allocated) {
+	if (drm_mm_node_allocated(&cache->node)) {
 		ggtt->vm.insert_page(&ggtt->vm,
 				     i915_gem_object_get_dma_address(obj, page),
 				     offset, I915_CACHE_NONE, 0);
