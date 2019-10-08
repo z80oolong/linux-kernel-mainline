@@ -606,7 +606,11 @@ static struct k_clock *clockid_to_kclock(const clockid_t id)
 	if (id >= MAX_CLOCKS)
 		return NULL;
 
-	return &posix_clocks[array_index_nospec(idx, MAX_CLOCKS)];
+	idx = array_index_nospec(idx, MAX_CLOCKS);
+	if (!posix_clocks[idx].clock_getres)
+		return NULL;
+
+	return &posix_clocks[idx];
 }
 
 static int common_timer_create(struct k_itimer *new_timer)
