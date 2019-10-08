@@ -736,6 +736,7 @@ intel_engine_init_active(struct intel_engine_cs *engine, unsigned int subclass)
 static struct intel_context *
 create_kernel_context(struct intel_engine_cs *engine)
 {
+	static struct lock_class_key kernel;
 	struct intel_context *ce;
 	int err;
 
@@ -750,6 +751,14 @@ create_kernel_context(struct intel_engine_cs *engine)
 		intel_context_put(ce);
 		return ERR_PTR(err);
 	}
+
+	/*
+	 * Give our perma-pinned kernel timelines a separate lockdep class,
+	 * so that we can use them from within the normal user timelines
+	 * should we need to inject GPU operations during their request
+	 * construction.
+	 */
+	lockdep_set_class(&ce->timeline->mutex, &kernel);
 
 	return ce;
 }
@@ -1040,6 +1049,25 @@ static bool ring_is_idle(struct intel_engine_cs *engine)
 	return idle;
 }
 
+void intel_engine_flush_submission(struct intel_engine_cs *engine)
+{
+	struct tasklet_struct *t = &engine->execlists.tasklet;
+
+	if (__tasklet_is_scheduled(t)) {
+		local_bh_disable();
+		if (tasklet_trylock(t)) {
+			/* Must wait for any GPU reset in progress. */
+			if (__tasklet_is_enabled(t))
+				t->func(t->data);
+			tasklet_unlock(t);
+		}
+		local_bh_enable();
+	}
+
+	/* Otherwise flush the tasklet if it was running on another cpu */
+	tasklet_unlock_wait(t);
+}
+
 /**
  * intel_engine_is_idle() - Report if the engine has finished process all work
  * @engine: the intel_engine_cs
@@ -1058,21 +1086,9 @@ bool intel_engine_is_idle(struct intel_engine_cs *engine)
 
 	/* Waiting to drain ELSP? */
 	if (execlists_active(&engine->execlists)) {
-		struct tasklet_struct *t = &engine->execlists.tasklet;
-
 		synchronize_hardirq(engine->i915->drm.pdev->irq);
 
-		local_bh_disable();
-		if (tasklet_trylock(t)) {
-			/* Must wait for any GPU reset in progress. */
-			if (__tasklet_is_enabled(t))
-				t->func(t->data);
-			tasklet_unlock(t);
-		}
-		local_bh_enable();
-
-		/* Otherwise flush the tasklet if it was on another cpu */
-		tasklet_unlock_wait(t);
+		intel_engine_flush_submission(engine);
 
 		if (execlists_active(&engine->execlists))
 			return false;
@@ -1458,10 +1474,10 @@ void intel_engine_dump(struct intel_engine_cs *engine,
 	spin_unlock_irqrestore(&engine->active.lock, flags);
 
 	drm_printf(m, "\tMMIO base:  0x%08x\n", engine->mmio_base);
-	wakeref = intel_runtime_pm_get_if_in_use(&engine->i915->runtime_pm);
+	wakeref = intel_runtime_pm_get_if_in_use(engine->uncore->rpm);
 	if (wakeref) {
 		intel_engine_print_registers(engine, m);
-		intel_runtime_pm_put(&engine->i915->runtime_pm, wakeref);
+		intel_runtime_pm_put(engine->uncore->rpm, wakeref);
 	} else {
 		drm_printf(m, "\tDevice is asleep; skipping register dump\n");
 	}
