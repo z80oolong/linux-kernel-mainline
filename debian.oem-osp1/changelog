@@ -8,7 +8,7 @@ linux-oem-osp1 (5.0.0-1025.28) UNRELEASED; urgency=medium
 
 linux-oem-osp1 (5.0.0-1024.27) bionic; urgency=medium
 
-  * bionic/linux-oem-osp1: <version to be filled> -proposed tracker
+  * bionic/linux-oem-osp1: 5.0.0-1024.27 -proposed tracker
     (LP: #1846023)
 
   * alsa/sof: fix the hang issue on Dell Nebula MP platforms (LP: #1845904)
