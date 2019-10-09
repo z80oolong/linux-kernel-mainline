@@ -793,10 +793,15 @@ static void i915_audio_component_get_power(struct device *kdev)
 	intel_display_power_get(kdev_to_i915(kdev), POWER_DOMAIN_AUDIO);
 
 	/* Force CDCLK to 2*BCLK as long as we need audio to be powered. */
-	if (dev_priv->audio_power_refcount++ == 0)
+	if (dev_priv->audio_power_refcount++ == 0) {
 		if (IS_CANNONLAKE(dev_priv) || IS_GEMINILAKE(dev_priv))
 			glk_force_audio_cdclk(dev_priv, true);
 
+		if (INTEL_GEN(dev_priv) >= 10 || IS_GEMINILAKE(dev_priv))
+			I915_WRITE(AUD_PIN_BUF_CTL,
+				   (I915_READ(AUD_PIN_BUF_CTL) |
+				    AUD_PIN_BUF_ENABLE));
+	}
 }
 
 static void i915_audio_component_put_power(struct device *kdev)
