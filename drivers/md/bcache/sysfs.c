@@ -820,7 +820,7 @@ SHOW(__bch_cache)
 
 	if (attr == &sysfs_priority_stats) {
 		int cmp(const void *l, const void *r)
-		{	return *((uint16_t *) r) - *((uint16_t *) l); }
+		{	cond_resched(); return *((uint16_t *) r) - *((uint16_t *) l); }
 
 		struct bucket *b;
 		size_t n = ca->sb.nbuckets, i;
