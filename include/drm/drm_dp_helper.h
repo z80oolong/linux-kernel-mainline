@@ -625,6 +625,20 @@
 /* up to ID_SLOT_63 at 0x2ff */
 
 #define DP_SOURCE_OUI			    0x300
+#define DP_EDP_TCON_CAPABILITY_BYTE0	    0x340
+
+#define DP_EDP_TCON_CAPABILITY_BYTE1	    0x341
+#define DP_BRIGHTNESS_CONTROL_NITS	    0x10
+
+#define DP_EDP_TCON_CAPABILITY_BYTE2	    0x342
+#define DP_BRIGHTNESS_CONTROL_BY_AUX	    0x01
+
+#define DP_EDP_GETSET_CTRL_PARAMS	    0x344
+#define DP_EDP_CONTENT_LUMINANCE	    0x346
+#define DP_EDP_PANEL_LUMINANCE_OVERRIDE     0x34A
+#define DP_EDP_BRIGHTNESS_NITS		    0x354
+#define DP_EDP_BRIGHTNESS_OPTIMIZATION	    0x358
+
 #define DP_SINK_OUI			    0x400
 #define DP_BRANCH_OUI			    0x500
 #define DP_BRANCH_ID                        0x503
@@ -1161,6 +1175,12 @@ enum drm_dp_quirk {
 	 * to 16 bits.
 	 */
 	DP_DPCD_QUIRK_LIMITED_M_N,
+	/**
+	 * @DP_DPCD_QUIRK_NON_STANDARD_BRIGHTNESS_CONTROL:
+	 *
+	 * The device used specific DPCD register to control brightness.
+	 */
+	DP_DPCD_QUIRK_CUSTOMIZE_BRIGHTNESS_CONTROL,
 };
 
 /**
