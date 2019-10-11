@@ -5934,6 +5934,13 @@ static bool intel_edp_init_connector(struct intel_dp *intel_dp,
 		goto out_vdd_off;
 	}
 
+	if (drm_dp_has_quirk(&intel_dp->desc,
+	    DP_DPCD_QUIRK_CUSTOMIZE_BRIGHTNESS_CONTROL)) {
+		i915_modparams.enable_dpcd_backlight = true;
+		i915_modparams.fastboot = false;
+		DRM_DEBUG_KMS("Using specific DPCD to control brightness\n");
+	}
+
 	mutex_lock(&dev->mode_config.mutex);
 	edid = drm_get_edid(connector, &intel_dp->aux.ddc);
 	if (edid) {
