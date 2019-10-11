@@ -1,0 +1,30 @@
+drm drm-fixes 4adbcff22e676d28de185dfd391a6fe56b3e6284
+	Merge tag 'drm-intel-fixes-2019-10-10' of git://anongit.freedesktop.org/drm/drm-intel into drm-fixes
+drm-misc drm-misc-fixes c3d79a83ca10d2026fd1cce096cde2d8e316592e
+	dma-buf/resv: fix exclusive fence get
+drm-intel drm-intel-fixes e137d3abdfca0fb6fc270da576a9d9d6a1f8d8b3
+	drm/i915/gt: execlists->active is serialised by the tasklet
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 7ed093602e0e1b60a0fc074a9692687e7d2b723d
+	Merge tag 'drm-misc-next-2019-10-09-2' of git://anongit.freedesktop.org/drm/drm-misc into drm-next
+drm-misc drm-misc-next-fixes d7d44b6fe40a98e960be92ea8617954c2596d140
+	drm/tilcdc: include linux/pinctrl/consumer.h again
+drm-intel drm-intel-next-fixes 458863e08e13ecf22b9ba1ee6d4baba0ce9990ea
+	drm/i915: Mark contents as dirty on a write fault
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 2636a5172da2eadee8190fad8d82d25d9a276525
+	drm/scheduler: make unexported items static
+drm-intel drm-intel-next-queued da80f04792fc0dddcc44201cb4ee96cb011755b6
+	drm/i915/tgl: Read SAGV block time from PCODE
+drm-intel drm-intel-next 9445ad17109b6fe7864acc33f0c62bd9d866b722
+	drm/i915: Update DRIVER_DATE to 20191007
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus 130bce3afbbbbe585cba8604f2124c28e8d86fb0
+	ALSA: hdac: clear link output stream mapping
+sound-upstream for-next 82e8d723e9e6698572098bf2976223d5069b34b5
+	sound: Fix Kconfig indentation
+drm-intel topic/core-for-CI d31a39a7f1c13a611258a920bcb95b1fa10a95c7
+	HAX iommu/intel: Ignore igfx_off
