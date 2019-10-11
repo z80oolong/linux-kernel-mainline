@@ -2405,6 +2405,13 @@ static int i915_dmc_info(struct seq_file *m, void *unused)
 	if (INTEL_GEN(dev_priv) >= 12) {
 		dc5_reg = TGL_DMC_DEBUG_DC5_COUNT;
 		dc6_reg = TGL_DMC_DEBUG_DC6_COUNT;
+		/*
+		 * NOTE: DMC_DEBUG3 is a general purpose reg.
+		 * According to B.Specs:49196 DMC f/w reuses DC5/6 counter
+		 * reg for DC3CO debugging and validation,
+		 * but TGL DMC f/w is using DMC_DEBUG3 reg for DC3CO counter.
+		 */
+		seq_printf(m, "DC3CO count: %d\n", I915_READ(DMC_DEBUG3));
 	} else {
 		dc5_reg = IS_BROXTON(dev_priv) ? BXT_CSR_DC3_DC5_COUNT :
 						 SKL_CSR_DC3_DC5_COUNT;
@@ -3592,6 +3599,7 @@ DEFINE_SIMPLE_ATTRIBUTE(i915_wedged_fops,
 #define DROP_IDLE	BIT(6)
 #define DROP_RESET_ACTIVE	BIT(7)
 #define DROP_RESET_SEQNO	BIT(8)
+#define DROP_RCU	BIT(9)
 #define DROP_ALL (DROP_UNBOUND	| \
 		  DROP_BOUND	| \
 		  DROP_RETIRE	| \
@@ -3600,7 +3608,8 @@ DEFINE_SIMPLE_ATTRIBUTE(i915_wedged_fops,
 		  DROP_SHRINK_ALL |\
 		  DROP_IDLE	| \
 		  DROP_RESET_ACTIVE | \
-		  DROP_RESET_SEQNO)
+		  DROP_RESET_SEQNO | \
+		  DROP_RCU)
 static int
 i915_drop_caches_get(void *data, u64 *val)
 {
@@ -3651,6 +3660,9 @@ i915_drop_caches_set(void *data, u64 val)
 	if (val & DROP_SHRINK_ALL)
 		i915_gem_shrink_all(i915);
 	fs_reclaim_release(GFP_KERNEL);
+
+	if (val & DROP_RCU)
+		rcu_barrier();
 
 	if (val & DROP_FREED)
 		i915_gem_drain_freed_objects(i915);
