@@ -247,8 +247,12 @@ static void __context_pin_release(struct intel_context *ce)
 
 static void mark_eio(struct i915_request *rq)
 {
-	if (!i915_request_signaled(rq))
-		dma_fence_set_error(&rq->fence, -EIO);
+	if (i915_request_completed(rq))
+		return;
+
+	GEM_BUG_ON(i915_request_signaled(rq));
+
+	dma_fence_set_error(&rq->fence, -EIO);
 	i915_request_mark_complete(rq);
 }
 
@@ -669,64 +673,6 @@ static const u8 gen12_xcs_offsets[] = {
 	REG16(0x274),
 	REG16(0x270),
 
-	NOP(13),
-	LRI(2, POSTED),
-	REG16(0x200),
-	REG16(0x204),
-
-	NOP(11),
-	LRI(50, POSTED),
-	REG16(0x588),
-	REG16(0x588),
-	REG16(0x588),
-	REG16(0x588),
-	REG16(0x588),
-	REG16(0x588),
-	REG(0x028),
-	REG(0x09c),
-	REG(0x0c0),
-	REG(0x178),
-	REG(0x17c),
-	REG16(0x358),
-	REG(0x170),
-	REG(0x150),
-	REG(0x154),
-	REG(0x158),
-	REG16(0x41c),
-	REG16(0x600),
-	REG16(0x604),
-	REG16(0x608),
-	REG16(0x60c),
-	REG16(0x610),
-	REG16(0x614),
-	REG16(0x618),
-	REG16(0x61c),
-	REG16(0x620),
-	REG16(0x624),
-	REG16(0x628),
-	REG16(0x62c),
-	REG16(0x630),
-	REG16(0x634),
-	REG16(0x638),
-	REG16(0x63c),
-	REG16(0x640),
-	REG16(0x644),
-	REG16(0x648),
-	REG16(0x64c),
-	REG16(0x650),
-	REG16(0x654),
-	REG16(0x658),
-	REG16(0x65c),
-	REG16(0x660),
-	REG16(0x664),
-	REG16(0x668),
-	REG16(0x66c),
-	REG16(0x670),
-	REG16(0x674),
-	REG16(0x678),
-	REG16(0x67c),
-	REG(0x068),
-
 	END(),
 };
 
@@ -857,6 +803,15 @@ static const u8 gen12_rcs_offsets[] = {
 
 static const u8 *reg_offsets(const struct intel_engine_cs *engine)
 {
+	/*
+	 * The gen12+ lists only have the registers we program in the basic
+	 * default state. We rely on the context image using relative
+	 * addressing to automatic fixup the register state between the
+	 * physical engines for virtual engine.
+	 */
+	GEM_BUG_ON(INTEL_GEN(engine->i915) >= 12 &&
+		   !intel_engine_has_relative_mmio(engine));
+
 	if (engine->class == RENDER_CLASS) {
 		if (INTEL_GEN(engine->i915) >= 12)
 			return gen12_rcs_offsets;
@@ -892,7 +847,6 @@ __unwind_incomplete_requests(struct intel_engine_cs *engine)
 	list_for_each_entry_safe_reverse(rq, rn,
 					 &engine->active.requests,
 					 sched.link) {
-		struct intel_engine_cs *owner;
 
 		if (i915_request_completed(rq))
 			continue; /* XXX */
@@ -907,8 +861,7 @@ __unwind_incomplete_requests(struct intel_engine_cs *engine)
 		 * engine so that it can be moved across onto another physical
 		 * engine as load dictates.
 		 */
-		owner = rq->hw_context->engine;
-		if (likely(owner == engine)) {
+		if (likely(rq->execution_mask == engine->mask)) {
 			GEM_BUG_ON(rq_prio(rq) == I915_PRIORITY_INVALID);
 			if (rq_prio(rq) != prio) {
 				prio = rq_prio(rq);
@@ -919,6 +872,8 @@ __unwind_incomplete_requests(struct intel_engine_cs *engine)
 			list_move(&rq->sched.link, pl);
 			active = rq;
 		} else {
+			struct intel_engine_cs *owner = rq->hw_context->engine;
+
 			/*
 			 * Decouple the virtual breadcrumb before moving it
 			 * back to the virtual engine -- we don't want the
@@ -928,7 +883,8 @@ __unwind_incomplete_requests(struct intel_engine_cs *engine)
 			 */
 			if (test_bit(DMA_FENCE_FLAG_ENABLE_SIGNAL_BIT,
 				     &rq->fence.flags)) {
-				spin_lock(&rq->lock);
+				spin_lock_nested(&rq->lock,
+						 SINGLE_DEPTH_NESTING);
 				i915_request_cancel_breadcrumb(rq);
 				spin_unlock(&rq->lock);
 			}
@@ -1137,25 +1093,45 @@ assert_pending_valid(const struct intel_engine_execlists *execlists,
 
 	trace_ports(execlists, msg, execlists->pending);
 
-	if (!execlists->pending[0])
+	if (!execlists->pending[0]) {
+		GEM_TRACE_ERR("Nothing pending for promotion!\n");
 		return false;
+	}
 
-	if (execlists->pending[execlists_num_ports(execlists)])
+	if (execlists->pending[execlists_num_ports(execlists)]) {
+		GEM_TRACE_ERR("Excess pending[%d] for promotion!\n",
+			      execlists_num_ports(execlists));
 		return false;
+	}
 
 	for (port = execlists->pending; (rq = *port); port++) {
-		if (ce == rq->hw_context)
+		if (ce == rq->hw_context) {
+			GEM_TRACE_ERR("Duplicate context in pending[%zd]\n",
+				      port - execlists->pending);
 			return false;
+		}
 
 		ce = rq->hw_context;
 		if (i915_request_completed(rq))
 			continue;
 
-		if (i915_active_is_idle(&ce->active))
+		if (i915_active_is_idle(&ce->active)) {
+			GEM_TRACE_ERR("Inactive context in pending[%zd]\n",
+				      port - execlists->pending);
 			return false;
+		}
 
-		if (!i915_vma_is_pinned(ce->state))
+		if (!i915_vma_is_pinned(ce->state)) {
+			GEM_TRACE_ERR("Unpinned context in pending[%zd]\n",
+				      port - execlists->pending);
 			return false;
+		}
+
+		if (!i915_vma_is_pinned(ce->ring->vma)) {
+			GEM_TRACE_ERR("Unpinned ringbuffer in pending[%zd]\n",
+				      port - execlists->pending);
+			return false;
+		}
 	}
 
 	return ce;
@@ -1231,6 +1207,10 @@ static bool can_merge_rq(const struct i915_request *prev,
 	 */
 	if (i915_request_completed(next))
 		return true;
+
+	if (unlikely((prev->flags ^ next->flags) &
+		     (I915_REQUEST_NOPREEMPT | I915_REQUEST_SENTINEL)))
+		return false;
 
 	if (!can_merge_ctx(prev->hw_context, next->hw_context))
 		return false;
@@ -1680,6 +1660,9 @@ static void execlists_dequeue(struct intel_engine_cs *engine)
 				if (last->hw_context == rq->hw_context)
 					goto done;
 
+				if (i915_request_has_sentinel(last))
+					goto done;
+
 				/*
 				 * If GVT overrides us we only ever submit
 				 * port[0], leaving port[1] empty. Note that we
@@ -1859,6 +1842,13 @@ static void process_csb(struct intel_engine_cs *engine)
 	const u8 num_entries = execlists->csb_size;
 	u8 head, tail;
 
+	/*
+	 * As we modify our execlists state tracking we require exclusive
+	 * access. Either we are inside the tasklet, or the tasklet is disabled
+	 * and we assume that is only inside the reset paths and so serialised.
+	 */
+	GEM_BUG_ON(!tasklet_is_locked(&execlists->tasklet) &&
+		   !reset_in_progress(execlists));
 	GEM_BUG_ON(USES_GUC_SUBMISSION(engine->i915));
 
 	/*
@@ -2776,8 +2766,10 @@ static void __execlists_reset(struct intel_engine_cs *engine, bool stalled)
 	if (!rq)
 		goto unwind;
 
+	/* We still have requests in-flight; the engine should be active */
+	GEM_BUG_ON(!intel_engine_pm_is_awake(engine));
+
 	ce = rq->hw_context;
-	GEM_BUG_ON(i915_active_is_idle(&ce->active));
 	GEM_BUG_ON(!i915_vma_is_pinned(ce->state));
 
 	/* Proclaim we have exclusive access to the context image! */
@@ -2785,10 +2777,13 @@ static void __execlists_reset(struct intel_engine_cs *engine, bool stalled)
 
 	rq = active_request(rq);
 	if (!rq) {
+		/* Idle context; tidy up the ring so we can restart afresh */
 		ce->ring->head = ce->ring->tail;
 		goto out_replay;
 	}
 
+	/* Context has requests still in-flight; it should not be idle! */
+	GEM_BUG_ON(i915_active_is_idle(&ce->active));
 	ce->ring->head = intel_ring_wrap(ce->ring, rq->head);
 
 	/*
@@ -3451,7 +3446,7 @@ void intel_execlists_set_default_submission(struct intel_engine_cs *engine)
 			engine->flags |= I915_ENGINE_HAS_PREEMPTION;
 	}
 
-	if (engine->class != COPY_ENGINE_CLASS && INTEL_GEN(engine->i915) >= 12)
+	if (INTEL_GEN(engine->i915) >= 12)
 		engine->flags |= I915_ENGINE_HAS_RELATIVE_MMIO;
 }
 
@@ -4173,6 +4168,7 @@ intel_execlists_create_virtual(struct i915_gem_context *ctx,
 
 	ve->base.i915 = ctx->i915;
 	ve->base.gt = siblings[0]->gt;
+	ve->base.uncore = siblings[0]->uncore;
 	ve->base.id = -1;
 	ve->base.class = OTHER_CLASS;
 	ve->base.uabi_class = I915_ENGINE_CLASS_INVALID;
