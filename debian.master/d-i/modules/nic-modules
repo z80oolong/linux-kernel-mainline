@@ -98,6 +98,7 @@ iwl3945 ?
 iwl4965 ?
 iwl-legacy ?
 iwldvm ?
+iwlmvm ?
 iwlwifi ?
 ixgb ?
 ixgbe ?
