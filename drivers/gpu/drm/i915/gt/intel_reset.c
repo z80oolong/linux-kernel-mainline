@@ -282,14 +282,14 @@ static int gen6_reset_engines(struct intel_gt *gt,
 			      intel_engine_mask_t engine_mask,
 			      unsigned int retry)
 {
-	struct intel_engine_cs *engine;
-	const u32 hw_engine_mask[] = {
+	static const u32 hw_engine_mask[] = {
 		[RCS0]  = GEN6_GRDOM_RENDER,
 		[BCS0]  = GEN6_GRDOM_BLT,
 		[VCS0]  = GEN6_GRDOM_MEDIA,
 		[VCS1]  = GEN8_GRDOM_MEDIA2,
 		[VECS0] = GEN6_GRDOM_VECS,
 	};
+	struct intel_engine_cs *engine;
 	u32 hw_mask;
 
 	if (engine_mask == ALL_ENGINES) {
@@ -413,7 +413,7 @@ static int gen11_reset_engines(struct intel_gt *gt,
 			       intel_engine_mask_t engine_mask,
 			       unsigned int retry)
 {
-	const u32 hw_engine_mask[] = {
+	static const u32 hw_engine_mask[] = {
 		[RCS0]  = GEN11_GRDOM_RENDER,
 		[BCS0]  = GEN11_GRDOM_BLT,
 		[VCS0]  = GEN11_GRDOM_MEDIA,
@@ -715,7 +715,7 @@ static int gt_reset(struct intel_gt *gt, intel_engine_mask_t stalled_mask)
 	for_each_engine(engine, gt->i915, id)
 		__intel_engine_reset(engine, stalled_mask & engine->mask);
 
-	i915_gem_restore_fences(gt->i915);
+	i915_gem_restore_fences(gt->ggtt);
 
 	return err;
 }
@@ -811,7 +811,7 @@ void intel_gt_set_wedged(struct intel_gt *gt)
 	intel_wakeref_t wakeref;
 
 	mutex_lock(&gt->reset.mutex);
-	with_intel_runtime_pm(&gt->i915->runtime_pm, wakeref)
+	with_intel_runtime_pm(gt->uncore->rpm, wakeref)
 		__intel_gt_set_wedged(gt);
 	mutex_unlock(&gt->reset.mutex);
 }
@@ -872,8 +872,14 @@ static bool __intel_gt_unset_wedged(struct intel_gt *gt)
 	ok = !HAS_EXECLISTS(gt->i915); /* XXX better agnosticism desired */
 	if (!INTEL_INFO(gt->i915)->gpu_reset_clobbers_display)
 		ok = __intel_gt_reset(gt, ALL_ENGINES) == 0;
-	if (!ok)
+	if (!ok) {
+		/*
+		 * Warn CI about the unrecoverable wedged condition.
+		 * Time for a reboot.
+		 */
+		add_taint_for_CI(TAINT_WARN);
 		return false;
+	}
 
 	/*
 	 * Undo nop_submit_request. We prevent all new i915 requests from
@@ -1186,7 +1192,7 @@ void intel_gt_handle_error(struct intel_gt *gt,
 	 * isn't the case at least when we get here by doing a
 	 * simulated reset via debugfs, so get an RPM reference.
 	 */
-	wakeref = intel_runtime_pm_get(&gt->i915->runtime_pm);
+	wakeref = intel_runtime_pm_get(gt->uncore->rpm);
 
 	engine_mask &= INTEL_INFO(gt->i915)->engine_mask;
 
@@ -1246,7 +1252,7 @@ void intel_gt_handle_error(struct intel_gt *gt,
 	wake_up_all(&gt->reset.queue);
 
 out:
-	intel_runtime_pm_put(&gt->i915->runtime_pm, wakeref);
+	intel_runtime_pm_put(gt->uncore->rpm, wakeref);
 }
 
 int intel_gt_reset_trylock(struct intel_gt *gt, int *srcu)

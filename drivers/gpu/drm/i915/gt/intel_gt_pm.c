@@ -94,7 +94,7 @@ static const struct intel_wakeref_ops wf_ops = {
 
 void intel_gt_pm_init_early(struct intel_gt *gt)
 {
-	intel_wakeref_init(&gt->wakeref, &gt->i915->runtime_pm, &wf_ops);
+	intel_wakeref_init(&gt->wakeref, gt->uncore->rpm, &wf_ops);
 
 	BLOCKING_INIT_NOTIFIER_HEAD(&gt->pm_notifications);
 }
@@ -136,11 +136,18 @@ void intel_gt_sanitize(struct intel_gt *gt, bool force)
 
 	intel_uc_sanitize(&gt->uc);
 
-	if (!reset_engines(gt) && !force)
-		return;
+	for_each_engine(engine, gt->i915, id)
+		if (engine->reset.prepare)
+			engine->reset.prepare(engine);
+
+	if (reset_engines(gt) || force) {
+		for_each_engine(engine, gt->i915, id)
+			__intel_engine_reset(engine, false);
+	}
 
 	for_each_engine(engine, gt->i915, id)
-		__intel_engine_reset(engine, false);
+		if (engine->reset.finish)
+			engine->reset.finish(engine);
 }
 
 void intel_gt_pm_disable(struct intel_gt *gt)
@@ -222,7 +229,7 @@ void intel_gt_suspend(struct intel_gt *gt)
 	/* We expect to be idle already; but also want to be independent */
 	wait_for_idle(gt);
 
-	with_intel_runtime_pm(&gt->i915->runtime_pm, wakeref)
+	with_intel_runtime_pm(gt->uncore->rpm, wakeref)
 		intel_rc6_disable(&gt->rc6);
 }
 
