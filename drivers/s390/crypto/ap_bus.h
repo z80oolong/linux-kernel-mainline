@@ -106,6 +106,7 @@ static inline int ap_test_bit(unsigned int *ptr, unsigned int nr)
 #define AP_DEVICE_TYPE_CEX4	10
 #define AP_DEVICE_TYPE_CEX5	11
 #define AP_DEVICE_TYPE_CEX6	12
+#define AP_DEVICE_TYPE_CEX7	13
 
 /*
  * Known function facilities
