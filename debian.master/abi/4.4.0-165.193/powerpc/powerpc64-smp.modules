@@ -2996,7 +2996,6 @@ rfd_ftl
 rfkill-gpio
 rfkill-regulator
 rio-scan
-rio500
 rionet
 rivafb
 rj54n1cb0c
