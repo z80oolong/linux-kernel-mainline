@@ -117,6 +117,7 @@ struct amdtp_stream {
 	/* For packet processing. */
 	struct fw_iso_context *context;
 	struct iso_packets_buffer buffer;
+	unsigned int queue_size;
 	int packet_index;
 	struct pkt_desc *pkt_descs;
 	int tag;
@@ -144,6 +145,9 @@ struct amdtp_stream {
 			int syt_override;
 		} rx;
 	} ctx_data;
+	unsigned int event_count;
+	unsigned int events_per_period;
+	unsigned int idle_irq_interval;
 
 	/* For CIP headers. */
 	unsigned int source_node_id_field;
@@ -272,6 +276,9 @@ static inline bool amdtp_stream_wait_callback(struct amdtp_stream *s,
 
 struct amdtp_domain {
 	struct list_head streams;
+
+	unsigned int events_per_period;
+	unsigned int events_per_buffer;
 };
 
 int amdtp_domain_init(struct amdtp_domain *d);
@@ -282,5 +289,15 @@ int amdtp_domain_add_stream(struct amdtp_domain *d, struct amdtp_stream *s,
 
 int amdtp_domain_start(struct amdtp_domain *d);
 void amdtp_domain_stop(struct amdtp_domain *d);
+
+static inline int amdtp_domain_set_events_per_period(struct amdtp_domain *d,
+						unsigned int events_per_period,
+						unsigned int events_per_buffer)
+{
+	d->events_per_period = events_per_period;
+	d->events_per_buffer = events_per_buffer;
+
+	return 0;
+}
 
 #endif
