@@ -3640,7 +3640,6 @@ realtek
 redboot
 redrat3
 reed_solomon
-regmap-sdw
 regmap-spmi
 regmap-w1
 regulator-haptic
@@ -4511,7 +4510,6 @@ sony-btf-mpx
 sony-laptop
 sonypi
 soundcore
-soundwire-bus
 soundwire-cadence
 soundwire-intel
 soundwire-intel-init
