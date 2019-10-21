@@ -111,7 +111,7 @@ static bool switch_to_kernel_context(struct intel_engine_cs *engine)
 	i915_request_add_active_barriers(rq);
 
 	/* Install ourselves as a preemption barrier */
-	rq->sched.attr.priority = I915_PRIORITY_UNPREEMPTABLE;
+	rq->sched.attr.priority = I915_PRIORITY_BARRIER;
 	__i915_request_commit(rq);
 
 	/* Release our exclusive hold on the engine */
@@ -185,7 +185,7 @@ static const struct intel_wakeref_ops wf_ops = {
 
 void intel_engine_init__pm(struct intel_engine_cs *engine)
 {
-	struct intel_runtime_pm *rpm = &engine->i915->runtime_pm;
+	struct intel_runtime_pm *rpm = engine->uncore->rpm;
 
 	intel_wakeref_init(&engine->wakeref, rpm, &wf_ops);
 }

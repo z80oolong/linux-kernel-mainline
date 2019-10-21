@@ -16,11 +16,6 @@
 #include "intel_rc6.h"
 #include "intel_wakeref.h"
 
-static void pm_notify(struct intel_gt *gt, int state)
-{
-	blocking_notifier_call_chain(&gt->pm_notifications, state, gt->i915);
-}
-
 static int __gt_unpark(struct intel_wakeref *wf)
 {
 	struct intel_gt *gt = container_of(wf, typeof(*gt), wakeref);
@@ -55,8 +50,6 @@ static int __gt_unpark(struct intel_wakeref *wf)
 	intel_gt_queue_hangcheck(gt);
 	intel_gt_unpark_requests(gt);
 
-	pm_notify(gt, INTEL_GT_UNPARK);
-
 	return 0;
 }
 
@@ -68,9 +61,9 @@ static int __gt_park(struct intel_wakeref *wf)
 
 	GEM_TRACE("\n");
 
-	pm_notify(gt, INTEL_GT_PARK);
 	intel_gt_park_requests(gt);
 
+	i915_vma_parked(gt);
 	i915_pmu_gt_parked(i915);
 	if (INTEL_GEN(i915) >= 6)
 		gen6_rps_idle(i915);
@@ -94,9 +87,7 @@ static const struct intel_wakeref_ops wf_ops = {
 
 void intel_gt_pm_init_early(struct intel_gt *gt)
 {
-	intel_wakeref_init(&gt->wakeref, &gt->i915->runtime_pm, &wf_ops);
-
-	BLOCKING_INIT_NOTIFIER_HEAD(&gt->pm_notifications);
+	intel_wakeref_init(&gt->wakeref, gt->uncore->rpm, &wf_ops);
 }
 
 void intel_gt_pm_init(struct intel_gt *gt)
@@ -136,11 +127,18 @@ void intel_gt_sanitize(struct intel_gt *gt, bool force)
 
 	intel_uc_sanitize(&gt->uc);
 
-	if (!reset_engines(gt) && !force)
-		return;
+	for_each_engine(engine, gt, id)
+		if (engine->reset.prepare)
+			engine->reset.prepare(engine);
 
-	for_each_engine(engine, gt->i915, id)
-		__intel_engine_reset(engine, false);
+	if (reset_engines(gt) || force) {
+		for_each_engine(engine, gt, id)
+			__intel_engine_reset(engine, false);
+	}
+
+	for_each_engine(engine, gt, id)
+		if (engine->reset.finish)
+			engine->reset.finish(engine);
 }
 
 void intel_gt_pm_disable(struct intel_gt *gt)
@@ -170,7 +168,7 @@ int intel_gt_resume(struct intel_gt *gt)
 	intel_uncore_forcewake_get(gt->uncore, FORCEWAKE_ALL);
 	intel_rc6_sanitize(&gt->rc6);
 
-	for_each_engine(engine, gt->i915, id) {
+	for_each_engine(engine, gt, id) {
 		struct intel_context *ce;
 
 		intel_engine_pm_get(engine);
@@ -222,7 +220,7 @@ void intel_gt_suspend(struct intel_gt *gt)
 	/* We expect to be idle already; but also want to be independent */
 	wait_for_idle(gt);
 
-	with_intel_runtime_pm(&gt->i915->runtime_pm, wakeref)
+	with_intel_runtime_pm(gt->uncore->rpm, wakeref)
 		intel_rc6_disable(&gt->rc6);
 }
 

@@ -51,6 +51,7 @@ i915-y += i915_drv.o \
 	  i915_utils.o \
 	  intel_csr.o \
 	  intel_device_info.o \
+	  intel_memory_region.o \
 	  intel_pch.o \
 	  intel_pm.o \
 	  intel_runtime_pm.o \
@@ -77,8 +78,9 @@ gt-y += \
 	gt/intel_breadcrumbs.o \
 	gt/intel_context.o \
 	gt/intel_engine_cs.o \
-	gt/intel_engine_pool.o \
+	gt/intel_engine_heartbeat.o \
 	gt/intel_engine_pm.o \
+	gt/intel_engine_pool.o \
 	gt/intel_engine_user.o \
 	gt/intel_gt.o \
 	gt/intel_gt_irq.o \
@@ -86,6 +88,7 @@ gt-y += \
 	gt/intel_gt_pm_irq.o \
 	gt/intel_gt_requests.o \
 	gt/intel_hangcheck.o \
+	gt/intel_llc.o \
 	gt/intel_lrc.o \
 	gt/intel_rc6.o \
 	gt/intel_renderstate.o \
@@ -121,6 +124,7 @@ gem-y += \
 	gem/i915_gem_pages.o \
 	gem/i915_gem_phys.o \
 	gem/i915_gem_pm.o \
+	gem/i915_gem_region.o \
 	gem/i915_gem_shmem.o \
 	gem/i915_gem_shrinker.o \
 	gem/i915_gem_stolen.o \
