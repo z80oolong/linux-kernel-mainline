@@ -179,6 +179,7 @@ intel_pch_type(const struct drm_i915_private *dev_priv, unsigned short id)
 			!IS_COFFEELAKE(dev_priv));
 		return PCH_KBP;
 	case INTEL_PCH_CNP_DEVICE_ID_TYPE:
+	case INTEL_PCH_CNP2_DEVICE_ID_TYPE:
 		DRM_DEBUG_KMS("Found Cannon Lake PCH (CNP)\n");
 		WARN_ON(!IS_CANNONLAKE(dev_priv) && !IS_COFFEELAKE(dev_priv));
 		return PCH_CNP;
