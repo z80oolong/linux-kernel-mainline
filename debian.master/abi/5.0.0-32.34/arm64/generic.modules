@@ -1794,6 +1794,7 @@ hisi_sas_v2_hw
 hisi_sas_v3_hw
 hisi_sec
 hisi_thermal
+hisi_zip
 hix5hd2_gmac
 hmc5843_core
 hmc5843_i2c
@@ -3577,6 +3578,7 @@ qla3xxx
 qla4xxx
 qlcnic
 qlge
+qm
 qm1d1b0004
 qm1d1c0042
 qmi_helpers
@@ -4183,6 +4185,7 @@ ses
 sfc
 sfc-falcon
 sfp
+sgl
 sh-sci
 sh_eth
 sh_mmcif

@@ -112,6 +112,7 @@ EXPORT_SYMBOL drivers/gpu/drm/drm 0x00000000	drm_crtc_from_index
 EXPORT_SYMBOL drivers/gpu/drm/drm 0x00000000	drm_crtc_handle_vblank
 EXPORT_SYMBOL drivers/gpu/drm/drm 0x00000000	drm_crtc_init_with_planes
 EXPORT_SYMBOL drivers/gpu/drm/drm 0x00000000	drm_crtc_send_vblank_event
+EXPORT_SYMBOL drivers/gpu/drm/drm 0x00000000	drm_crtc_set_max_vblank_count
 EXPORT_SYMBOL drivers/gpu/drm/drm 0x00000000	drm_crtc_vblank_count
 EXPORT_SYMBOL drivers/gpu/drm/drm 0x00000000	drm_crtc_vblank_count_and_time
 EXPORT_SYMBOL drivers/gpu/drm/drm 0x00000000	drm_crtc_vblank_get
