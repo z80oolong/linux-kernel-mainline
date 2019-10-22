@@ -370,38 +370,40 @@ static void __setup_engine_capabilities(struct intel_engine_cs *engine)
 	}
 }
 
-static void intel_setup_engine_capabilities(struct drm_i915_private *i915)
+static void intel_setup_engine_capabilities(struct intel_gt *gt)
 {
 	struct intel_engine_cs *engine;
 	enum intel_engine_id id;
 
-	for_each_engine(engine, i915, id)
+	for_each_engine(engine, gt, id)
 		__setup_engine_capabilities(engine);
 }
 
 /**
  * intel_engines_cleanup() - free the resources allocated for Command Streamers
- * @i915: the i915 devic
+ * @gt: pointer to struct intel_gt
  */
-void intel_engines_cleanup(struct drm_i915_private *i915)
+void intel_engines_cleanup(struct intel_gt *gt)
 {
 	struct intel_engine_cs *engine;
 	enum intel_engine_id id;
 
-	for_each_engine(engine, i915, id) {
+	for_each_engine(engine, gt, id) {
 		engine->destroy(engine);
-		i915->engine[id] = NULL;
+		gt->engine[id] = NULL;
+		gt->i915->engine[id] = NULL;
 	}
 }
 
 /**
  * intel_engines_init_mmio() - allocate and prepare the Engine Command Streamers
- * @i915: the i915 device
+ * @gt: pointer to struct intel_gt
  *
  * Return: non-zero if the initialization failed.
  */
-int intel_engines_init_mmio(struct drm_i915_private *i915)
+int intel_engines_init_mmio(struct intel_gt *gt)
 {
+	struct drm_i915_private *i915 = gt->i915;
 	struct intel_device_info *device_info = mkwrite_device_info(i915);
 	const unsigned int engine_mask = INTEL_INFO(i915)->engine_mask;
 	unsigned int mask = 0;
@@ -419,7 +421,7 @@ int intel_engines_init_mmio(struct drm_i915_private *i915)
 		if (!HAS_ENGINE(i915, i))
 			continue;
 
-		err = intel_engine_setup(&i915->gt, i);
+		err = intel_engine_setup(gt, i);
 		if (err)
 			goto cleanup;
 
@@ -436,36 +438,36 @@ int intel_engines_init_mmio(struct drm_i915_private *i915)
 
 	RUNTIME_INFO(i915)->num_engines = hweight32(mask);
 
-	intel_gt_check_and_clear_faults(&i915->gt);
+	intel_gt_check_and_clear_faults(gt);
 
-	intel_setup_engine_capabilities(i915);
+	intel_setup_engine_capabilities(gt);
 
 	return 0;
 
 cleanup:
-	intel_engines_cleanup(i915);
+	intel_engines_cleanup(gt);
 	return err;
 }
 
 /**
  * intel_engines_init() - init the Engine Command Streamers
- * @i915: i915 device private
+ * @gt: pointer to struct intel_gt
  *
  * Return: non-zero if the initialization failed.
  */
-int intel_engines_init(struct drm_i915_private *i915)
+int intel_engines_init(struct intel_gt *gt)
 {
 	int (*init)(struct intel_engine_cs *engine);
 	struct intel_engine_cs *engine;
 	enum intel_engine_id id;
 	int err;
 
-	if (HAS_EXECLISTS(i915))
+	if (HAS_EXECLISTS(gt->i915))
 		init = intel_execlists_submission_init;
 	else
 		init = intel_ring_submission_init;
 
-	for_each_engine(engine, i915, id) {
+	for_each_engine(engine, gt, id) {
 		err = init(engine);
 		if (err)
 			goto cleanup;
@@ -474,7 +476,7 @@ int intel_engines_init(struct drm_i915_private *i915)
 	return 0;
 
 cleanup:
-	intel_engines_cleanup(i915);
+	intel_engines_cleanup(gt);
 	return err;
 }
 
@@ -621,26 +623,26 @@ static int intel_engine_setup_common(struct intel_engine_cs *engine)
 
 /**
  * intel_engines_setup- setup engine state not requiring hw access
- * @i915: Device to setup.
+ * @gt: pointer to struct intel_gt
  *
  * Initializes engine structure members shared between legacy and execlists
  * submission modes which do not require hardware access.
  *
  * Typically done early in the submission mode specific engine setup stage.
  */
-int intel_engines_setup(struct drm_i915_private *i915)
+int intel_engines_setup(struct intel_gt *gt)
 {
 	int (*setup)(struct intel_engine_cs *engine);
 	struct intel_engine_cs *engine;
 	enum intel_engine_id id;
 	int err;
 
-	if (HAS_EXECLISTS(i915))
+	if (HAS_EXECLISTS(gt->i915))
 		setup = intel_execlists_submission_setup;
 	else
 		setup = intel_ring_submission_setup;
 
-	for_each_engine(engine, i915, id) {
+	for_each_engine(engine, gt, id) {
 		err = intel_engine_setup_common(engine);
 		if (err)
 			goto cleanup;
@@ -658,7 +660,7 @@ int intel_engines_setup(struct drm_i915_private *i915)
 	return 0;
 
 cleanup:
-	intel_engines_cleanup(i915);
+	intel_engines_cleanup(gt);
 	return err;
 }
 
