@@ -255,6 +255,7 @@ EXPORT_SYMBOL drivers/gpu/drm/drm 0x00000000	drm_crtc_from_index
 EXPORT_SYMBOL drivers/gpu/drm/drm 0x00000000	drm_crtc_handle_vblank
 EXPORT_SYMBOL drivers/gpu/drm/drm 0x00000000	drm_crtc_init_with_planes
 EXPORT_SYMBOL drivers/gpu/drm/drm 0x00000000	drm_crtc_send_vblank_event
+EXPORT_SYMBOL drivers/gpu/drm/drm 0x00000000	drm_crtc_set_max_vblank_count
 EXPORT_SYMBOL drivers/gpu/drm/drm 0x00000000	drm_crtc_vblank_count
 EXPORT_SYMBOL drivers/gpu/drm/drm 0x00000000	drm_crtc_vblank_count_and_time
 EXPORT_SYMBOL drivers/gpu/drm/drm 0x00000000	drm_crtc_vblank_get
@@ -5055,8 +5056,8 @@ EXPORT_SYMBOL net/wireless/cfg80211 0x00000000	cfg80211_crit_proto_stopped
 EXPORT_SYMBOL net/wireless/cfg80211 0x00000000	cfg80211_del_sta_sinfo
 EXPORT_SYMBOL net/wireless/cfg80211 0x00000000	cfg80211_disconnected
 EXPORT_SYMBOL net/wireless/cfg80211 0x00000000	cfg80211_external_auth_request
-EXPORT_SYMBOL net/wireless/cfg80211 0x00000000	cfg80211_find_ie_match
-EXPORT_SYMBOL net/wireless/cfg80211 0x00000000	cfg80211_find_vendor_ie
+EXPORT_SYMBOL net/wireless/cfg80211 0x00000000	cfg80211_find_elem_match
+EXPORT_SYMBOL net/wireless/cfg80211 0x00000000	cfg80211_find_vendor_elem
 EXPORT_SYMBOL net/wireless/cfg80211 0x00000000	cfg80211_free_nan_func
 EXPORT_SYMBOL net/wireless/cfg80211 0x00000000	cfg80211_ft_event
 EXPORT_SYMBOL net/wireless/cfg80211 0x00000000	cfg80211_get_bss
@@ -5109,7 +5110,7 @@ EXPORT_SYMBOL net/wireless/cfg80211 0x00000000	cfg80211_unlink_bss
 EXPORT_SYMBOL net/wireless/cfg80211 0x00000000	cfg80211_unregister_wdev
 EXPORT_SYMBOL net/wireless/cfg80211 0x00000000	freq_reg_info
 EXPORT_SYMBOL net/wireless/cfg80211 0x00000000	ieee80211_amsdu_to_8023s
-EXPORT_SYMBOL net/wireless/cfg80211 0x00000000	ieee80211_bss_get_ie
+EXPORT_SYMBOL net/wireless/cfg80211 0x00000000	ieee80211_bss_get_elem
 EXPORT_SYMBOL net/wireless/cfg80211 0x00000000	ieee80211_chandef_to_operating_class
 EXPORT_SYMBOL net/wireless/cfg80211 0x00000000	ieee80211_channel_to_frequency
 EXPORT_SYMBOL net/wireless/cfg80211 0x00000000	ieee80211_data_to_8023_exthdr
