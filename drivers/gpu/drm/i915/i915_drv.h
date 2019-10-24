@@ -1097,13 +1097,14 @@ struct drm_i915_private {
 	unsigned int fdi_pll_freq;
 	unsigned int czclk_freq;
 
+	/*
+	 * For reading holding any crtc lock is sufficient,
+	 * for writing must hold all of them.
+	 */
 	struct {
 		/*
 		 * The current logical cdclk state.
 		 * See intel_atomic_state.cdclk.logical
-		 *
-		 * For reading holding any crtc lock is sufficient,
-		 * for writing must hold all of them.
 		 */
 		struct intel_cdclk_state logical;
 		/*
@@ -1173,6 +1174,10 @@ struct drm_i915_private {
 	 */
 	struct mutex dpll_lock;
 
+	/*
+	 * For reading active_pipes, min_cdclk, min_voltage_level holding
+	 * any crtc lock is sufficient, for writing must hold all of them.
+	 */
 	u8 active_pipes;
 	/* minimum acceptable cdclk for each pipe */
 	int min_cdclk[I915_MAX_PIPES];
@@ -1846,7 +1851,6 @@ void i915_driver_remove(struct drm_i915_private *i915);
 int i915_resume_switcheroo(struct drm_i915_private *i915);
 int i915_suspend_switcheroo(struct drm_i915_private *i915, pm_message_t state);
 
-void intel_engine_init_hangcheck(struct intel_engine_cs *engine);
 int vlv_force_gfx_clock(struct drm_i915_private *dev_priv, bool on);
 
 static inline bool intel_gvt_active(struct drm_i915_private *dev_priv)

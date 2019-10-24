@@ -1563,7 +1563,7 @@ static int __igt_atomic_reset_engine(struct intel_engine_cs *engine,
 	GEM_TRACE("i915_reset_engine(%s:%s) under %s\n",
 		  engine->name, mode, p->name);
 
-	tasklet_disable_nosync(t);
+	tasklet_disable(t);
 	p->critical_section_begin();
 
 	err = intel_engine_reset(engine, NULL);
@@ -1686,7 +1686,6 @@ int intel_hangcheck_live_selftests(struct drm_i915_private *i915)
 	};
 	struct intel_gt *gt = &i915->gt;
 	intel_wakeref_t wakeref;
-	bool saved_hangcheck;
 	int err;
 
 	if (!intel_has_gpu_reset(gt))
@@ -1696,12 +1695,9 @@ int intel_hangcheck_live_selftests(struct drm_i915_private *i915)
 		return -EIO; /* we're long past hope of a successful reset */
 
 	wakeref = intel_runtime_pm_get(gt->uncore->rpm);
-	saved_hangcheck = fetch_and_zero(&i915_modparams.enable_hangcheck);
-	drain_delayed_work(&gt->hangcheck.work); /* flush param */
 
 	err = intel_gt_live_subtests(tests, gt);
 
-	i915_modparams.enable_hangcheck = saved_hangcheck;
 	intel_runtime_pm_put(gt->uncore->rpm, wakeref);
 
 	return err;

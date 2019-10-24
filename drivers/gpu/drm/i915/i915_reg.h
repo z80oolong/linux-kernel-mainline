@@ -2490,6 +2490,7 @@ static inline bool i915_mmio_reg_valid(i915_reg_t reg)
 #define GEN8_RING_CS_GPR_UDW(base, n)	_MMIO((base) + 0x600 + (n) * 8 + 4)
 
 #define RING_FORCE_TO_NONPRIV(base, i) _MMIO(((base) + 0x4D0) + (i) * 4)
+#define   RING_FORCE_TO_NONPRIV_ADDRESS_MASK	REG_GENMASK(25, 2)
 #define   RING_FORCE_TO_NONPRIV_ACCESS_RW	(0 << 28)    /* CFL+ & Gen11+ */
 #define   RING_FORCE_TO_NONPRIV_ACCESS_RD	(1 << 28)
 #define   RING_FORCE_TO_NONPRIV_ACCESS_WR	(2 << 28)
@@ -7390,6 +7391,9 @@ enum {
 #define  GEN8_PIPE_VSYNC		(1 << 1)
 #define  GEN8_PIPE_VBLANK		(1 << 0)
 #define  GEN9_PIPE_CURSOR_FAULT		(1 << 11)
+#define  GEN11_PIPE_PLANE7_FAULT	(1 << 22)
+#define  GEN11_PIPE_PLANE6_FAULT	(1 << 21)
+#define  GEN11_PIPE_PLANE5_FAULT	(1 << 20)
 #define  GEN9_PIPE_PLANE4_FAULT		(1 << 10)
 #define  GEN9_PIPE_PLANE3_FAULT		(1 << 9)
 #define  GEN9_PIPE_PLANE2_FAULT		(1 << 8)
@@ -7409,6 +7413,11 @@ enum {
 	 GEN9_PIPE_PLANE3_FAULT | \
 	 GEN9_PIPE_PLANE2_FAULT | \
 	 GEN9_PIPE_PLANE1_FAULT)
+#define GEN11_DE_PIPE_IRQ_FAULT_ERRORS \
+	(GEN9_DE_PIPE_IRQ_FAULT_ERRORS | \
+	 GEN11_PIPE_PLANE7_FAULT | \
+	 GEN11_PIPE_PLANE6_FAULT | \
+	 GEN11_PIPE_PLANE5_FAULT)
 
 #define GEN8_DE_PORT_ISR _MMIO(0x44440)
 #define GEN8_DE_PORT_IMR _MMIO(0x44444)
