@@ -2234,7 +2234,7 @@ static void intel_ddi_get_power_domains(struct intel_encoder *encoder,
 	/*
 	 * VDSC power is needed when DSC is enabled
 	 */
-	if (crtc_state->dsc_params.compression_enable)
+	if (crtc_state->dsc.compression_enable)
 		intel_display_power_get(dev_priv,
 					intel_dsc_power_domain(crtc_state));
 }
@@ -2837,6 +2837,8 @@ tgl_dkl_phy_ddi_vswing_sequence(struct intel_encoder *encoder, int link_clock,
 
 	for (ln = 0; ln < 2; ln++) {
 		I915_WRITE(HIP_INDEX_REG(tc_port), HIP_INDEX_VAL(tc_port, ln));
+
+		I915_WRITE(DKL_TX_PMD_LANE_SUS(tc_port), 0);
 
 		/* All the registers are RMW */
 		val = I915_READ(DKL_TX_DPCNTL0(tc_port));
