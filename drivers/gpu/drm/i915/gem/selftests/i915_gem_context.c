@@ -32,7 +32,6 @@ static int live_nop_switch(void *arg)
 	struct drm_i915_private *i915 = arg;
 	struct intel_engine_cs *engine;
 	struct i915_gem_context **ctx;
-	enum intel_engine_id id;
 	struct igt_live_test t;
 	struct drm_file *file;
 	unsigned long n;
@@ -67,7 +66,7 @@ static int live_nop_switch(void *arg)
 		}
 	}
 
-	for_each_engine(engine, i915, id) {
+	for_each_uabi_engine(engine, i915) {
 		struct i915_request *rq;
 		unsigned long end_time, prime;
 		ktime_t times[2] = {};
@@ -170,18 +169,24 @@ static int __live_parallel_switch1(void *data)
 		struct i915_request *rq = NULL;
 		int err, n;
 
-		for (n = 0; n < ARRAY_SIZE(arg->ce); n++) {
-			i915_request_put(rq);
+		err = 0;
+		for (n = 0; !err && n < ARRAY_SIZE(arg->ce); n++) {
+			struct i915_request *prev = rq;
 
 			rq = i915_request_create(arg->ce[n]);
-			if (IS_ERR(rq))
+			if (IS_ERR(rq)) {
+				i915_request_put(prev);
 				return PTR_ERR(rq);
+			}
 
 			i915_request_get(rq);
+			if (prev) {
+				err = i915_request_await_dma_fence(rq, &prev->fence);
+				i915_request_put(prev);
+			}
+
 			i915_request_add(rq);
 		}
-
-		err = 0;
 		if (i915_request_wait(rq, 0, HZ / 5) < 0)
 			err = -ETIME;
 		i915_request_put(rq);
@@ -198,6 +203,7 @@ static int __live_parallel_switch1(void *data)
 static int __live_parallel_switchN(void *data)
 {
 	struct parallel_switch *arg = data;
+	struct i915_request *rq = NULL;
 	IGT_TIMEOUT(end_time);
 	unsigned long count;
 	int n;
@@ -205,17 +211,31 @@ static int __live_parallel_switchN(void *data)
 	count = 0;
 	do {
 		for (n = 0; n < ARRAY_SIZE(arg->ce); n++) {
-			struct i915_request *rq;
+			struct i915_request *prev = rq;
+			int err = 0;
 
 			rq = i915_request_create(arg->ce[n]);
-			if (IS_ERR(rq))
+			if (IS_ERR(rq)) {
+				i915_request_put(prev);
 				return PTR_ERR(rq);
+			}
+
+			i915_request_get(rq);
+			if (prev) {
+				err = i915_request_await_dma_fence(rq, &prev->fence);
+				i915_request_put(prev);
+			}
 
 			i915_request_add(rq);
+			if (err) {
+				i915_request_put(rq);
+				return err;
+			}
 		}
 
 		count++;
 	} while (!__igt_timeout(end_time, NULL));
+	i915_request_put(rq);
 
 	pr_info("%s: %lu switches (many)\n", arg->ce[0]->engine->name, count);
 	return 0;
@@ -583,7 +603,6 @@ static int igt_ctx_exec(void *arg)
 {
 	struct drm_i915_private *i915 = arg;
 	struct intel_engine_cs *engine;
-	enum intel_engine_id id;
 	int err = -ENODEV;
 
 	/*
@@ -595,7 +614,7 @@ static int igt_ctx_exec(void *arg)
 	if (!DRIVER_CAPS(i915)->has_logical_contexts)
 		return 0;
 
-	for_each_engine(engine, i915, id) {
+	for_each_uabi_engine(engine, i915) {
 		struct drm_i915_gem_object *obj = NULL;
 		unsigned long ncontexts, ndwords, dw;
 		struct i915_request *tq[5] = {};
@@ -711,7 +730,6 @@ static int igt_shared_ctx_exec(void *arg)
 	struct i915_request *tq[5] = {};
 	struct i915_gem_context *parent;
 	struct intel_engine_cs *engine;
-	enum intel_engine_id id;
 	struct igt_live_test t;
 	struct drm_file *file;
 	int err = 0;
@@ -743,7 +761,7 @@ static int igt_shared_ctx_exec(void *arg)
 	if (err)
 		goto out_file;
 
-	for_each_engine(engine, i915, id) {
+	for_each_uabi_engine(engine, i915) {
 		unsigned long ncontexts, ndwords, dw;
 		struct drm_i915_gem_object *obj = NULL;
 		IGT_TIMEOUT(end_time);
@@ -1651,7 +1669,6 @@ static int igt_vm_isolation(void *arg)
 	struct drm_file *file;
 	I915_RND_STATE(prng);
 	unsigned long count;
-	unsigned int id;
 	u64 vm_total;
 	int err;
 
@@ -1692,7 +1709,7 @@ static int igt_vm_isolation(void *arg)
 	vm_total -= I915_GTT_PAGE_SIZE;
 
 	count = 0;
-	for_each_engine(engine, i915, id) {
+	for_each_uabi_engine(engine, i915) {
 		IGT_TIMEOUT(end_time);
 		unsigned long this = 0;
 
