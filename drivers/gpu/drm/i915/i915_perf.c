@@ -200,6 +200,7 @@
 #include "gt/intel_engine_user.h"
 #include "gt/intel_gt.h"
 #include "gt/intel_lrc_reg.h"
+#include "gt/intel_ring.h"
 
 #include "i915_drv.h"
 #include "i915_perf.h"
@@ -1260,7 +1261,11 @@ static int oa_get_render_ctx_id(struct i915_perf_stream *stream)
 	case 8:
 	case 9:
 	case 10:
-		if (USES_GUC_SUBMISSION(ce->engine->i915)) {
+		if (intel_engine_in_execlists_submission_mode(ce->engine)) {
+			stream->specific_ctx_id_mask =
+				(1U << GEN8_CTX_ID_WIDTH) - 1;
+			stream->specific_ctx_id = stream->specific_ctx_id_mask;
+		} else {
 			/*
 			 * When using GuC, the context descriptor we write in
 			 * i915 is read by GuC and rewritten before it's
@@ -1280,10 +1285,6 @@ static int oa_get_render_ctx_id(struct i915_perf_stream *stream)
 			 */
 			stream->specific_ctx_id_mask =
 				(1U << (GEN8_CTX_ID_WIDTH - 1)) - 1;
-		} else {
-			stream->specific_ctx_id_mask =
-				(1U << GEN8_CTX_ID_WIDTH) - 1;
-			stream->specific_ctx_id = stream->specific_ctx_id_mask;
 		}
 		break;
 
@@ -2615,7 +2616,6 @@ void i915_oa_init_reg_state(const struct intel_context *ce,
 	struct i915_perf_stream *stream;
 
 	/* perf.exclusive_stream serialised by gen8_configure_all_contexts() */
-	lockdep_assert_held(&ce->pin_mutex);
 
 	if (engine->class != RENDER_CLASS)
 		return;

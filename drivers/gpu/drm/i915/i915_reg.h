@@ -2490,6 +2490,7 @@ static inline bool i915_mmio_reg_valid(i915_reg_t reg)
 #define GEN8_RING_CS_GPR_UDW(base, n)	_MMIO((base) + 0x600 + (n) * 8 + 4)
 
 #define RING_FORCE_TO_NONPRIV(base, i) _MMIO(((base) + 0x4D0) + (i) * 4)
+#define   RING_FORCE_TO_NONPRIV_ADDRESS_MASK	REG_GENMASK(25, 2)
 #define   RING_FORCE_TO_NONPRIV_ACCESS_RW	(0 << 28)    /* CFL+ & Gen11+ */
 #define   RING_FORCE_TO_NONPRIV_ACCESS_RD	(1 << 28)
 #define   RING_FORCE_TO_NONPRIV_ACCESS_WR	(2 << 28)
@@ -2601,6 +2602,8 @@ static inline bool i915_mmio_reg_valid(i915_reg_t reg)
 #define GEN12_FAULT_TLB_DATA1		_MMIO(0xcebc)
 #define   FAULT_VA_HIGH_BITS		(0xf << 0)
 #define   FAULT_GTT_SEL			(1 << 4)
+
+#define GEN12_AUX_ERR_DBG		_MMIO(0x43f4)
 
 #define FPGA_DBG		_MMIO(0x42300)
 #define   FPGA_DBG_RM_NOCLAIM	(1 << 31)
@@ -7390,6 +7393,9 @@ enum {
 #define  GEN8_PIPE_VSYNC		(1 << 1)
 #define  GEN8_PIPE_VBLANK		(1 << 0)
 #define  GEN9_PIPE_CURSOR_FAULT		(1 << 11)
+#define  GEN11_PIPE_PLANE7_FAULT	(1 << 22)
+#define  GEN11_PIPE_PLANE6_FAULT	(1 << 21)
+#define  GEN11_PIPE_PLANE5_FAULT	(1 << 20)
 #define  GEN9_PIPE_PLANE4_FAULT		(1 << 10)
 #define  GEN9_PIPE_PLANE3_FAULT		(1 << 9)
 #define  GEN9_PIPE_PLANE2_FAULT		(1 << 8)
@@ -7409,6 +7415,11 @@ enum {
 	 GEN9_PIPE_PLANE3_FAULT | \
 	 GEN9_PIPE_PLANE2_FAULT | \
 	 GEN9_PIPE_PLANE1_FAULT)
+#define GEN11_DE_PIPE_IRQ_FAULT_ERRORS \
+	(GEN9_DE_PIPE_IRQ_FAULT_ERRORS | \
+	 GEN11_PIPE_PLANE7_FAULT | \
+	 GEN11_PIPE_PLANE6_FAULT | \
+	 GEN11_PIPE_PLANE5_FAULT)
 
 #define GEN8_DE_PORT_ISR _MMIO(0x44440)
 #define GEN8_DE_PORT_IMR _MMIO(0x44444)
@@ -7428,6 +7439,12 @@ enum {
 #define  GEN8_PORT_DP_A_HOTPLUG		(1 << 3)
 #define  BXT_DE_PORT_GMBUS		(1 << 1)
 #define  GEN8_AUX_CHANNEL_A		(1 << 0)
+#define  TGL_DE_PORT_AUX_USBC6		(1 << 13)
+#define  TGL_DE_PORT_AUX_USBC5		(1 << 12)
+#define  TGL_DE_PORT_AUX_USBC4		(1 << 11)
+#define  TGL_DE_PORT_AUX_USBC3		(1 << 10)
+#define  TGL_DE_PORT_AUX_USBC2		(1 << 9)
+#define  TGL_DE_PORT_AUX_USBC1		(1 << 8)
 #define  TGL_DE_PORT_AUX_DDIC		(1 << 2)
 #define  TGL_DE_PORT_AUX_DDIB		(1 << 1)
 #define  TGL_DE_PORT_AUX_DDIA		(1 << 0)
@@ -7616,10 +7633,17 @@ enum {
 #define  BDW_DPRS_MASK_VBLANK_SRD	(1 << 0)
 #define CHICKEN_PIPESL_1(pipe) _MMIO_PIPE(pipe, _CHICKEN_PIPESL_1_A, _CHICKEN_PIPESL_1_B)
 
-#define CHICKEN_TRANS_A		_MMIO(0x420c0)
-#define CHICKEN_TRANS_B		_MMIO(0x420c4)
-#define CHICKEN_TRANS_C		_MMIO(0x420c8)
-#define CHICKEN_TRANS_EDP	_MMIO(0x420cc)
+#define _CHICKEN_TRANS_A	0x420c0
+#define _CHICKEN_TRANS_B	0x420c4
+#define _CHICKEN_TRANS_C	0x420c8
+#define _CHICKEN_TRANS_EDP	0x420cc
+#define _CHICKEN_TRANS_D	0x420d8
+#define CHICKEN_TRANS(trans)	_MMIO(_PICK((trans), \
+					    [TRANSCODER_EDP] = _CHICKEN_TRANS_EDP, \
+					    [TRANSCODER_A] = _CHICKEN_TRANS_A, \
+					    [TRANSCODER_B] = _CHICKEN_TRANS_B, \
+					    [TRANSCODER_C] = _CHICKEN_TRANS_C, \
+					    [TRANSCODER_D] = _CHICKEN_TRANS_D))
 #define  VSC_DATA_SEL_SOFTWARE_CONTROL	(1 << 25) /* GLK and CNL+ */
 #define  DDI_TRAINING_OVERRIDE_ENABLE	(1 << 19)
 #define  DDI_TRAINING_OVERRIDE_VALUE	(1 << 18)
@@ -10248,6 +10272,12 @@ enum skl_power_gate {
 						     _DKL_PHY1_BASE, \
 						     _DKL_PHY2_BASE) + \
 						     _DKL_TX_FW_CALIB)
+
+#define _DKL_TX_PMD_LANE_SUS				0xD00
+#define DKL_TX_PMD_LANE_SUS(tc_port) _MMIO(_PORT(tc_port, \
+							  _DKL_PHY1_BASE, \
+							  _DKL_PHY2_BASE) + \
+							  _DKL_TX_PMD_LANE_SUS)
 
 #define _DKL_TX_DW17					0xDC4
 #define DKL_TX_DW17(tc_port) _MMIO(_PORT(tc_port, \

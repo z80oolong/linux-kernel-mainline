@@ -506,6 +506,14 @@ struct intel_atomic_state {
 
 	bool rps_interactive;
 
+	/*
+	 * active_pipes
+	 * min_cdclk[]
+	 * min_voltage_level[]
+	 * cdclk.*
+	 */
+	bool global_state_changed;
+
 	/* Gen9+ only */
 	struct skl_ddb_values wm_results;
 
@@ -932,6 +940,8 @@ struct intel_crtc_state {
 
 	struct intel_crtc_wm_state wm;
 
+	int min_cdclk[I915_MAX_PLANES];
+
 	u32 data_rate[I915_MAX_PLANES];
 
 	/* Gamma mode programmed on the pipe */
@@ -986,8 +996,8 @@ struct intel_crtc_state {
 		bool dsc_split;
 		u16 compressed_bpp;
 		u8 slice_count;
-	} dsc_params;
-	struct drm_dsc_config dp_dsc_cfg;
+		struct drm_dsc_config config;
+	} dsc;
 
 	/* Forward Error correction State */
 	bool fec_enable;
@@ -1077,6 +1087,8 @@ struct intel_plane {
 	bool (*get_hw_state)(struct intel_plane *plane, enum pipe *pipe);
 	int (*check_plane)(struct intel_crtc_state *crtc_state,
 			   struct intel_plane_state *plane_state);
+	int (*min_cdclk)(const struct intel_crtc_state *crtc_state,
+			 const struct intel_plane_state *plane_state);
 };
 
 struct intel_watermark_params {

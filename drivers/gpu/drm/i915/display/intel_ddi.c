@@ -2234,7 +2234,7 @@ static void intel_ddi_get_power_domains(struct intel_encoder *encoder,
 	/*
 	 * VDSC power is needed when DSC is enabled
 	 */
-	if (crtc_state->dsc_params.compression_enable)
+	if (crtc_state->dsc.compression_enable)
 		intel_display_power_get(dev_priv,
 					intel_dsc_power_domain(crtc_state));
 }
@@ -2837,6 +2837,8 @@ tgl_dkl_phy_ddi_vswing_sequence(struct intel_encoder *encoder, int link_clock,
 
 	for (ln = 0; ln < 2; ln++) {
 		I915_WRITE(HIP_INDEX_REG(tc_port), HIP_INDEX_VAL(tc_port, ln));
+
+		I915_WRITE(DKL_TX_PMD_LANE_SUS(tc_port), 0);
 
 		/* All the registers are RMW */
 		val = I915_READ(DKL_TX_DPCNTL0(tc_port));
@@ -3870,12 +3872,12 @@ static i915_reg_t
 gen9_chicken_trans_reg_by_port(struct drm_i915_private *dev_priv,
 			       enum port port)
 {
-	static const i915_reg_t regs[] = {
-		[PORT_A] = CHICKEN_TRANS_EDP,
-		[PORT_B] = CHICKEN_TRANS_A,
-		[PORT_C] = CHICKEN_TRANS_B,
-		[PORT_D] = CHICKEN_TRANS_C,
-		[PORT_E] = CHICKEN_TRANS_A,
+	static const enum transcoder trans[] = {
+		[PORT_A] = TRANSCODER_EDP,
+		[PORT_B] = TRANSCODER_A,
+		[PORT_C] = TRANSCODER_B,
+		[PORT_D] = TRANSCODER_C,
+		[PORT_E] = TRANSCODER_A,
 	};
 
 	WARN_ON(INTEL_GEN(dev_priv) < 9);
@@ -3883,7 +3885,7 @@ gen9_chicken_trans_reg_by_port(struct drm_i915_private *dev_priv,
 	if (WARN_ON(port < PORT_A || port > PORT_E))
 		port = PORT_A;
 
-	return regs[port];
+	return CHICKEN_TRANS(trans[port]);
 }
 
 static void intel_enable_ddi_hdmi(struct intel_encoder *encoder,
