@@ -2303,6 +2303,8 @@ call_decode(struct rpc_task *task)
 	if (IS_ERR(p)) {
 		if (p == ERR_PTR(-EAGAIN))
 			goto out_retry;
+		if (p == ERR_PTR(-EKEYREJECTED))
+			goto out_key_rejected;
 		return;
 	}
 	task->tk_action = rpc_exit_task;
@@ -2315,17 +2317,21 @@ call_decode(struct rpc_task *task)
 	return;
 out_retry:
 	task->tk_status = 0;
-	/* Note: rpc_verify_header() may have freed the RPC slot */
-	if (task->tk_rqstp == req) {
-		xdr_free_bvec(&req->rq_rcv_buf);
-		req->rq_reply_bytes_recvd = 0;
-		req->rq_rcv_buf.len = 0;
-		if (task->tk_client->cl_discrtry)
-			xprt_conditional_disconnect(req->rq_xprt,
-						    req->rq_connect_cookie);
-	}
+	xdr_free_bvec(&req->rq_rcv_buf);
+	req->rq_reply_bytes_recvd = 0;
+	req->rq_rcv_buf.len = 0;
+	if (task->tk_client->cl_discrtry)
+		xprt_conditional_disconnect(req->rq_xprt,
+					    req->rq_connect_cookie);
 	task->tk_action = call_encode;
 	rpc_check_timeout(task);
+	return;
+out_key_rejected:
+	task->tk_action = call_reserve;
+	rpc_check_timeout(task);
+	rpcauth_invalcred(task);
+	/* Ensure we obtain a new XID if we retry! */
+	xprt_release(task);
 }
 
 static __be32 *
@@ -2413,11 +2419,7 @@ rpc_verify_header(struct rpc_task *task)
 			task->tk_cred_retry--;
 			dprintk("RPC: %5u %s: retry stale creds\n",
 					task->tk_pid, __func__);
-			rpcauth_invalcred(task);
-			/* Ensure we obtain a new XID! */
-			xprt_release(task);
-			task->tk_action = call_reserve;
-			goto out_retry;
+			return ERR_PTR(-EKEYREJECTED);
 		case RPC_AUTH_BADCRED:
 		case RPC_AUTH_BADVERF:
 			/* possibly garbled cred/verf? */
