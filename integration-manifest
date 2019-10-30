@@ -1,0 +1,32 @@
+drm drm-fixes d6d5df1db6e9d7f8f76d2911707f7d5877251b02
+	Linux 5.4-rc5
+drm-misc drm-misc-fixes f70744c68779c8a72a0c82294e3233b994af656d
+	drm/panfrost: Don't dereference bogus MMU pointers
+drm-intel drm-intel-fixes d6d5df1db6e9d7f8f76d2911707f7d5877251b02
+	Linux 5.4-rc5
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 57c2af791b6c8087b6d8b56046838427d2ec0d73
+	Merge tag 'topic/mst-suspend-resume-reprobe-2019-10-29-2' of git://anongit.freedesktop.org/drm/drm-misc into drm-next
+drm-misc drm-misc-next-fixes d7d44b6fe40a98e960be92ea8617954c2596d140
+	drm/tilcdc: include linux/pinctrl/consumer.h again
+drm-intel drm-intel-next-fixes 458863e08e13ecf22b9ba1ee6d4baba0ce9990ea
+	drm/i915: Mark contents as dirty on a write fault
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next 83b8a6f242ea6b4eafe69afcd0bfa428235f2ee4
+	drm/gem: Fix mmap fake offset handling for drm_gem_object_funcs.mmap
+drm-intel drm-intel-next-queued b3545e086877557b8b933c0fbf64dca065a1f5f6
+	drm/i915/tgl: add support to one DP-MST stream
+drm-intel drm-intel-next ce53908bba6fa6e905d8fe81da4591d3e7a65878
+	drm/i915: Update DRIVER_DATE to 20191021
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus ba8bf0967a154796be15c4983603aad0b05c3138
+	ALSA: usb-audio: Fix copy&paste error in the validator
+sound-upstream for-next 46b4bff6572b0552b1ee062043621e4b252638d8
+	PCI: Fix missing inline for pci_pr3_present()
+drm-intel topic/core-for-CI bf3c76ce565f970e94a32402853dd44b9e2adbf8
+	Revert "ALSA: hda: Add Tigerlake/Jasperlake PCI ID"
+drm-misc topic/mst-suspend-resume-reprobe 12a280c7286857119cf0d88c487f695e3a1c0912
+	drm/dp_mst: Add topology ref history tracking for debugging
