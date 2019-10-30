@@ -70,7 +70,6 @@ static void	call_status(struct rpc_task *task);
 static void	call_transmit_status(struct rpc_task *task);
 static void	call_refresh(struct rpc_task *task);
 static void	call_refreshresult(struct rpc_task *task);
-static void	call_timeout(struct rpc_task *task);
 static void	call_connect(struct rpc_task *task);
 static void	call_connect_status(struct rpc_task *task);
 
@@ -1887,7 +1886,8 @@ call_bind_status(struct rpc_task *task)
 
 retry_timeout:
 	task->tk_status = 0;
-	task->tk_action = call_timeout;
+	task->tk_action = call_encode;
+	rpc_check_timeout(task);
 }
 
 /*
@@ -2176,10 +2176,8 @@ call_status(struct rpc_task *task)
 	case -EHOSTUNREACH:
 	case -ENETUNREACH:
 	case -EPERM:
-		if (RPC_IS_SOFTCONN(task)) {
-			rpc_exit(task, status);
-			break;
-		}
+		if (RPC_IS_SOFTCONN(task))
+			goto out_exit;
 		/*
 		 * Delay any retries for 3 seconds, then handle as if it
 		 * were a timeout.
@@ -2187,7 +2185,6 @@ call_status(struct rpc_task *task)
 		rpc_delay(task, 3*HZ);
 		/* fall through */
 	case -ETIMEDOUT:
-		task->tk_action = call_timeout;
 		break;
 	case -ECONNREFUSED:
 	case -ECONNRESET:
@@ -2200,18 +2197,21 @@ call_status(struct rpc_task *task)
 		/* fall through */
 	case -EPIPE:
 	case -EAGAIN:
-		task->tk_action = call_timeout;
 		break;
 	case -EIO:
 		/* shutdown or soft timeout */
-		rpc_exit(task, status);
-		break;
+		goto out_exit;
 	default:
 		if (clnt->cl_chatty)
 			printk("%s: RPC call returned error %d\n",
 			       clnt->cl_program->name, -status);
-		rpc_exit(task, status);
+		goto out_exit;
 	}
+	task->tk_action = call_encode;
+	rpc_check_timeout(task);
+	return;
+out_exit:
+	rpc_exit(task, status);
 }
 
 static void
@@ -2259,19 +2259,6 @@ rpc_check_timeout(struct rpc_task *task)
 }
 
 /*
- * 6a.	Handle RPC timeout
- * 	We do not release the request slot, so we keep using the
- *	same XID for all retransmits.
- */
-static void
-call_timeout(struct rpc_task *task)
-{
-	task->tk_action = call_encode;
-	task->tk_status = 0;
-	rpc_check_timeout(task);
-}
-
-/*
  * 7.	Decode the RPC reply
  */
 static void
@@ -2309,16 +2296,8 @@ call_decode(struct rpc_task *task)
 	WARN_ON(memcmp(&req->rq_rcv_buf, &req->rq_private_buf,
 				sizeof(req->rq_rcv_buf)) != 0);
 
-	if (req->rq_rcv_buf.len < 12) {
-		if (!RPC_IS_SOFT(task)) {
-			task->tk_action = call_encode;
-			goto out_retry;
-		}
-		dprintk("RPC:       %s: too small RPC reply size (%d bytes)\n",
-				clnt->cl_program->name, task->tk_status);
-		task->tk_action = call_timeout;
+	if (req->rq_rcv_buf.len < 12)
 		goto out_retry;
-	}
 
 	p = rpc_verify_header(task);
 	if (IS_ERR(p)) {
@@ -2339,11 +2318,14 @@ out_retry:
 	/* Note: rpc_verify_header() may have freed the RPC slot */
 	if (task->tk_rqstp == req) {
 		xdr_free_bvec(&req->rq_rcv_buf);
-		req->rq_reply_bytes_recvd = req->rq_rcv_buf.len = 0;
+		req->rq_reply_bytes_recvd = 0;
+		req->rq_rcv_buf.len = 0;
 		if (task->tk_client->cl_discrtry)
 			xprt_conditional_disconnect(req->rq_xprt,
-					req->rq_connect_cookie);
+						    req->rq_connect_cookie);
 	}
+	task->tk_action = call_encode;
+	rpc_check_timeout(task);
 }
 
 static __be32 *
