@@ -21136,7 +21136,6 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_clk_resume
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_clk_runtime_resume
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_clk_runtime_suspend
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_clk_suspend
-EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_freezing
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_generic_freeze
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_generic_freeze_late
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	pm_generic_freeze_noirq
