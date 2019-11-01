@@ -42,13 +42,13 @@ static int intel_dp_mst_compute_link_config(struct intel_encoder *encoder,
 					    struct drm_connector_state *conn_state,
 					    struct link_config_limits *limits)
 {
-	struct drm_atomic_state *state = crtc_state->base.state;
+	struct drm_atomic_state *state = crtc_state->uapi.state;
 	struct intel_dp_mst_encoder *intel_mst = enc_to_mst(&encoder->base);
 	struct intel_dp *intel_dp = &intel_mst->primary->dp;
 	struct intel_connector *connector =
 		to_intel_connector(conn_state->connector);
 	const struct drm_display_mode *adjusted_mode =
-		&crtc_state->base.adjusted_mode;
+		&crtc_state->hw.adjusted_mode;
 	void *port = connector->port;
 	bool constant_n = drm_dp_has_quirk(&intel_dp->desc,
 					   DP_DPCD_QUIRK_CONSTANT_N);
@@ -99,7 +99,7 @@ static int intel_dp_mst_compute_config(struct intel_encoder *encoder,
 	struct intel_digital_connector_state *intel_conn_state =
 		to_intel_digital_connector_state(conn_state);
 	const struct drm_display_mode *adjusted_mode =
-		&pipe_config->base.adjusted_mode;
+		&pipe_config->hw.adjusted_mode;
 	void *port = connector->port;
 	struct link_config_limits limits;
 	int ret;
@@ -168,7 +168,6 @@ intel_dp_mst_atomic_check(struct drm_connector *connector,
 	struct intel_connector *intel_connector =
 		to_intel_connector(connector);
 	struct drm_crtc *new_crtc = new_conn_state->crtc;
-	struct drm_crtc_state *crtc_state;
 	struct drm_dp_mst_topology_mgr *mgr;
 	int ret;
 
@@ -183,11 +182,16 @@ intel_dp_mst_atomic_check(struct drm_connector *connector,
 	 * connector
 	 */
 	if (new_crtc) {
-		crtc_state = drm_atomic_get_new_crtc_state(state, new_crtc);
+		struct intel_atomic_state *intel_state =
+			to_intel_atomic_state(state);
+		struct intel_crtc *intel_crtc = to_intel_crtc(new_crtc);
+		struct intel_crtc_state *crtc_state =
+			intel_atomic_get_new_crtc_state(intel_state,
+							intel_crtc);
 
 		if (!crtc_state ||
-		    !drm_atomic_crtc_needs_modeset(crtc_state) ||
-		    crtc_state->enable)
+		    !drm_atomic_crtc_needs_modeset(&crtc_state->uapi) ||
+		    crtc_state->hw.enable)
 			return 0;
 	}
 
@@ -600,8 +604,6 @@ intel_dp_create_fake_mst_encoder(struct intel_digital_port *intel_dig_port, enum
 	struct intel_dp_mst_encoder *intel_mst;
 	struct intel_encoder *intel_encoder;
 	struct drm_device *dev = intel_dig_port->base.base.dev;
-	struct drm_i915_private *dev_priv = to_i915(dev);
-	enum pipe pipe_iter;
 
 	intel_mst = kzalloc(sizeof(*intel_mst), GFP_KERNEL);
 
@@ -619,8 +621,15 @@ intel_dp_create_fake_mst_encoder(struct intel_digital_port *intel_dig_port, enum
 	intel_encoder->power_domain = intel_dig_port->base.power_domain;
 	intel_encoder->port = intel_dig_port->base.port;
 	intel_encoder->cloneable = 0;
-	for_each_pipe(dev_priv, pipe_iter)
-		intel_encoder->crtc_mask |= BIT(pipe_iter);
+	/*
+	 * This is wrong, but broken userspace uses the intersection
+	 * of possible_crtcs of all the encoders of a given connector
+	 * to figure out which crtcs can drive said connector. What
+	 * should be used instead is the union of possible_crtcs.
+	 * To keep such userspace functioning we must misconfigure
+	 * this to make sure the intersection is not empty :(
+	 */
+	intel_encoder->pipe_mask = ~0;
 
 	intel_encoder->compute_config = intel_dp_mst_compute_config;
 	intel_encoder->disable = intel_mst_disable_dp;

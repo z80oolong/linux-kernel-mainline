@@ -447,10 +447,10 @@ enum phy_fia {
 #define intel_atomic_crtc_state_for_each_plane_state( \
 		  plane, plane_state, \
 		  crtc_state) \
-	for_each_intel_plane_mask(((crtc_state)->base.state->dev), (plane), \
-				((crtc_state)->base.plane_mask)) \
+	for_each_intel_plane_mask(((crtc_state)->uapi.state->dev), (plane), \
+				((crtc_state)->uapi.plane_mask)) \
 		for_each_if ((plane_state = \
-			      to_intel_plane_state(__drm_atomic_get_current_plane_state((crtc_state)->base.state, &plane->base))))
+			      to_intel_plane_state(__drm_atomic_get_current_plane_state((crtc_state)->uapi.state, &plane->base))))
 
 void intel_link_compute_m_n(u16 bpp, int nlanes,
 			    int pixel_clock, int link_clock,
@@ -509,7 +509,6 @@ void vlv_wait_port_ready(struct drm_i915_private *dev_priv,
 			 struct intel_digital_port *dport,
 			 unsigned int expected_mask);
 int intel_get_load_detect_pipe(struct drm_connector *connector,
-			       const struct drm_display_mode *mode,
 			       struct intel_load_detect_pipe *old,
 			       struct drm_modeset_acquire_ctx *ctx);
 void intel_release_load_detect_pipe(struct drm_connector *connector,
@@ -563,8 +562,6 @@ void intel_crtc_arm_fifo_underrun(struct intel_crtc *crtc,
 
 u16 skl_scaler_calc_phase(int sub, int scale, bool chroma_center);
 int skl_update_scaler_crtc(struct intel_crtc_state *crtc_state);
-int skl_max_scale(const struct intel_crtc_state *crtc_state,
-		  const struct drm_format_info *format);
 u32 glk_plane_color_ctl(const struct intel_crtc_state *crtc_state,
 			const struct intel_plane_state *plane_state);
 u32 glk_plane_color_ctl_crtc(const struct intel_crtc_state *crtc_state);
