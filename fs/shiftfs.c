@@ -1094,21 +1094,6 @@ static int shiftfs_change_flags(struct file *file, unsigned int flags)
 	return 0;
 }
 
-static int shiftfs_real_fdget(const struct file *file, struct fd *lowerfd)
-{
-	struct shiftfs_file_info *file_info = file->private_data;
-	struct file *realfile = file_info->realfile;
-
-	lowerfd->flags = 0;
-	lowerfd->file = realfile;
-
-	/* Did the flags change since open? */
-	if (unlikely(file->f_flags & ~lowerfd->file->f_flags))
-		return shiftfs_change_flags(lowerfd->file, file->f_flags);
-
-	return 0;
-}
-
 static int shiftfs_open(struct inode *inode, struct file *file)
 {
 	struct shiftfs_super_info *ssi = inode->i_sb->s_fs_info;
@@ -1187,6 +1172,26 @@ static rwf_t shiftfs_iocb_to_rwf(struct kiocb *iocb)
 		flags |= RWF_SYNC;
 
 	return flags;
+}
+
+static int shiftfs_real_fdget(const struct file *file, struct fd *lowerfd)
+{
+	struct shiftfs_file_info *file_info;
+	struct file *realfile;
+
+	if (file->f_op->open != shiftfs_open)
+		return -EINVAL;
+
+	file_info = file->private_data;
+	realfile = file_info->realfile;
+	lowerfd->flags = 0;
+	lowerfd->file = realfile;
+
+	/* Did the flags change since open? */
+	if (unlikely(file->f_flags & ~lowerfd->file->f_flags))
+		return shiftfs_change_flags(lowerfd->file, file->f_flags);
+
+	return 0;
 }
 
 static ssize_t shiftfs_read_iter(struct kiocb *iocb, struct iov_iter *iter)
