@@ -30,6 +30,7 @@
 #include <drm/i915_drm.h>
 
 #include "gem/i915_gem_pm.h"
+#include "gt/intel_ring.h"
 
 #include "i915_drv.h"
 #include "i915_reg.h"
@@ -667,8 +668,8 @@ static void update_colorkey(struct intel_overlay *overlay,
 	if (overlay->color_key_enabled)
 		flags |= DST_KEY_ENABLE;
 
-	if (state->base.visible)
-		format = state->base.fb->format->format;
+	if (state->uapi.visible)
+		format = state->hw.fb->format->format;
 
 	switch (format) {
 	case DRM_FORMAT_C8:

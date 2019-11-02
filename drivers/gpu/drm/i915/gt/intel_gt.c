@@ -9,6 +9,7 @@
 #include "intel_gt_requests.h"
 #include "intel_mocs.h"
 #include "intel_rc6.h"
+#include "intel_rps.h"
 #include "intel_uncore.h"
 #include "intel_pm.h"
 
@@ -22,19 +23,20 @@ void intel_gt_init_early(struct intel_gt *gt, struct drm_i915_private *i915)
 	INIT_LIST_HEAD(&gt->closed_vma);
 	spin_lock_init(&gt->closed_lock);
 
-	intel_gt_init_hangcheck(gt);
 	intel_gt_init_reset(gt);
 	intel_gt_init_requests(gt);
+	intel_gt_init_timelines(gt);
 	intel_gt_pm_init_early(gt);
+
+	intel_rps_init_early(&gt->rps);
 	intel_uc_init_early(&gt->uc);
 }
 
-void intel_gt_init_hw_early(struct drm_i915_private *i915)
+void intel_gt_init_hw_early(struct intel_gt *gt, struct i915_ggtt *ggtt)
 {
-	i915->gt.ggtt = &i915->ggtt;
+	gt->ggtt = ggtt;
 
-	/* BIOS often leaves RC6 enabled, but disable it for hw init */
-	intel_gt_pm_disable(&i915->gt);
+	intel_gt_sanitize(gt, false);
 }
 
 static void init_unused_ring(struct intel_gt *gt, u32 base)
@@ -321,8 +323,7 @@ void intel_gt_chipset_flush(struct intel_gt *gt)
 
 void intel_gt_driver_register(struct intel_gt *gt)
 {
-	if (IS_GEN(gt->i915, 5))
-		intel_gpu_ips_init(gt->i915);
+	intel_rps_driver_register(&gt->rps);
 }
 
 static int intel_gt_init_scratch(struct intel_gt *gt, unsigned int size)
@@ -380,20 +381,16 @@ int intel_gt_init(struct intel_gt *gt)
 void intel_gt_driver_remove(struct intel_gt *gt)
 {
 	GEM_BUG_ON(gt->awake);
-	intel_gt_pm_disable(gt);
 }
 
 void intel_gt_driver_unregister(struct intel_gt *gt)
 {
-	intel_gpu_ips_teardown();
+	intel_rps_driver_unregister(&gt->rps);
 }
 
 void intel_gt_driver_release(struct intel_gt *gt)
 {
-	/* Paranoia: make sure we have disabled everything before we exit. */
-	intel_gt_pm_disable(gt);
 	intel_gt_pm_fini(gt);
-
 	intel_gt_fini_scratch(gt);
 }
 
@@ -401,4 +398,5 @@ void intel_gt_driver_late_release(struct intel_gt *gt)
 {
 	intel_uc_driver_late_release(&gt->uc);
 	intel_gt_fini_reset(gt);
+	intel_gt_fini_timelines(gt);
 }

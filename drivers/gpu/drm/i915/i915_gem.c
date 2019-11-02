@@ -48,9 +48,11 @@
 #include "gt/intel_engine_user.h"
 #include "gt/intel_gt.h"
 #include "gt/intel_gt_pm.h"
+#include "gt/intel_gt_requests.h"
 #include "gt/intel_mocs.h"
 #include "gt/intel_reset.h"
 #include "gt/intel_renderstate.h"
+#include "gt/intel_rps.h"
 #include "gt/intel_workarounds.h"
 
 #include "i915_drv.h"
@@ -1037,39 +1039,7 @@ out:
 	return err;
 }
 
-void i915_gem_sanitize(struct drm_i915_private *i915)
-{
-	intel_wakeref_t wakeref;
-
-	GEM_TRACE("\n");
-
-	wakeref = intel_runtime_pm_get(&i915->runtime_pm);
-	intel_uncore_forcewake_get(&i915->uncore, FORCEWAKE_ALL);
-
-	/*
-	 * As we have just resumed the machine and woken the device up from
-	 * deep PCI sleep (presumably D3_cold), assume the HW has been reset
-	 * back to defaults, recovering from whatever wedged state we left it
-	 * in and so worth trying to use the device once more.
-	 */
-	if (intel_gt_is_wedged(&i915->gt))
-		intel_gt_unset_wedged(&i915->gt);
-
-	/*
-	 * If we inherit context state from the BIOS or earlier occupants
-	 * of the GPU, the GPU may be in an inconsistent state when we
-	 * try to take over. The only way to remove the earlier state
-	 * is by resetting. However, resetting on earlier gen is tricky as
-	 * it may impact the display and we are uncertain about the stability
-	 * of the reset, so this could be applied to even earlier gen.
-	 */
-	intel_gt_sanitize(&i915->gt, false);
-
-	intel_uncore_forcewake_put(&i915->uncore, FORCEWAKE_ALL);
-	intel_runtime_pm_put(&i915->runtime_pm, wakeref);
-}
-
-static int __intel_engines_record_defaults(struct drm_i915_private *i915)
+static int __intel_engines_record_defaults(struct intel_gt *gt)
 {
 	struct i915_request *requests[I915_NUM_ENGINES] = {};
 	struct intel_engine_cs *engine;
@@ -1085,7 +1055,7 @@ static int __intel_engines_record_defaults(struct drm_i915_private *i915)
 	 * from the same default HW values.
 	 */
 
-	for_each_engine(engine, i915, id) {
+	for_each_engine(engine, gt, id) {
 		struct intel_context *ce;
 		struct i915_request *rq;
 
@@ -1093,7 +1063,8 @@ static int __intel_engines_record_defaults(struct drm_i915_private *i915)
 		GEM_BUG_ON(!engine->kernel_context);
 		engine->serial++; /* force the kernel context switch */
 
-		ce = intel_context_create(i915->kernel_context, engine);
+		ce = intel_context_create(engine->kernel_context->gem_context,
+					  engine);
 		if (IS_ERR(ce)) {
 			err = PTR_ERR(ce);
 			goto out;
@@ -1122,7 +1093,7 @@ err_rq:
 	}
 
 	/* Flush the default context image to memory, and enable powersaving. */
-	if (!i915_gem_load_power_context(i915)) {
+	if (intel_gt_wait_for_idle(gt, I915_GEM_IDLE_TIMEOUT) == -ETIME) {
 		err = -EIO;
 		goto out;
 	}
@@ -1181,7 +1152,7 @@ out:
 	 * this is by declaring ourselves wedged.
 	 */
 	if (err)
-		intel_gt_set_wedged(&i915->gt);
+		intel_gt_set_wedged(gt);
 
 	for (id = 0; id < ARRAY_SIZE(requests); id++) {
 		struct intel_context *ce;
@@ -1198,7 +1169,7 @@ out:
 	return err;
 }
 
-static int intel_engines_verify_workarounds(struct drm_i915_private *i915)
+static int intel_engines_verify_workarounds(struct intel_gt *gt)
 {
 	struct intel_engine_cs *engine;
 	enum intel_engine_id id;
@@ -1207,7 +1178,7 @@ static int intel_engines_verify_workarounds(struct drm_i915_private *i915)
 	if (!IS_ENABLED(CONFIG_DRM_I915_DEBUG_GEM))
 		return 0;
 
-	for_each_engine(engine, i915, id) {
+	for_each_engine(engine, gt, id) {
 		if (intel_engine_verify_workarounds(engine, "load"))
 			err = -EIO;
 	}
@@ -1223,8 +1194,6 @@ int i915_gem_init(struct drm_i915_private *dev_priv)
 	if (intel_vgpu_active(dev_priv) && !intel_vgpu_has_huge_gtt(dev_priv))
 		mkwrite_device_info(dev_priv)->page_sizes =
 			I915_GTT_PAGE_SIZE_4K;
-
-	intel_timelines_init(dev_priv);
 
 	ret = i915_gem_init_userptr(dev_priv);
 	if (ret)
@@ -1249,7 +1218,7 @@ int i915_gem_init(struct drm_i915_private *dev_priv)
 
 	intel_gt_init(&dev_priv->gt);
 
-	ret = intel_engines_setup(dev_priv);
+	ret = intel_engines_setup(&dev_priv->gt);
 	if (ret) {
 		GEM_BUG_ON(ret == -EIO);
 		goto err_unlock;
@@ -1261,13 +1230,11 @@ int i915_gem_init(struct drm_i915_private *dev_priv)
 		goto err_scratch;
 	}
 
-	ret = intel_engines_init(dev_priv);
+	ret = intel_engines_init(&dev_priv->gt);
 	if (ret) {
 		GEM_BUG_ON(ret == -EIO);
 		goto err_context;
 	}
-
-	intel_init_gt_powersave(dev_priv);
 
 	intel_uc_init(&dev_priv->gt.uc);
 
@@ -1291,19 +1258,19 @@ int i915_gem_init(struct drm_i915_private *dev_priv)
 	 */
 	intel_init_clock_gating(dev_priv);
 
-	ret = intel_engines_verify_workarounds(dev_priv);
+	ret = intel_engines_verify_workarounds(&dev_priv->gt);
 	if (ret)
 		goto err_gt;
 
-	ret = __intel_engines_record_defaults(dev_priv);
+	ret = __intel_engines_record_defaults(&dev_priv->gt);
 	if (ret)
 		goto err_gt;
 
-	ret = i915_inject_load_error(dev_priv, -ENODEV);
+	ret = i915_inject_probe_error(dev_priv, -ENODEV);
 	if (ret)
 		goto err_gt;
 
-	ret = i915_inject_load_error(dev_priv, -EIO);
+	ret = i915_inject_probe_error(dev_priv, -EIO);
 	if (ret)
 		goto err_gt;
 
@@ -1328,7 +1295,7 @@ err_init_hw:
 err_uc_init:
 	if (ret != -EIO) {
 		intel_uc_fini(&dev_priv->gt.uc);
-		intel_engines_cleanup(dev_priv);
+		intel_engines_cleanup(&dev_priv->gt);
 	}
 err_context:
 	if (ret != -EIO)
@@ -1341,7 +1308,6 @@ err_unlock:
 	if (ret != -EIO) {
 		intel_uc_cleanup_firmwares(&dev_priv->gt.uc);
 		i915_gem_cleanup_userptr(dev_priv);
-		intel_timelines_fini(dev_priv);
 	}
 
 	if (ret == -EIO) {
@@ -1397,7 +1363,7 @@ void i915_gem_driver_remove(struct drm_i915_private *dev_priv)
 
 void i915_gem_driver_release(struct drm_i915_private *dev_priv)
 {
-	intel_engines_cleanup(dev_priv);
+	intel_engines_cleanup(&dev_priv->gt);
 	i915_gem_driver_release__contexts(dev_priv);
 	intel_gt_driver_release(&dev_priv->gt);
 
@@ -1405,16 +1371,10 @@ void i915_gem_driver_release(struct drm_i915_private *dev_priv)
 
 	intel_uc_cleanup_firmwares(&dev_priv->gt.uc);
 	i915_gem_cleanup_userptr(dev_priv);
-	intel_timelines_fini(dev_priv);
 
 	i915_gem_drain_freed_objects(dev_priv);
 
 	WARN_ON(!list_empty(&dev_priv->gem.contexts.list));
-}
-
-void i915_gem_init_mmio(struct drm_i915_private *i915)
-{
-	i915_gem_sanitize(i915);
 }
 
 static void i915_gem_init__mm(struct drm_i915_private *i915)
@@ -1432,7 +1392,6 @@ static void i915_gem_init__mm(struct drm_i915_private *i915)
 void i915_gem_init_early(struct drm_i915_private *dev_priv)
 {
 	i915_gem_init__mm(dev_priv);
-	i915_gem_init__pm(dev_priv);
 
 	spin_lock_init(&dev_priv->fb_tracking.lock);
 }
