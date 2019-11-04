@@ -2410,6 +2410,10 @@ static int mmc_pm_notify(struct notifier_block *notify_block,
 	case PM_HIBERNATION_PREPARE:
 	case PM_SUSPEND_PREPARE:
 	case PM_RESTORE_PREPARE:
+		if (host->slot.cd_irq >= 0) {
+			free_irq(host->slot.cd_irq, host);
+			host->slot.cd_irq = -EINVAL;
+		}
 		spin_lock_irqsave(&host->lock, flags);
 		host->rescan_disable = 1;
 		spin_unlock_irqrestore(&host->lock, flags);
@@ -2444,6 +2448,10 @@ static int mmc_pm_notify(struct notifier_block *notify_block,
 	case PM_POST_SUSPEND:
 	case PM_POST_HIBERNATION:
 	case PM_POST_RESTORE:
+		if (host->slot.cd_irq < 0) {
+			mmc_gpiod_request_cd_irq(host);
+		}
+
 
 		spin_lock_irqsave(&host->lock, flags);
 		host->rescan_disable = 0;
