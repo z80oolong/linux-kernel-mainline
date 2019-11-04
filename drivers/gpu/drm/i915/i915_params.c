@@ -176,6 +176,15 @@ i915_param_named(enable_dpcd_backlight, int, 0600,
 #if IS_ENABLED(CONFIG_DRM_I915_GVT)
 i915_param_named(enable_gvt, bool, 0400,
 	"Enable support for Intel GVT-g graphics virtualization host support(default:false)");
+
+i915_param_named(min_clock_force, int, 0400,
+	"Set GPU minimum clock force (-1=default)");
+i915_param_named(max_clock_force, int, 0400,
+	"Set GPU maximum clock force (-1=default)");
+i915_param_named(eff_clock_force, int, 0400,
+	"Set GPU efficient clock force (-1=default)");
+i915_param_named(guard_clock_force, int, 0400,
+	"Set GPU guard clock force (-1=default)");
 #endif
 
 static __always_inline void _print_param(struct drm_printer *p,
