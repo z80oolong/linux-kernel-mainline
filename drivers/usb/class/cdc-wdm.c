@@ -188,7 +188,12 @@ static void wdm_in_callback(struct urb *urb)
 		}
 	}
 
-	desc->rerr = status;
+	/*
+	 * Avoid propagating -EPIPE (stall) to userspace since it is
+	 * better handled as an empty read
+	 */
+	desc->rerr = (status != -EPIPE) ? status : 0;
+
 	if (length + desc->length > desc->wMaxCommand) {
 		/* The buffer would overflow */
 		set_bit(WDM_OVERFLOW, &desc->flags);
