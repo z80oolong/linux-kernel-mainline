@@ -2891,6 +2891,17 @@ static const struct dmi_system_id dmi_platform_intel_quirks[] = {
 						 RT5670_DEV_GPIO |
 						 RT5670_JD_MODE3),
 	},
+	{
+		.callback = rt5670_quirk_cb,
+		.ident = "Kingjim XMC10",
+		.matches = {
+			DMI_MATCH(DMI_BOARD_NAME, "Cherry Trail FFD"),
+		},
+		.driver_data = (unsigned long *)(RT5670_DMIC_EN |
+						 RT5670_DMIC1_IN2P |
+						 RT5670_DEV_GPIO |
+						 RT5670_JD_MODE1),
+	},
 	{}
 };
 
