@@ -7068,15 +7068,39 @@ static void gen6_init_rps_frequencies(struct drm_i915_private *dev_priv)
 	/* static values from HW: RP0 > RP1 > RPn (min_freq) */
 	if (IS_GEN9_LP(dev_priv)) {
 		u32 rp_state_cap = I915_READ(BXT_RP_STATE_CAP);
-		rps->rp0_freq = (rp_state_cap >> 16) & 0xff;
-		rps->rp1_freq = (rp_state_cap >>  8) & 0xff;
-		rps->min_freq = (rp_state_cap >>  0) & 0xff;
+		if (i915_modparams.max_clock_force > 0)
+			rps->rp0_freq = i915_modparams.max_clock_force / 50;
+		else
+			rps->rp0_freq = (rp_state_cap >> 16) & 0xff;
+		if (i915_modparams.eff_clock_force > 0)
+			rps->rp1_freq = i915_modparams.eff_clock_force / 50;
+		else
+			rps->rp1_freq = (rp_state_cap >>  8) & 0xff;
+		if (i915_modparams.min_clock_force > 0)
+			rps->min_freq = i915_modparams.min_clock_force / 50;
+		else
+			rps->min_freq = (rp_state_cap >>  0) & 0xff;
 	} else {
 		u32 rp_state_cap = I915_READ(GEN6_RP_STATE_CAP);
-		rps->rp0_freq = (rp_state_cap >>  0) & 0xff;
-		rps->rp1_freq = (rp_state_cap >>  8) & 0xff;
-		rps->min_freq = (rp_state_cap >> 16) & 0xff;
+		if (i915_modparams.max_clock_force > 0)
+			rps->rp0_freq = i915_modparams.max_clock_force / 50;
+		else
+			rps->rp0_freq = (rp_state_cap >>  0) & 0xff;
+		if (i915_modparams.eff_clock_force > 0)
+			rps->rp1_freq = i915_modparams.eff_clock_force / 50;
+		else
+			rps->rp1_freq = (rp_state_cap >>  8) & 0xff;
+		if (i915_modparams.min_clock_force > 0)
+			rps->min_freq = i915_modparams.min_clock_force / 50;
+		else
+			rps->min_freq = (rp_state_cap >> 16) & 0xff;
 	}
+	if (rps->min_freq > rps->rp0_freq)
+		rps->min_freq = rps->rp0_freq;
+	if (rps->rp1_freq > rps->rp0_freq)
+		rps->rp1_freq = rps->rp0_freq;
+	if (rps->rp1_freq < rps->min_freq)
+		rps->rp1_freq = rps->min_freq;
 	/* hw_max = RP0 until we check for overclocking */
 	rps->max_freq = rps->rp0_freq;
 
@@ -7801,22 +7825,35 @@ static void valleyview_init_gt_powersave(struct drm_i915_private *dev_priv)
 	}
 	DRM_DEBUG_DRIVER("DDR speed: %d MHz\n", dev_priv->mem_freq);
 
-	rps->max_freq = valleyview_rps_max_freq(dev_priv);
+	if (i915_modparams.max_clock_force > 0)
+		rps->max_freq = intel_freq_opcode(dev_priv, i915_modparams.max_clock_force);
+	else
+		rps->max_freq = valleyview_rps_max_freq(dev_priv);
 	rps->rp0_freq = rps->max_freq;
 	DRM_DEBUG_DRIVER("max GPU freq: %d MHz (%u)\n",
 			 intel_gpu_freq(dev_priv, rps->max_freq),
 			 rps->max_freq);
 
-	rps->efficient_freq = valleyview_rps_rpe_freq(dev_priv);
+	if (i915_modparams.eff_clock_force > 0)
+		rps->efficient_freq = intel_freq_opcode(dev_priv, i915_modparams.eff_clock_force);
+	else
+		rps->efficient_freq = valleyview_rps_rpe_freq(dev_priv);
 	DRM_DEBUG_DRIVER("RPe GPU freq: %d MHz (%u)\n",
 			 intel_gpu_freq(dev_priv, rps->efficient_freq),
 			 rps->efficient_freq);
 
-	rps->rp1_freq = valleyview_rps_guar_freq(dev_priv);
+	if (i915_modparams.guard_clock_force > 0)
+		rps->rp1_freq =	intel_freq_opcode(dev_priv, i915_modparams.guard_clock_force);
+	else
+		rps->rp1_freq = valleyview_rps_guar_freq(dev_priv);
 	DRM_DEBUG_DRIVER("RP1(Guar Freq) GPU freq: %d MHz (%u)\n",
 			 intel_gpu_freq(dev_priv, rps->rp1_freq),
 			 rps->rp1_freq);
 
+	if (i915_modparams.min_clock_force > 0)
+		rps->min_freq = intel_freq_opcode(dev_priv, i915_modparams.min_clock_force);
+	else
+		rps->min_freq = valleyview_rps_min_freq(dev_priv);
 	rps->min_freq = valleyview_rps_min_freq(dev_priv);
 	DRM_DEBUG_DRIVER("min GPU freq: %d MHz (%u)\n",
 			 intel_gpu_freq(dev_priv, rps->min_freq),
@@ -7854,23 +7891,35 @@ static void cherryview_init_gt_powersave(struct drm_i915_private *dev_priv)
 	}
 	DRM_DEBUG_DRIVER("DDR speed: %d MHz\n", dev_priv->mem_freq);
 
-	rps->max_freq = cherryview_rps_max_freq(dev_priv);
+	if (i915_modparams.max_clock_force > 0)
+		rps->max_freq = intel_freq_opcode(dev_priv, i915_modparams.max_clock_force);
+	else
+		rps->max_freq = cherryview_rps_max_freq(dev_priv);
 	rps->rp0_freq = rps->max_freq;
 	DRM_DEBUG_DRIVER("max GPU freq: %d MHz (%u)\n",
 			 intel_gpu_freq(dev_priv, rps->max_freq),
 			 rps->max_freq);
 
-	rps->efficient_freq = cherryview_rps_rpe_freq(dev_priv);
+	if (i915_modparams.eff_clock_force > 0)
+		rps->efficient_freq = intel_freq_opcode(dev_priv, i915_modparams.eff_clock_force);
+	else
+		rps->efficient_freq = cherryview_rps_rpe_freq(dev_priv);
 	DRM_DEBUG_DRIVER("RPe GPU freq: %d MHz (%u)\n",
 			 intel_gpu_freq(dev_priv, rps->efficient_freq),
 			 rps->efficient_freq);
 
-	rps->rp1_freq = cherryview_rps_guar_freq(dev_priv);
+	if (i915_modparams.guard_clock_force > 0)
+		rps->rp1_freq = intel_freq_opcode(dev_priv, i915_modparams.guard_clock_force);
+	else
+		rps->rp1_freq = cherryview_rps_guar_freq(dev_priv);
 	DRM_DEBUG_DRIVER("RP1(Guar) GPU freq: %d MHz (%u)\n",
 			 intel_gpu_freq(dev_priv, rps->rp1_freq),
 			 rps->rp1_freq);
 
-	rps->min_freq = cherryview_rps_min_freq(dev_priv);
+	if (i915_modparams.min_clock_force > 0)
+		rps->min_freq =	intel_freq_opcode(dev_priv, i915_modparams.min_clock_force);
+	else
+		rps->min_freq = cherryview_rps_min_freq(dev_priv);
 	DRM_DEBUG_DRIVER("min GPU freq: %d MHz (%u)\n",
 			 intel_gpu_freq(dev_priv, rps->min_freq),
 			 rps->min_freq);

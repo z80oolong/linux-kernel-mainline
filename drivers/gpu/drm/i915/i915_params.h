@@ -77,7 +77,12 @@ struct drm_printer;
 	param(bool, verbose_state_checks, true) \
 	param(bool, nuclear_pageflip, false) \
 	param(bool, enable_dp_mst, true) \
-	param(bool, enable_gvt, false)
+	param(bool, enable_dpcd_backlight, false) \
+	param(bool, enable_gvt, false)	\
+	param(int, min_clock_force, -1)	\
+	param(int, max_clock_force, -1)	\
+	param(int, eff_clock_force, -1)	\
+	param(int, guard_clock_force, -1)
 
 #define MEMBER(T, member, ...) T member;
 struct i915_params {
