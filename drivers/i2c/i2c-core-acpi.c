@@ -222,6 +222,18 @@ static void i2c_acpi_register_device(struct i2c_adapter *adapter,
 				     struct acpi_device *adev,
 				     struct i2c_board_info *info)
 {
+	/* special hacks for portabook */
+	if (!strcmp(dev_name(&adev->dev), "LNXVIDEO:00")) {
+		if ((!strcmp(dev_name(&adapter->dev), "i2c-1")
+			&& info->addr == 0x2c) ||
+		    (!strcmp(dev_name(&adapter->dev), "i2c-2")
+			&& info->addr == 0x7e)) {
+			dev_info(&adapter->dev,
+			"skip to add I2C device %s from ACPI at 0x%02hx\n",
+				dev_name(&adev->dev), info->addr);
+			return;
+		}
+	}
 	adev->power.flags.ignore_parent = true;
 	acpi_device_set_enumerated(adev);
 
