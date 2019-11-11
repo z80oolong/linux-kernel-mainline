@@ -2428,6 +2428,13 @@ static int gen8_enable_metric_set(struct i915_perf_stream *stream)
 	return emit_oa_config(stream, oa_config, oa_context(stream));
 }
 
+static u32 oag_report_ctx_switches(const struct i915_perf_stream *stream)
+{
+	return _MASKED_FIELD(GEN12_OAG_OA_DEBUG_DISABLE_CTX_SWITCH_REPORTS,
+			     (stream->sample_flags & SAMPLE_OA_REPORT) ?
+			     0 : GEN12_OAG_OA_DEBUG_DISABLE_CTX_SWITCH_REPORTS);
+}
+
 static int gen12_enable_metric_set(struct i915_perf_stream *stream)
 {
 	struct intel_uncore *uncore = stream->uncore;
@@ -2441,12 +2448,10 @@ static int gen12_enable_metric_set(struct i915_perf_stream *stream)
 			   _MASKED_BIT_ENABLE(GEN12_OAG_OA_DEBUG_DISABLE_CLK_RATIO_REPORTS |
 					      GEN12_OAG_OA_DEBUG_INCLUDE_CLK_RATIO) |
 			   /*
-			    * If the user didn't require OA reports, instruct the
-			    * hardware not to emit ctx switch reports.
+			    * If the user didn't require OA reports, instruct
+			    * the hardware not to emit ctx switch reports.
 			    */
-			   !(stream->sample_flags & SAMPLE_OA_REPORT) ?
-			   _MASKED_BIT_ENABLE(GEN12_OAG_OA_DEBUG_DISABLE_CTX_SWITCH_REPORTS) :
-			   _MASKED_BIT_DISABLE(GEN12_OAG_OA_DEBUG_DISABLE_CTX_SWITCH_REPORTS));
+			   oag_report_ctx_switches(stream));
 
 	intel_uncore_write(uncore, GEN12_OAG_OAGLBCTXCTRL, periodic ?
 			   (GEN12_OAG_OAGLBCTXCTRL_COUNTER_RESUME |
@@ -3307,15 +3312,6 @@ i915_perf_open_ioctl_locked(struct i915_perf *perf,
 		}
 	}
 
-	if (props->hold_preemption) {
-		if (!props->single_context) {
-			DRM_DEBUG("preemption disable with no context\n");
-			ret = -EINVAL;
-			goto err;
-		}
-		privileged_op = true;
-	}
-
 	/*
 	 * On Haswell the OA unit supports clock gating off for a specific
 	 * context and in this mode there's no visibility of metrics for the
@@ -3335,11 +3331,20 @@ i915_perf_open_ioctl_locked(struct i915_perf *perf,
 	 * doesn't request global stream access (i.e. query based sampling
 	 * using MI_RECORD_PERF_COUNT.
 	 */
-	if (IS_HASWELL(perf->i915) && specific_ctx && !props->hold_preemption)
+	if (IS_HASWELL(perf->i915) && specific_ctx)
 		privileged_op = false;
 	else if (IS_GEN(perf->i915, 12) && specific_ctx &&
 		 (props->sample_flags & SAMPLE_OA_REPORT) == 0)
 		privileged_op = false;
+
+	if (props->hold_preemption) {
+		if (!props->single_context) {
+			DRM_DEBUG("preemption disable with no context\n");
+			ret = -EINVAL;
+			goto err;
+		}
+		privileged_op = true;
+	}
 
 	/* Similar to perf's kernel.perf_paranoid_cpu sysctl option
 	 * we check a dev.i915.perf_stream_paranoid sysctl option

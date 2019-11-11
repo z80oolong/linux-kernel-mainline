@@ -131,7 +131,7 @@ userptr_mn_invalidate_range_start(struct mmu_notifier *_mn,
 		ret = i915_gem_object_unbind(obj,
 					     I915_GEM_OBJECT_UNBIND_ACTIVE);
 		if (ret == 0)
-			ret = __i915_gem_object_put_pages(obj, I915_MM_SHRINKER);
+			ret = __i915_gem_object_put_pages(obj);
 		i915_gem_object_put(obj);
 		if (ret)
 			return ret;
@@ -459,31 +459,36 @@ __i915_gem_userptr_get_pages_worker(struct work_struct *_work)
 	if (pvec != NULL) {
 		struct mm_struct *mm = obj->userptr.mm->mm;
 		unsigned int flags = 0;
+		int locked = 0;
 
 		if (!i915_gem_object_is_readonly(obj))
 			flags |= FOLL_WRITE;
 
 		ret = -EFAULT;
 		if (mmget_not_zero(mm)) {
-			down_read(&mm->mmap_sem);
 			while (pinned < npages) {
+				if (!locked) {
+					down_read(&mm->mmap_sem);
+					locked = 1;
+				}
 				ret = get_user_pages_remote
 					(work->task, mm,
 					 obj->userptr.ptr + pinned * PAGE_SIZE,
 					 npages - pinned,
 					 flags,
-					 pvec + pinned, NULL, NULL);
+					 pvec + pinned, NULL, &locked);
 				if (ret < 0)
 					break;
 
 				pinned += ret;
 			}
-			up_read(&mm->mmap_sem);
+			if (locked)
+				up_read(&mm->mmap_sem);
 			mmput(mm);
 		}
 	}
 
-	mutex_lock(&obj->mm.lock);
+	mutex_lock_nested(&obj->mm.lock, I915_MM_GET_PAGES);
 	if (obj->userptr.work == &work->work) {
 		struct sg_table *pages = ERR_PTR(ret);
 
@@ -646,8 +651,28 @@ i915_gem_userptr_put_pages(struct drm_i915_gem_object *obj,
 		obj->mm.dirty = false;
 
 	for_each_sgt_page(page, sgt_iter, pages) {
-		if (obj->mm.dirty)
+		if (obj->mm.dirty && trylock_page(page)) {
+			/*
+			 * As this may not be anonymous memory (e.g. shmem)
+			 * but exist on a real mapping, we have to lock
+			 * the page in order to dirty it -- holding
+			 * the page reference is not sufficient to
+			 * prevent the inode from being truncated.
+			 * Play safe and take the lock.
+			 *
+			 * However...!
+			 *
+			 * The mmu-notifier can be invalidated for a
+			 * migrate_page, that is alreadying holding the lock
+			 * on the page. Such a try_to_unmap() will result
+			 * in us calling put_pages() and so recursively try
+			 * to lock the page. We avoid that deadlock with
+			 * a trylock_page() and in exchange we risk missing
+			 * some page dirtying.
+			 */
 			set_page_dirty(page);
+			unlock_page(page);
+		}
 
 		mark_page_accessed(page);
 		put_page(page);
