@@ -1,0 +1,34 @@
+drm drm-fixes 31f4f5b495a62c9a8b15b1c3581acd5efeb9af8c
+	Linux 5.4-rc7
+drm-misc drm-misc-fixes 105401b659b7eb9cb42d6b5b75d5c049ad4b3dca
+	drm/shmem: Add docbook comments for drm_gem_shmem_object madvise fields
+drm-intel drm-intel-fixes 31e8d62989a7117eecc927f268ced9d6c3d90836
+	Merge tag 'gvt-fixes-2019-11-12' of https://github.com/intel/gvt-linux into drm-intel-fixes
+drm-amd drm-amd-fixes 2b702e72e33bbdec0764cfb6e1dd00fe1142ae55
+	Merge tag 'drm-misc-fixes-2017-09-28-1' of git://anongit.freedesktop.org/git/drm-misc into drm-fixes
+drm drm-next 3ca3a9eab7085b3c938b5d088c3020269cfecdc8
+	Merge tag 'drm-misc-next-fixes-2019-11-06' of git://anongit.freedesktop.org/drm/drm-misc into drm-next
+drm-misc drm-misc-next-fixes 3ca3a9eab7085b3c938b5d088c3020269cfecdc8
+	Merge tag 'drm-misc-next-fixes-2019-11-06' of git://anongit.freedesktop.org/drm/drm-misc into drm-next
+drm-intel drm-intel-next-fixes cee7fb437edcdb2f9f8affa959e274997f5dca4d
+	drm/i915/userptr: Try to acquire the page lock around set_page_dirty()
+drm-amd drm-amd-next-fixes 2bd6bf03f4c1c59381d62c61d03f6cc3fe71f66e
+	Linux 4.14-rc1
+drm-misc drm-misc-next e1cff82c1097bda2478c7ee74e13dfab33561639
+	drm/bridge: fix anx6345 compilation for v5.5
+drm-intel drm-intel-next-queued d670719467ecb3ab6bf39c97e01657a82d458fde
+	drm/i915: do not warn late about hdmi on port A
+drm-intel drm-intel-next 1883e2999f045e1fd6f76a7f30288a5312085289
+	drm/i915: Update DRIVER_DATE to 20191101
+drm-amd drm-amd-next 754270c7c56292e97d0eff924a5d5d83f92add07
+	Merge branch 'drm-next-4.15' of git://people.freedesktop.org/~agd5f/linux into drm-next
+sound-upstream for-linus a7d0358ea3b7f8d7216e663c1ae71cabf7ac24e3
+	ALSA: hda: hdmi - fix pin setup on Tigerlake
+sound-upstream for-next 509526706e68e4fb47519f02f78b48c818869d4e
+	ALSA: au88x0: Fix incorrect device pointer for preallocation
+drm-intel topic/core-for-CI 883d9554ea8e228c4e6aca8339b1c1c970a938e8
+	Revert "Revert "ALSA: hda: Add Tigerlake/Jasperlake PCI ID""
+drm-misc topic/mst-suspend-resume-reprobe 12a280c7286857119cf0d88c487f695e3a1c0912
+	drm/dp_mst: Add topology ref history tracking for debugging
+drm-intel topic/drm-mipi-dsi-dsc-updates f4dea1aaa9a12486f5813fada574192feb3850cd
+	drm/dsi: add helpers for DSI compression mode and PPS packets
