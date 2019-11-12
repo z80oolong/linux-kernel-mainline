@@ -18876,6 +18876,8 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpu_has_xfeatures
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpu_hotplug_disable
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpu_hotplug_enable
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpu_is_hotpluggable
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpu_mitigations_auto_nosmt
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpu_mitigations_off
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpu_subsys
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpu_up
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	cpuacct_cgrp_subsys_enabled_key
@@ -20307,6 +20309,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	is_skb_forwardable
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	isa_register_driver
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	isa_unregister_driver
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	iterate_mounts
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	itlb_multihit_kvm_mitigation
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	jprobe_return
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	jump_label_rate_limit
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	kallsyms_lookup_name
