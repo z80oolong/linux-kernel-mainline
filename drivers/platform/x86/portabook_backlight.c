@@ -174,6 +174,7 @@ int
 portabook_backlight_init(void)
 {
     int error = 0;
+printk("Portabook backlight initialized.\n");
     error = intel_soc_pmic_rw_init();
     if (error)
 	return -ENODEV;
