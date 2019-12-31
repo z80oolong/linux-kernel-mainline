@@ -465,6 +465,7 @@ portabook_battery_init(void)
     int index;
     struct i2c_adapter *adapter;
     
+printk("Initialize Portabook battery.\n");
     s = i2c_add_driver(&portabook_battery_driver);
     if (s < 0) return s;
 
