@@ -38,7 +38,7 @@ portabook_ext_init_module(void)
 {
     int error = 0;
 
-    printk("portabook_ext is loaded!\n");
+    printk("XMC10: portabook_ext is loaded!\n");
 #ifdef CONFIG_PORTABOOK_EXT_BACKLIGHT
     error = portabook_backlight_init();
     if (error)
@@ -60,7 +60,7 @@ static void portabook_ext_cleanup_module(void)
 #ifdef CONFIG_PORTABOOK_EXT_BACKLIGHT
     portabook_backlight_cleanup();
 #endif
-    printk("portabook_ext is unloaded!\n");
+    printk("XMC10: portabook_ext is unloaded!\n");
 }
 
 module_init(portabook_ext_init_module);
