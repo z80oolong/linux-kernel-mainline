@@ -465,7 +465,7 @@ portabook_battery_init(void)
     int index;
     struct i2c_adapter *adapter;
     
-printk("Initialize Portabook battery.\n");
+    printk("XMC10: portabook battery is loaded.\n");
     s = i2c_add_driver(&portabook_battery_driver);
     if (s < 0) return s;
 
@@ -498,4 +498,5 @@ portabook_battery_cleanup(void)
 	i2c_unregister_device(battery_i2c_client);
     battery_i2c_client = NULL;
     i2c_del_driver(&portabook_battery_driver);
+    printk("XMC10: portabook battery is unloaded.\n");
 }
