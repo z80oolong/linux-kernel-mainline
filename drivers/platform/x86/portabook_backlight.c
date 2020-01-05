@@ -174,7 +174,8 @@ int
 portabook_backlight_init(void)
 {
     int error = 0;
-printk("Portabook backlight initialized.\n");
+
+    printk("XMC10: portabook backlight is loaded.\n");
     error = intel_soc_pmic_rw_init();
     if (error)
 	return -ENODEV;
@@ -189,4 +190,5 @@ void
 portabook_backlight_cleanup(void)
 {
     portabook_backlight_device_unregister();
+    printk("XMC10: portabook backlight is unloaded.\n");
 }
