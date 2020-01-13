@@ -67,6 +67,9 @@ static inline int kbd_defleds(void)
 
 #define KBD_DEFLOCK 0
 
+#define KBD_FLAG_CTRL 0x04
+#define KBD_FLAG_ALT  0x08
+
 /*
  * Handler Tables.
  */
@@ -132,6 +135,7 @@ static unsigned int diacr;
 static char rep;					/* flag telling character repeat */
 
 static int shift_state = 0;
+static int ignore_altlock = 0;
 
 static unsigned int ledstate = -1U;			/* undefined */
 static unsigned char ledioctl;
@@ -1422,9 +1426,13 @@ static void kbd_keycode(unsigned int keycode, int down, int hw_raw)
 	}
 
 	param.shift = shift_final = (shift_state | kbd->slockstate) ^ kbd->lockstate;
+
+	if (ignore_altlock && !(shift_final & KBD_FLAG_CTRL)) {
+		param.shift = shift_final = (shift_final & (~ KBD_FLAG_ALT));
+	}
+
 	param.ledstate = kbd->ledflagstate;
 	key_map = key_maps[shift_final];
-
 	rc = atomic_notifier_call_chain(&keyboard_notifier_list,
 					KBD_KEYCODE, &param);
 	if (rc == NOTIFY_STOP || !key_map) {
@@ -2297,3 +2305,21 @@ void vt_clr_kbd_mode_bit(int console, int bit)
 	clr_vc_kbd_mode(kb, bit);
 	spin_unlock_irqrestore(&kbd_event_lock, flags);
 }
+
+static int __init setup_ignore_altlock(char *str)
+{
+	if (!strncmp(str, "yes", 3)) {
+		ignore_altlock = 1;
+		printk(KERN_INFO "VT Console: ignore_altlock = yes. ALT key is ignored in /dev/tty*.");
+	} else if (!strncmp(str, "no", 2)) {
+		ignore_altlock = 0;
+		printk(KERN_INFO "VT Console: ignore_altlock = no.");
+	} else {
+		ignore_altlock = 0;
+		printk(KERN_INFO "VT Console: ignore_altlock is not setted.");
+	}
+
+	return 1;
+}
+
+__setup("ignore_altlock=", setup_ignore_altlock);
