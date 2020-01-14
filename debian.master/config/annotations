@@ -6407,7 +6407,7 @@ CONFIG_PCIE_QCOM                                policy<{'arm64': 'y', 'armhf': '
 CONFIG_PCIE_ARMADA_8K                           policy<{'arm64': 'y', 'armhf': 'y'}>
 CONFIG_PCIE_KIRIN                               policy<{'arm64': 'y'}>
 CONFIG_PCIE_HISI_STB                            policy<{'arm64': 'y', 'armhf': 'y'}>
-CONFIG_PCI_MESON                                policy<{'amd64': 'n', 'arm64': 'n', 'armhf': 'n', 'i386': 'n', 'ppc64el': '-', 's390x': '-'}>
+CONFIG_PCI_MESON                                policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y'}>
 CONFIG_PCIE_UNIPHIER                            policy<{'armhf': 'y'}>
 CONFIG_PCIE_AL                                  policy<{'arm64': 'y'}>
 
@@ -8103,12 +8103,12 @@ CONFIG_SND_SOC_SOF_TOPLEVEL                     policy<{'amd64': 'y', 'arm64': '
 CONFIG_SND_SOC_SOF_PCI                          policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'ppc64el': 'm'}>
 CONFIG_SND_SOC_SOF_ACPI                         policy<{'amd64': 'm', 'arm64': 'm', 'i386': 'm'}>
 CONFIG_SND_SOC_SOF_OF                           policy<{'arm64': 'm', 'armhf': 'm', 'ppc64el': 'm'}>
-#CONFIG_SND_SOC_SOF_NOCODEC_SUPPORT              policy<{'amd64': 'n', 'arm64': 'n', 'armhf': 'n', 'i386': 'n', 'ppc64el': 'n'}>
+CONFIG_SND_SOC_SOF_NOCODEC_SUPPORT              policy<{'amd64': 'n', 'arm64': 'n', 'armhf': 'n', 'i386': 'n', 'ppc64el': 'n'}>
 CONFIG_SND_SOC_SOF_STRICT_ABI_CHECKS            policy<{'amd64': 'n', 'arm64': 'n', 'armhf': 'n', 'i386': 'n', 'ppc64el': 'n'}>
 CONFIG_SND_SOC_SOF_IMX_TOPLEVEL                 policy<{'arm64': 'y'}>
 CONFIG_SND_SOC_SOF_IMX8                         policy<{'arm64': 'm'}>
 #
-#CONFIG_SND_SOC_SOF_NOCODEC_SUPPORT              mark<ENFORCED> note<LP:1848490>
+CONFIG_SND_SOC_SOF_NOCODEC_SUPPORT              mark<ENFORCED> note<LP:1848490>
 
 # Menu: Device Drivers >> Sound card support >> Advanced Linux Sound Architecture >> ALSA for SoC audio support >> Sound Open Firmware Support >> SOF debugging features
 CONFIG_SND_SOC_SOF_DEBUG                        policy<{'amd64': 'n', 'arm64': 'n', 'armhf': 'n', 'i386': 'n', 'ppc64el': 'n'}>
@@ -8352,10 +8352,8 @@ CONFIG_SND_X86                                  policy<{'amd64': 'y', 'i386': 'y
 CONFIG_HDMI_LPE_AUDIO                           policy<{'amd64': 'm', 'i386': 'm'}>
 
 # Menu: Device Drivers >> SoundWire support
-CONFIG_SOUNDWIRE                                policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'ppc64el': 'm'}>
+CONFIG_SOUNDWIRE                                policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y', 'ppc64el': 'y'}>
 CONFIG_SOUNDWIRE_INTEL                          policy<{'amd64': 'm', 'i386': 'm'}>
-#
-CONFIG_SOUNDWIRE                                mark<ENFORCED> note<LP:1855685>
 
 # Menu: Device Drivers >> Staging drivers
 CONFIG_QLGE                                     policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'ppc64el': 'm'}>
@@ -9200,9 +9198,9 @@ CONFIG_UIO_MF624                                policy<{'amd64': 'm', 'arm64': '
 CONFIG_UIO_HV_GENERIC                           policy<{'amd64': 'm', 'i386': 'm'}>
 
 # Menu: Device Drivers >> VFIO Non-Privileged userspace driver framework
-CONFIG_VFIO                                     policy<{'amd64': 'y', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'ppc64el': 'y', 's390x': 'm'}>
+CONFIG_VFIO                                     policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'ppc64el': 'y', 's390x': 'm'}>
 CONFIG_VFIO_NOIOMMU                             policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y', 'ppc64el': 'y', 's390x': 'y'}>
-CONFIG_VFIO_PCI                                 policy<{'amd64': 'y', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'ppc64el': 'y', 's390x': 'm'}>
+CONFIG_VFIO_PCI                                 policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'ppc64el': 'y', 's390x': 'm'}>
 CONFIG_VFIO_PCI_VGA                             policy<{'amd64': 'y', 'i386': 'y'}>
 CONFIG_VFIO_PCI_IGD                             policy<{'amd64': 'y', 'i386': 'y'}>
 CONFIG_VFIO_MDEV                                policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'ppc64el': 'm', 's390x': 'm'}>
@@ -12363,7 +12361,7 @@ CONFIG_MATH_EMULATION                           policy<{'i386': 'n'}>
 CONFIG_CMDLINE_BOOL                             policy<{'amd64': 'n', 'i386': 'n', 'ppc64el': 'n'}>
 CONFIG_HIGHMEM                                  policy<{'armhf': 'y', 'i386': 'y'}>
 CONFIG_FORCE_MAX_ZONEORDER                      policy<{'arm64': '13', 'armhf-generic': '12', 'armhf-generic-lpae': '11', 'ppc64el': '9', 's390x': '9'}>
-CONFIG_COMPAT_VDSO                              policy<{'amd64': 'n', 'i386': 'n'}>
+CONFIG_COMPAT_VDSO                              policy<{'amd64': 'n', 'i386': 'n', 's390x': 'y'}>
 #
 CONFIG_RELOCATABLE                              flag<REVIEW>
 CONFIG_HOTPLUG_CPU                              flag<REVIEW>
