@@ -421,6 +421,13 @@ config HID_KYE
 	- MousePen i608X tablet
 	- EasyPen M610X tablet
 
+config HID_KINGJIM
+	tristate "Kingjim"
+	depends on HID
+	---help---
+	Support for Kingjim notebook built-in keyboard and touchpad via i2c.
+		- Kingjim XMC10
+
 config HID_UCLOGIC
 	tristate "UC-Logic"
 	depends on USB_HID
