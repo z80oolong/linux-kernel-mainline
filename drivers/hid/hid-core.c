@@ -1202,6 +1202,14 @@ int hid_open_report(struct hid_device *device)
 
 	if (device->driver->report_fixup)
 		start = device->driver->report_fixup(device, buf, &size);
+	else if (device->vendor == 0x8566 && device->product == 0x0101) {
+		/* check portabook keyboard */
+		if (size > 0x37 && buf[0x36] == 0x25 && buf[0x37] == 0x6a) {
+			buf[0x37] = 0xdd;
+			hid_info(device, "Special report_fixup for portabook\n");
+		}
+		start = buf;
+	}
 	else
 		start = buf;
 
