@@ -1334,6 +1334,36 @@ config PCENGINES_APU2
 	  To compile this driver as a module, choose M here: the module
 	  will be called pcengines-apuv2.
 
+config PORTABOOK_EXT
+	tristate "KingJim XMC10 power and backlight device support"
+	depends on ACPI
+	default m
+	---help---
+	  This driver provides support for backlight controll, battery
+	  infomation, and AC adaptor information of KingJim XMC10.
+	  
+	  To compile this driver as a module, choose M here.
+
+config PORTABOOK_EXT_BATTERY
+	bool "KingJim XMC10 power device support"
+	depends on PORTABOOK_EXT
+	default y
+	---help---
+	  This driver provides support for battery and AC adaptor
+	  information of KingJim XMC10.
+
+	  If unsure, say Y.
+
+config PORTABOOK_EXT_BACKLIGHT
+	bool "KingJim XMC10 backlight device support"
+	depends on PORTABOOK_EXT
+	default y
+	---help---
+	  This driver provides support for backlight controll
+	  of KingJim XMC10.
+
+	  If unsure, say Y.
+
 source "drivers/platform/x86/intel_speed_select_if/Kconfig"
 
 endif # X86_PLATFORM_DEVICES
